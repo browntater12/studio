@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,7 +50,7 @@ type AddProductToAccountFormProps = {
 };
 
 export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: AddProductToAccountFormProps) {
-  const [state, formAction] = useFormState(addProductToAccount, initialState);
+  const [state, formAction] = useActionState(addProductToAccount, initialState);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof addProductToAccountSchema>>({

@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,7 +62,7 @@ function AddProductDialog({ accountId, allProducts }: { accountId: string, allPr
 const editInitialState = { type: '', message: '', errors: undefined };
 
 function EditNoteForm({ accountId, productId, currentNotes, onSuccess }: { accountId: string, productId: string, currentNotes: string, onSuccess: () => void }) {
-    const [state, formAction] = useFormState(updateProductNote, editInitialState);
+    const [state, formAction] = useActionState(updateProductNote, editInitialState);
     const { pending } = useFormStatus();
     const { toast } = useToast();
 
