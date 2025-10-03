@@ -53,6 +53,16 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
   const [state, formAction] = useActionState(addProductToAccount, initialState);
   const { toast } = useToast();
 
+  const serverErrors = React.useMemo(() => {
+    return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
+        const fieldKey = key as keyof z.infer<typeof addProductToAccountSchema>;
+        if (state.errors?.[fieldKey]) {
+            acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
+        }
+        return acc;
+    }, {} as any)) : {};
+  }, [state?.errors]);
+
   const form = useForm<z.infer<typeof addProductToAccountSchema>>({
     resolver: zodResolver(addProductToAccountSchema),
     defaultValues: {
@@ -60,13 +70,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       productId: '',
       notes: '',
     },
-    errors: state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
-        const fieldKey = key as keyof z.infer<typeof addProductToAccountSchema>;
-        if (state.errors?.[fieldKey]) {
-            acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
-        }
-        return acc;
-    }, {} as any)) : {},
+    errors: serverErrors,
   });
 
   React.useEffect(() => {
@@ -75,8 +79,14 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       onSuccess();
     } else if (state.type === 'error') {
       toast({ title: 'Error', description: state.message, variant: 'destructive' });
+      Object.keys(form.getValues()).forEach((key) => {
+        const fieldKey = key as keyof z.infer<typeof addProductToAccountSchema>;
+        if (state.errors?.[fieldKey]) {
+            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+        }
+      });
     }
-  }, [state, onSuccess, toast]);
+  }, [state, onSuccess, toast, form]);
 
   return (
     <Form {...form}>

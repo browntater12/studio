@@ -44,6 +44,16 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
   const [state, formAction] = useActionState(addContact, initialState);
   const { toast } = useToast();
 
+  const serverErrors = React.useMemo(() => {
+      return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
+          const fieldKey = key as keyof z.infer<typeof addContactSchema>;
+          if (state.errors?.[fieldKey]) {
+              acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
+          }
+          return acc;
+      }, {} as any)) : {};
+  }, [state?.errors]);
+
   const form = useForm<z.infer<typeof addContactSchema>>({
     resolver: zodResolver(addContactSchema),
     defaultValues: {
@@ -54,13 +64,7 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
       location: '',
       isMainContact: false,
     },
-    errors: state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
-        const fieldKey = key as keyof z.infer<typeof addContactSchema>;
-        if (state.errors?.[fieldKey]) {
-            acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
-        }
-        return acc;
-    }, {} as any)) : {},
+    errors: serverErrors,
   });
 
   React.useEffect(() => {
@@ -69,8 +73,14 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
       onSuccess();
     } else if (state.type === 'error') {
       toast({ title: 'Error', description: state.message, variant: 'destructive' });
+      Object.keys(form.getValues()).forEach((key) => {
+        const fieldKey = key as keyof z.infer<typeof addContactSchema>;
+        if (state.errors?.[fieldKey]) {
+            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+        }
+      });
     }
-  }, [state, onSuccess, toast]);
+  }, [state, onSuccess, toast, form]);
 
   return (
     <Form {...form}>

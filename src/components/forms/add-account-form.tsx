@@ -53,17 +53,8 @@ export function AddAccountForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const form = useForm<z.infer<typeof addAccountSchema>>({
-    resolver: zodResolver(addAccountSchema),
-    defaultValues: {
-      name: '',
-      accountNumber: '',
-      industry: '',
-      status: 'lead',
-      details: '',
-    },
-    // Set errors from server action
-    errors: state?.errors
+  const serverErrors = React.useMemo(() => {
+    return state?.errors
       ? Object.keys(state.errors).reduce((acc, key) => {
           const fieldKey = key as keyof typeof state.errors;
           if (state.errors && state.errors[fieldKey]) {
@@ -74,7 +65,19 @@ export function AddAccountForm() {
           }
           return acc;
         }, {})
-      : {},
+      : {};
+  }, [state?.errors]);
+
+  const form = useForm<z.infer<typeof addAccountSchema>>({
+    resolver: zodResolver(addAccountSchema),
+    defaultValues: {
+      name: '',
+      accountNumber: '',
+      industry: '',
+      status: 'lead',
+      details: '',
+    },
+    errors: serverErrors,
   });
 
   React.useEffect(() => {
@@ -90,8 +93,15 @@ export function AddAccountForm() {
         description: state.message,
         variant: 'destructive',
       });
+      // Reset server errors on the form
+      Object.keys(form.getValues()).forEach((key) => {
+        const fieldKey = key as keyof z.infer<typeof addAccountSchema>;
+        if (state.errors?.[fieldKey]) {
+            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+        }
+      });
     }
-  }, [state, router, toast]);
+  }, [state, router, toast, form]);
 
   return (
     <Form {...form}>
