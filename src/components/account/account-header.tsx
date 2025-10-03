@@ -9,7 +9,7 @@ export function AccountHeader({ account }: { account: Account }) {
         <h1 className="text-3xl font-bold tracking-tight">{account.name}</h1>
         <div className="flex items-center gap-2 mt-2">
           <p className="text-muted-foreground">{account.accountNumber}</p>
-          <Badge variant={account.status === 'customer' ? 'default' : 'secondary'} className="capitalize">
+          <Badge variant={account.status === 'customer' ? 'default' : 'warning'} className="capitalize">
             {account.status}
           </Badge>
         </div>
