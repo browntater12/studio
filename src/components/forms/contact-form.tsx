@@ -52,28 +52,35 @@ export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps)
   const { toast } = useToast();
 
   const serverErrors = React.useMemo(() => {
-    return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
-        const fieldKey = key as keyof SchemaType;
-        if (state.errors?.[fieldKey]) {
-            (acc as any)[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
-        }
-        return acc;
-    }, {} as any)) : {};
+    return state?.errors
+      ? Object.keys(state.errors).reduce((acc, key) => {
+          const fieldKey = key as keyof SchemaType;
+          if (state.errors?.[fieldKey]) {
+            (acc as any)[fieldKey] = {
+              type: 'server',
+              message: state.errors[fieldKey]?.[0] || 'Server validation failed',
+            };
+          }
+          return acc;
+        }, {})
+      : {};
   }, [state?.errors]);
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
-    defaultValues: isEditMode ? {
-        ...contact,
-        contactId: contact.id,
-    } : {
-      accountId,
-      name: '',
-      phone: '',
-      email: '',
-      location: '',
-      isMainContact: false,
-    },
+    defaultValues: isEditMode
+      ? {
+          ...contact,
+          contactId: contact.id,
+        }
+      : {
+          accountId,
+          name: '',
+          phone: '',
+          email: '',
+          location: '',
+          isMainContact: false,
+        },
     errors: serverErrors,
   });
 
@@ -83,10 +90,10 @@ export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps)
       onSuccess();
     } else if (state.type === 'error') {
       toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      Object.keys(form.getValues()).forEach((key) => {
+      Object.keys(form.getValues()).forEach(key => {
         const fieldKey = key as keyof SchemaType;
         if (state.errors?.[fieldKey]) {
-            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+          form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
         }
       });
     }
@@ -147,7 +154,11 @@ export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps)
           render={({ field }) => (
             <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  name={field.name}
+                />
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel>Set as main contact</FormLabel>
