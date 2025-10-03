@@ -1,6 +1,6 @@
 import { type Account } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2 } from 'lucide-react';
+import { Building2, MapPin } from 'lucide-react';
 
 export function AccountInfo({ account }: { account: Account }) {
   return (
@@ -16,6 +16,15 @@ export function AccountInfo({ account }: { account: Account }) {
             <p className="font-medium">Industry</p>
             <p className="text-muted-foreground">{account.industry}</p>
         </div>
+        {account.address && (
+          <div className="text-sm">
+            <p className="font-medium">Address</p>
+            <p className="text-muted-foreground flex items-start gap-2">
+              <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>{account.address}</span>
+            </p>
+          </div>
+        )}
         <div className="text-sm">
             <p className="font-medium">Details</p>
             <p className="text-muted-foreground whitespace-pre-wrap">{account.details || 'No details provided.'}</p>

@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,7 +48,7 @@ function SubmitButton() {
 }
 
 export function AddAccountForm() {
-  const [state, formAction] = useActionState(addAccount, initialState);
+  const [state, formAction] = useFormState(addAccount, initialState);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -76,9 +75,12 @@ export function AddAccountForm() {
       industry: '',
       status: 'lead',
       details: '',
+      address: '',
     },
     errors: serverErrors,
   });
+
+  const status = form.watch('status');
 
   React.useEffect(() => {
     if (state.type === 'success' && state.accountId) {
@@ -166,6 +168,21 @@ export function AddAccountForm() {
             </FormItem>
           )}
         />
+        {status === 'lead' && (
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="123 Main St, Anytown USA" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <FormField
           control={form.control}
           name="details"

@@ -39,6 +39,7 @@ let accounts: Account[] = [
     name: 'Quantum Solutions',
     industry: 'Biotechnology',
     status: 'lead',
+    address: '456 Innovation Drive, Boston, MA',
     details: 'New lead from recent trade show. Interested in high-purity solvents in pails.',
     contacts: [
         { id: 'con_4', name: 'Diana Prince', phone: '345-678-9012', email: 'diana.p@quantum.com', location: 'Boston, MA', isMainContact: true, avatarUrl: PlaceHolderImages[3].imageUrl },

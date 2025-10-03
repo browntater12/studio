@@ -22,6 +22,7 @@ export type Account = {
   details: string;
   contacts: Contact[];
   accountProducts: AccountProduct[];
+  address?: string;
 };
 
 export type Product = {

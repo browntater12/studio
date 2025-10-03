@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
-export const addAccountSchema = z.object({
-  name: z.string().min(2, { message: "Account name must be at least 2 characters." }),
-  accountNumber: z.string().min(1, { message: "Account number is required." }),
-  industry: z.string().min(2, { message: "Industry must be at least 2 characters." }),
-  status: z.enum(['lead', 'customer']),
-  details: z.string().optional(),
-});
+export const addAccountSchema = z
+  .object({
+    name: z.string().min(2, { message: 'Account name must be at least 2 characters.' }),
+    accountNumber: z.string().min(1, { message: 'Account number is required.' }),
+    industry: z.string().min(2, { message: 'Industry must be at least 2 characters.' }),
+    status: z.enum(['lead', 'customer'], { required_error: 'Status is required.' }),
+    details: z.string().optional(),
+    address: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['address'],
+        message: 'Address is required for leads.',
+      });
+    }
+  });
 
 export const addContactSchema = z.object({
   accountId: z.string(),

@@ -29,6 +29,7 @@ export async function addAccount(prevState: any, formData: FormData) {
     industry: formData.get('industry'),
     status: formData.get('status'),
     details: formData.get('details'),
+    address: formData.get('address'),
   });
 
   if (!validatedFields.success) {
