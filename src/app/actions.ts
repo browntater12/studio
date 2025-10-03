@@ -23,7 +23,14 @@ import { generatePotentialActions } from '@/ai/flows/generate-potential-actions'
 
 
 export async function addAccount(prevState: any, formData: FormData) {
-  const validatedFields = addAccountSchema.safeParse(Object.fromEntries(formData.entries()));
+  const validatedFields = addAccountSchema.safeParse({
+    name: formData.get('name'),
+    accountNumber: formData.get('accountNumber'),
+    industry: formData.get('industry'),
+    status: formData.get('status'),
+    details: formData.get('details'),
+    address: formData.get('address'),
+  });
 
   if (!validatedFields.success) {
     return {
