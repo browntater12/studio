@@ -126,7 +126,7 @@ export function AddAccountForm() {
           name="accountNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Number (Optional)</FormLabel>
+              <FormLabel>Account Number</FormLabel>
               <FormControl>
                 <Input placeholder="CUST-001" {...field} />
               </FormControl>
@@ -139,7 +139,7 @@ export function AddAccountForm() {
           name="industry"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Industry (Optional)</FormLabel>
+              <FormLabel>Industry</FormLabel>
               <FormControl>
                 <Input placeholder="Technology" {...field} />
               </FormControl>
