@@ -59,7 +59,7 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
           </div>
         </div>
         <SidebarMenu>
-          <Button asChild variant="outline" className="m-2">
+          <Button asChild className="m-2">
               <Link href="/dashboard/account/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Account
