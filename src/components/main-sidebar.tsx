@@ -16,15 +16,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AddAccountForm } from '@/components/forms/add-account-form';
 import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
@@ -38,19 +30,12 @@ interface MainSidebarProps {
 export function MainSidebar({ accounts }: MainSidebarProps) {
   const params = useParams();
   const accountId = params.id as string;
-  const router = useRouter();
-  const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
 
   const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(search.toLowerCase()) ||
     acc.accountNumber.toLowerCase().includes(search.toLowerCase())
   );
-
-  const handleAccountCreated = (newAccountId: string) => {
-    setOpen(false);
-    router.push(`/dashboard/account/${newAccountId}`);
-  };
 
   return (
     <Sidebar>
@@ -74,20 +59,12 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
           </div>
         </div>
         <SidebarMenu>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="m-2">
+          <Button asChild variant="outline" className="m-2">
+              <Link href="/dashboard/account/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Account
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Account</DialogTitle>
-              </DialogHeader>
-              <AddAccountForm onAccountCreated={handleAccountCreated} />
-            </DialogContent>
-          </Dialog>
+              </Link>
+          </Button>
 
           {filteredAccounts.map(account => (
             <SidebarMenuItem key={account.id}>

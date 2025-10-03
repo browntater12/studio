@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { addAccount } from '@/app/actions';
 import { addAccountSchema } from '@/lib/schema';
@@ -46,13 +47,10 @@ function SubmitButton() {
   );
 }
 
-type AddAccountFormProps = {
-  onAccountCreated: (accountId: string) => void;
-};
-
-export function AddAccountForm({ onAccountCreated }: AddAccountFormProps) {
+export function AddAccountForm() {
   const [state, formAction] = useFormState(addAccount, initialState);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof addAccountSchema>>({
     resolver: zodResolver(addAccountSchema),
@@ -84,7 +82,7 @@ export function AddAccountForm({ onAccountCreated }: AddAccountFormProps) {
         title: 'Success!',
         description: state.message,
       });
-      onAccountCreated(state.accountId);
+      router.push(`/dashboard/account/${state.accountId}`);
     } else if (state.type === 'error') {
       toast({
         title: 'Error',
@@ -92,7 +90,7 @@ export function AddAccountForm({ onAccountCreated }: AddAccountFormProps) {
         variant: 'destructive',
       });
     }
-  }, [state, onAccountCreated, toast]);
+  }, [state, router, toast]);
 
   return (
     <Form {...form}>
