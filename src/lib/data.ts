@@ -164,3 +164,21 @@ export async function updateAccountProductNote(accountId: string, productId: str
     accountProduct.notes = notes;
     return accountProduct;
 }
+
+export async function addProduct(data: Omit<Product, 'id'>): Promise<Product> {
+    if (products.some(p => p.productNumber === data.productNumber)) {
+        throw new Error('A product with this product number already exists.');
+    }
+
+    const highestId = products.reduce((maxId, prod) => {
+        const currentId = parseInt(prod.id.split('_')[1]);
+        return currentId > maxId ? currentId : maxId;
+    }, 0);
+
+    const newProduct: Product = {
+        ...data,
+        id: `prod_${highestId + 1}`,
+    };
+    products.push(newProduct);
+    return newProduct;
+}

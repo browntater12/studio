@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { PlusCircle, Building, Search, Moon, Sun } from 'lucide-react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { PlusCircle, Building, Search, Moon, Sun, Package } from 'lucide-react';
 
 import { type Account, type Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
@@ -29,12 +30,13 @@ interface MainSidebarProps {
 
 export function MainSidebar({ accounts }: MainSidebarProps) {
   const params = useParams();
+  const pathname = usePathname();
   const accountId = params.id as string;
   const [search, setSearch] = React.useState('');
 
   const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(search.toLowerCase()) ||
-    acc.accountNumber.toLowerCase().includes(search.toLowerCase())
+    acc.accountNumber?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -70,7 +72,7 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
             <SidebarMenuItem key={account.id}>
               <Link href={`/dashboard/account/${account.id}`} passHref>
                 <SidebarMenuButton
-                  isActive={accountId === account.id}
+                  isActive={pathname.includes(`/dashboard/account/${account.id}`)}
                   className="w-full justify-start"
                 >
                   <Building />
@@ -85,6 +87,20 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
           {filteredAccounts.length === 0 && (
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
+        </SidebarMenu>
+        <SidebarSeparator />
+         <SidebarMenu>
+            <SidebarMenuItem>
+                <Link href="/dashboard/products" passHref>
+                    <SidebarMenuButton
+                    isActive={pathname === '/dashboard/products'}
+                    className="w-full justify-start"
+                    >
+                    <Package />
+                    <span>Products</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 

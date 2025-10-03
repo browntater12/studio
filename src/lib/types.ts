@@ -31,3 +31,5 @@ export type Product = {
   productNumber: string;
   volumes: ('pails' | 'drums' | 'totes' | 'bulk')[];
 };
+
+export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';

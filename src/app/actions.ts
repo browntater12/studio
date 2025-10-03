@@ -10,7 +10,8 @@ import {
   addContactSchema,
   editContactSchema,
   addProductToAccountSchema,
-  editProductNoteSchema
+  editProductNoteSchema,
+  createProductSchema,
 } from '@/lib/schema';
 import {
   addAccount as dbAddAccount,
@@ -19,6 +20,7 @@ import {
   updateContact as dbUpdateContact,
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
+  addProduct as dbAddProductGlobal,
   getAccountById,
 } from '@/lib/data';
 
@@ -226,5 +228,29 @@ export async function generateSalesInsights(accountId: string) {
     } catch (e) {
         console.error("AI generation failed:", e);
         return { error: "Failed to generate insights. Please try again." };
+    }
+}
+
+export async function createProduct(prevState: any, formData: FormData) {
+    const validatedFields = createProductSchema.safeParse({
+        name: formData.get('name'),
+        productNumber: formData.get('productNumber'),
+        volumes: formData.getAll('volumes'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Invalid fields. Failed to create product.',
+        };
+    }
+
+    try {
+        await dbAddProductGlobal(validatedFields.data);
+        revalidatePath('/dashboard/products');
+        return { type: 'success', message: 'Product created successfully.' };
+    } catch (e: any) {
+        return { type: 'error', message: e.message || 'Database Error: Failed to create product.' };
     }
 }

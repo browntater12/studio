@@ -55,3 +55,9 @@ export const editProductNoteSchema = z.object({
   productId: z.string(),
   notes: z.string().min(3, { message: "Notes must be at least 3 characters." }),
 });
+
+export const createProductSchema = z.object({
+    name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
+    productNumber: z.string().min(3, { message: 'Product number must be at least 3 characters.' }),
+    volumes: z.array(z.enum(['pails', 'drums', 'totes', 'bulk'])).min(1, { message: 'At least one volume must be selected.' }),
+});
