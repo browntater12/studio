@@ -1,6 +1,5 @@
 import { type Account } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { SalesInsights } from './sales-insights';
 
 export function AccountHeader({ account }: { account: Account }) {
   return (
@@ -15,7 +14,7 @@ export function AccountHeader({ account }: { account: Account }) {
         </div>
       </div>
       <div className="flex gap-2">
-        <SalesInsights accountId={account.id} />
+        
       </div>
     </div>
   );
