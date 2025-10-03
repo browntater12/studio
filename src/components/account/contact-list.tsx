@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
-import { PlusCircle, Users, Mail, Phone, MapPin, Star } from 'lucide-react';
+import { PlusCircle, Users, Mail, Phone, MapPin, Star, Edit } from 'lucide-react';
 import { type Contact } from '@/lib/types';
 import {
   Card,
@@ -19,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { AddContactForm } from '../forms/add-contact-form';
+import { ContactForm } from '../forms/contact-form';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
@@ -37,10 +36,25 @@ function AddContactDialog({ accountId }: { accountId: string }) {
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
         </DialogHeader>
-        <AddContactForm accountId={accountId} onSuccess={() => setOpen(false)} />
+        <ContactForm accountId={accountId} onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
+}
+
+function EditContactDialog({ accountId, contact, children }: { accountId: string, contact: Contact, children: React.ReactNode }) {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Contact</DialogTitle>
+                </DialogHeader>
+                <ContactForm accountId={accountId} contact={contact} onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 export function ContactList({
@@ -70,7 +84,7 @@ export function ContactList({
             {contacts.map(contact => (
               <div
                 key={contact.id}
-                className="flex items-start gap-4 p-4 border rounded-lg"
+                className="flex items-start gap-4 p-4 border rounded-lg relative group"
               >
                 <Avatar className="h-12 w-12">
                    <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint="person portrait" />
@@ -100,6 +114,11 @@ export function ContactList({
                     </div>
                   </div>
                 </div>
+                <EditContactDialog accountId={accountId} contact={contact}>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                </EditContactDialog>
               </div>
             ))}
           </div>

@@ -73,9 +73,14 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 }
 
 export async function addAccount(data: Omit<Account, 'id' | 'contacts' | 'accountProducts'>): Promise<Account> {
+  const highestId = accounts.reduce((maxId, acc) => {
+    const currentId = parseInt(acc.id.split('_')[1]);
+    return currentId > maxId ? currentId : maxId;
+  }, 0);
+
   const newAccount: Account = {
     ...data,
-    id: `acc_${Date.now()}`,
+    id: `acc_${highestId + 1}`,
     contacts: [],
     accountProducts: [],
   };
@@ -99,6 +104,27 @@ export async function addContactToAccount(accountId: string, contactData: Omit<C
 
   account.contacts.push(newContact);
   return newContact;
+}
+
+export async function updateContact(accountId: string, contactData: Omit<Contact, 'avatarUrl'> & { contactId: string }): Promise<Contact> {
+    const account = await getAccountById(accountId);
+    if (!account) throw new Error('Account not found');
+
+    const contactIndex = account.contacts.findIndex(c => c.id === contactData.contactId);
+    if (contactIndex === -1) throw new Error('Contact not found');
+
+    if (contactData.isMainContact) {
+        account.contacts.forEach(c => {
+            if (c.id !== contactData.contactId) {
+                c.isMainContact = false;
+            }
+        });
+    }
+
+    const updatedContact = { ...account.contacts[contactIndex], ...contactData };
+    account.contacts[contactIndex] = updatedContact;
+    
+    return updatedContact;
 }
 
 export async function addProductToAccount(accountId: string, productData: Omit<AccountProduct, ''>): Promise<AccountProduct> {

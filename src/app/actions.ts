@@ -7,12 +7,14 @@ import { redirect } from 'next/navigation';
 import {
   addAccountSchema,
   addContactSchema,
+  editContactSchema,
   addProductToAccountSchema,
   editProductNoteSchema
 } from '@/lib/schema';
 import {
   addAccount as dbAddAccount,
   addContactToAccount as dbAddContact,
+  updateContact as dbUpdateContact,
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
   getAccountById,
@@ -40,16 +42,19 @@ export async function addAccount(prevState: any, formData: FormData) {
     };
   }
 
+  let newAccount;
   try {
-    const newAccount = await dbAddAccount(validatedFields.data);
-    revalidatePath('/dashboard');
-    return { type: 'success', message: 'Account created successfully', accountId: newAccount.id };
+    newAccount = await dbAddAccount(validatedFields.data);
   } catch (e) {
     return {
       type: 'error',
       message: 'Database Error: Failed to Create Account.',
     };
   }
+
+  revalidatePath('/dashboard');
+  revalidatePath(`/dashboard/account/${newAccount.id}`);
+  redirect(`/dashboard/account/${newAccount.id}`);
 }
 
 export async function addContact(prevState: any, formData: FormData) {
@@ -76,6 +81,34 @@ export async function addContact(prevState: any, formData: FormData) {
         return { type: 'success', message: 'Contact added successfully.' };
     } catch (e) {
         return { type: 'error', message: 'Database Error: Failed to add contact.' };
+    }
+}
+
+export async function updateContact(prevState: any, formData: FormData) {
+    const validatedFields = editContactSchema.safeParse({
+        accountId: formData.get('accountId'),
+        contactId: formData.get('contactId'),
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        location: formData.get('location'),
+        isMainContact: formData.get('isMainContact') === 'on',
+    });
+
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Invalid fields. Failed to update contact.',
+        };
+    }
+
+    try {
+        await dbUpdateContact(validatedFields.data.accountId, validatedFields.data);
+        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
+        return { type: 'success', message: 'Contact updated successfully.' };
+    } catch (e: any) {
+        return { type: 'error', message: e.message || 'Database Error: Failed to update contact.' };
     }
 }
 

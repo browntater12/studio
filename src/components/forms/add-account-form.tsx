@@ -115,7 +115,7 @@ export function AddAccountForm() {
             <FormItem>
               <FormLabel>Account Name</FormLabel>
               <FormControl>
-                <Input placeholder="Innovate Corp" {...field} />
+                <Input placeholder="Nebraska Chemical" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -128,7 +128,7 @@ export function AddAccountForm() {
             <FormItem>
               <FormLabel>Account Number</FormLabel>
               <FormControl>
-                <Input placeholder="CUST-001" {...field} />
+                <Input placeholder="0148" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

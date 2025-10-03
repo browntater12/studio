@@ -7,9 +7,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { type Contact } from '@/lib/types';
 
-import { addContact } from '@/app/actions';
-import { addContactSchema } from '@/lib/schema';
+import { addContact, updateContact } from '@/app/actions';
+import { addContactSchema, editContactSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,38 +26,47 @@ import { useToast } from '@/hooks/use-toast';
 
 const initialState = { type: '', message: '', errors: undefined };
 
-function SubmitButton() {
+function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Add Contact
+      {isEditMode ? 'Save Changes' : 'Add Contact'}
     </Button>
   );
 }
 
-type AddContactFormProps = {
+type ContactFormProps = {
   accountId: string;
+  contact?: Contact;
   onSuccess: () => void;
 };
 
-export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
-  const [state, formAction] = useActionState(addContact, initialState);
+export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps) {
+  const isEditMode = !!contact;
+  const action = isEditMode ? updateContact : addContact;
+  const schema = isEditMode ? editContactSchema : addContactSchema;
+  type SchemaType = z.infer<typeof schema>;
+
+  const [state, formAction] = useActionState(action, initialState);
   const { toast } = useToast();
 
   const serverErrors = React.useMemo(() => {
-      return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
-          const fieldKey = key as keyof z.infer<typeof addContactSchema>;
-          if (state.errors?.[fieldKey]) {
-              acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
-          }
-          return acc;
-      }, {} as any)) : {};
+    return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
+        const fieldKey = key as keyof SchemaType;
+        if (state.errors?.[fieldKey]) {
+            (acc as any)[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
+        }
+        return acc;
+    }, {} as any)) : {};
   }, [state?.errors]);
 
-  const form = useForm<z.infer<typeof addContactSchema>>({
-    resolver: zodResolver(addContactSchema),
-    defaultValues: {
+  const form = useForm<SchemaType>({
+    resolver: zodResolver(schema),
+    defaultValues: isEditMode ? {
+        ...contact,
+        contactId: contact.id,
+    } : {
       accountId,
       name: '',
       phone: '',
@@ -74,7 +84,7 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
     } else if (state.type === 'error') {
       toast({ title: 'Error', description: state.message, variant: 'destructive' });
       Object.keys(form.getValues()).forEach((key) => {
-        const fieldKey = key as keyof z.infer<typeof addContactSchema>;
+        const fieldKey = key as keyof SchemaType;
         if (state.errors?.[fieldKey]) {
             form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
         }
@@ -86,6 +96,7 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
     <Form {...form}>
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="accountId" value={accountId} />
+        {isEditMode && <input type="hidden" name="contactId" value={contact.id} />}
         <FormField
           control={form.control}
           name="name"
@@ -144,7 +155,7 @@ export function AddContactForm({ accountId, onSuccess }: AddContactFormProps) {
             </FormItem>
           )}
         />
-        <SubmitButton />
+        <SubmitButton isEditMode={isEditMode} />
       </form>
     </Form>
   );
