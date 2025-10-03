@@ -15,9 +15,9 @@ export type AccountProduct = {
 
 export type Account = {
   id: string;
-  accountNumber: string;
+  accountNumber?: string;
   name: string;
-  industry: string;
+  industry?: string;
   status: 'lead' | 'customer';
   details: string;
   contacts: Contact[];

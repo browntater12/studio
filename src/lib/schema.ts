@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const addAccountSchema = z
   .object({
     name: z.string().min(2, { message: 'Account name must be at least 2 characters.' }),
-    accountNumber: z.string().min(1, { message: 'Account number is required.' }),
-    industry: z.string().min(2, { message: 'Industry must be at least 2 characters.' }),
+    accountNumber: z.string().optional(),
+    industry: z.string().optional(),
     status: z.enum(['lead', 'customer'], { required_error: 'Status is required.' }),
     details: z.string().optional(),
     address: z.string().optional(),

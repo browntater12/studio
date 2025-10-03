@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -48,7 +49,7 @@ function SubmitButton() {
 }
 
 export function AddAccountForm() {
-  const [state, formAction] = useFormState(addAccount, initialState);
+  const [state, formAction] = useActionState(addAccount, initialState);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -126,7 +127,7 @@ export function AddAccountForm() {
           name="accountNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Number</FormLabel>
+              <FormLabel>Account Number (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="CUST-001" {...field} />
               </FormControl>
@@ -139,7 +140,7 @@ export function AddAccountForm() {
           name="industry"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Industry</FormLabel>
+              <FormLabel>Industry (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Technology" {...field} />
               </FormControl>
