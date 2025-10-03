@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 
 import {
   addAccountSchema,
+  editAccountSchema,
   addContactSchema,
   editContactSchema,
   addProductToAccountSchema,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/schema';
 import {
   addAccount as dbAddAccount,
+  updateAccount as dbUpdateAccount,
   addContactToAccount as dbAddContact,
   updateContact as dbUpdateContact,
   addProductToAccount as dbAddProduct,
@@ -55,6 +57,39 @@ export async function addAccount(prevState: any, formData: FormData) {
   revalidatePath('/dashboard');
   revalidatePath(`/dashboard/account/${newAccount.id}`);
   redirect(`/dashboard/account/${newAccount.id}`);
+}
+
+export async function updateAccount(prevState: any, formData: FormData) {
+    const validatedFields = editAccountSchema.safeParse({
+        id: formData.get('id'),
+        name: formData.get('name'),
+        accountNumber: formData.get('accountNumber'),
+        industry: formData.get('industry'),
+        status: formData.get('status'),
+        details: formData.get('details'),
+        address: formData.get('address'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Update Account.',
+        };
+    }
+
+    try {
+        await dbUpdateAccount(validatedFields.data.id, validatedFields.data);
+    } catch (e) {
+        return {
+            type: 'error',
+            message: 'Database Error: Failed to Update Account.',
+        };
+    }
+
+    revalidatePath('/dashboard');
+    revalidatePath(`/dashboard/account/${validatedFields.data.id}`);
+    redirect(`/dashboard/account/${validatedFields.data.id}`);
 }
 
 export async function addContact(prevState: any, formData: FormData) {

@@ -88,6 +88,20 @@ export async function addAccount(data: Omit<Account, 'id' | 'contacts' | 'accoun
   return newAccount;
 }
 
+export async function updateAccount(id: string, data: Omit<Account, 'id' | 'contacts' | 'accountProducts'>): Promise<Account> {
+    const accountIndex = accounts.findIndex(acc => acc.id === id);
+    if (accountIndex === -1) {
+        throw new Error('Account not found');
+    }
+    const account = accounts[accountIndex];
+    const updatedAccount = {
+        ...account,
+        ...data
+    };
+    accounts[accountIndex] = updatedAccount;
+    return updatedAccount;
+}
+
 export async function addContactToAccount(accountId: string, contactData: Omit<Contact, 'id' | 'avatarUrl'>): Promise<Contact> {
   const account = await getAccountById(accountId);
   if (!account) throw new Error('Account not found');

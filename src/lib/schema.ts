@@ -1,23 +1,35 @@
 import { z } from 'zod';
 
-export const addAccountSchema = z
-  .object({
-    name: z.string().min(2, { message: 'Account name must be at least 2 characters.' }),
-    accountNumber: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-    industry: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-    status: z.enum(['lead', 'customer'], { required_error: 'Status is required.' }),
-    details: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-    address: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-  })
-  .superRefine((data, ctx) => {
+const baseAccountSchema = z.object({
+  name: z.string().min(2, { message: 'Account name must be at least 2 characters.' }),
+  accountNumber: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
+  industry: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
+  status: z.enum(['lead', 'customer'], { required_error: 'Status is required.' }),
+  details: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
+  address: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
+});
+
+export const addAccountSchema = baseAccountSchema.superRefine((data, ctx) => {
+  if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address'],
+      message: 'Address is required for leads.',
+    });
+  }
+});
+
+export const editAccountSchema = baseAccountSchema.extend({
+    id: z.string(),
+}).superRefine((data, ctx) => {
     if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['address'],
-        message: 'Address is required for leads.',
-      });
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['address'],
+            message: 'Address is required for leads.',
+        });
     }
-  });
+});
 
 export const addContactSchema = z.object({
   accountId: z.string(),

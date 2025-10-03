@@ -8,8 +8,9 @@ import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { addAccount } from '@/app/actions';
-import { addAccountSchema } from '@/lib/schema';
+import { addAccount, updateAccount } from '@/app/actions';
+import { addAccountSchema, editAccountSchema } from '@/lib/schema';
+import { type Account } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,21 +35,29 @@ const initialState = {
   type: '',
   message: '',
   errors: undefined,
-  accountId: undefined
 };
 
-function SubmitButton() {
+function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
   const { pending } = useActionState(addAccount, initialState)[2];
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Add Account
+      {isEditMode ? 'Save Changes' : 'Add Account'}
     </Button>
   );
 }
 
-export function AddAccountForm() {
-  const [state, formAction] = useActionState(addAccount, initialState);
+type AddAccountFormProps = {
+    account?: Account;
+}
+
+export function AddAccountForm({ account }: AddAccountFormProps) {
+  const isEditMode = !!account;
+  const action = isEditMode ? updateAccount : addAccount;
+  const schema = isEditMode ? editAccountSchema : addAccountSchema;
+  type SchemaType = z.infer<typeof schema>;
+
+  const [state, formAction] = useActionState(action, initialState);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -67,29 +76,25 @@ export function AddAccountForm() {
       : {};
   }, [state?.errors]);
 
-  const form = useForm<z.infer<typeof addAccountSchema>>({
-    resolver: zodResolver(addAccountSchema),
-    defaultValues: {
-      name: '',
-      accountNumber: '',
-      industry: '',
-      status: 'lead',
-      details: '',
-      address: '',
-    },
+  const form = useForm<SchemaType>({
+    resolver: zodResolver(schema),
+    defaultValues: isEditMode
+      ? account
+      : {
+          name: '',
+          accountNumber: '',
+          industry: '',
+          status: 'lead',
+          details: '',
+          address: '',
+        },
     errors: serverErrors,
   });
 
   const status = form.watch('status');
 
   React.useEffect(() => {
-    if (state.type === 'success' && state.accountId) {
-      toast({
-        title: 'Success!',
-        description: state.message,
-      });
-      router.push(`/dashboard/account/${state.accountId}`);
-    } else if (state.type === 'error') {
+    if (state.type === 'error') {
       toast({
         title: 'Error',
         description: state.message,
@@ -108,6 +113,7 @@ export function AddAccountForm() {
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
+        {isEditMode && <input type="hidden" name="id" value={account.id} />}
         <FormField
           control={form.control}
           name="name"
@@ -128,7 +134,7 @@ export function AddAccountForm() {
             <FormItem>
               <FormLabel>Account Number</FormLabel>
               <FormControl>
-                <Input placeholder="0148" {...field} />
+                <Input placeholder="0148" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,7 +147,7 @@ export function AddAccountForm() {
             <FormItem>
               <FormLabel>Industry</FormLabel>
               <FormControl>
-                <Input placeholder="Technology" {...field} />
+                <Input placeholder="Technology" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -176,7 +182,7 @@ export function AddAccountForm() {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="123 Main St, Anytown USA" {...field} />
+                  <Input placeholder="123 Main St, Anytown USA" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -190,13 +196,13 @@ export function AddAccountForm() {
             <FormItem>
               <FormLabel>Account Details</FormLabel>
               <FormControl>
-                <Textarea placeholder="Initial notes about the account..." {...field} />
+                <Textarea placeholder="Initial notes about the account..." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <SubmitButton />
+        <SubmitButton isEditMode={isEditMode}/>
       </form>
     </Form>
   );
