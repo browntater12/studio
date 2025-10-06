@@ -20,8 +20,8 @@ import type { Account, Product, Contact, AccountProduct } from './types';
 // Data access functions
 export async function getAccounts(): Promise<Account[]> {
   const db = getAdminFirestore(initializeServerApp());
-  const accountsCol = collection(db, 'accounts-db');
-  const accountSnapshot = await getDocs(accountsCol);
+  const accountsCol = db.collection('accounts-db');
+  const accountSnapshot = await accountsCol.get();
   const accounts: Account[] = [];
   for (const doc of accountSnapshot.docs) {
     accounts.push({ id: doc.id, ...doc.data() } as Account);
@@ -31,8 +31,8 @@ export async function getAccounts(): Promise<Account[]> {
 
 export async function getAccountProductNotes(accountId: string): Promise<AccountProduct[]> {
     const db = getAdminFirestore(initializeServerApp());
-    const q = query(collection(db, 'account-products'), where('accountId', '==', accountId));
-    const snapshot = await getDocs(q);
+    const q = db.collection('account-products').where('accountId', '==', accountId);
+    const snapshot = await q.get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AccountProduct));
 }
 
@@ -40,10 +40,10 @@ export async function getAccountById(
   id: string
 ): Promise<Account | undefined> {
   const db = getAdminFirestore(initializeServerApp());
-  const accountRef = doc(db, 'accounts-db', id);
-  const accountSnap = await getDoc(accountRef);
+  const accountRef = db.collection('accounts-db').doc(id);
+  const accountSnap = await accountRef.get();
 
-  if (!accountSnap.exists()) {
+  if (!accountSnap.exists) {
     return undefined;
   }
 
@@ -54,8 +54,8 @@ export async function getAccountById(
 
 export async function getProducts(): Promise<Product[]> {
   const db = getAdminFirestore(initializeServerApp());
-  const productsCol = collection(db, 'products');
-  const productSnapshot = await getDocs(productsCol);
+  const productsCol = db.collection('products');
+  const productSnapshot = await productsCol.get();
   return productSnapshot.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() } as Product)
   );
@@ -65,8 +65,8 @@ export async function getProductById(
   id: string
 ): Promise<Product | undefined> {
   const db = getAdminFirestore(initializeServerApp());
-  const productRef = doc(db, 'products', id);
-  const productSnap = await getDoc(productRef);
+  const productRef = db.collection('products').doc(id);
+  const productSnap = await productRef.get();
   return productSnap.exists()
     ? ({ id: productSnap.id, ...productSnap.data() } as Product)
     : undefined;
@@ -78,7 +78,7 @@ export async function updateAccount(
 ): Promise<void> {
   const db = getAdminFirestore(initializeServerApp());
   const accountRef = db.collection('accounts-db').doc(id);
-  await updateDoc(accountRef, data);
+  await accountRef.update(data);
 }
 
 export async function updateAccountProductNote(
@@ -87,7 +87,7 @@ export async function updateAccountProductNote(
 ): Promise<void> {
   const db = getAdminFirestore(initializeServerApp());
   const noteRef = db.collection('account-products').doc(noteId);
-  await updateDoc(noteRef, { notes });
+  await noteRef.update({ notes });
 }
 
 export async function addProductToAccount(
@@ -95,7 +95,7 @@ export async function addProductToAccount(
 ): Promise<void> {
   const db = getAdminFirestore(initializeServerApp());
   const accountProductsCollection = db.collection('account-products');
-  await addDoc(accountProductsCollection, productData);
+  await accountProductsCollection.add(productData);
 }
 
 export async function updateProduct(
@@ -111,7 +111,7 @@ export async function updateProduct(
         throw new Error('A product with this product number already exists.');
     }
   }
-  await updateDoc(productRef, data);
+  await productRef.update(data);
 }
 
 export async function deleteProduct(id: string): Promise<void> {
@@ -121,5 +121,5 @@ export async function deleteProduct(id: string): Promise<void> {
   // In a real app, this might be a Cloud Function for safety.
   // For now, we will just delete the product doc.
   // Note: References in account-products will be orphaned.
-  await deleteDoc(productRef);
+  await productRef.delete();
 }
