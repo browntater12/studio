@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean; isSubmitting: boolean }) {
   return (
@@ -67,7 +69,7 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
         },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     if (!firestore) {
         toast({
@@ -79,34 +81,49 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
         return;
     }
 
-    try {
-        if (isEditMode) {
-            const { id, ...accountData } = values as Account;
-            const accountRef = doc(firestore, 'accounts-db', id);
-            await updateDoc(accountRef, accountData);
-            toast({
-                title: 'Account Updated',
-                description: 'The account details have been saved.',
+    if (isEditMode) {
+        const { id, ...accountData } = values as Account;
+        const accountRef = doc(firestore, 'accounts-db', id);
+        updateDoc(accountRef, accountData)
+            .then(() => {
+                toast({
+                    title: 'Account Updated',
+                    description: 'The account details have been saved.',
+                });
+                router.push(`/dashboard/account/${id}`);
+            })
+            .catch(async (error) => {
+                const permissionError = new FirestorePermissionError({
+                    path: accountRef.path,
+                    operation: 'update',
+                    requestResourceData: accountData
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-            router.push(`/dashboard/account/${id}`);
-        } else {
-            const accountsCollection = collection(firestore, 'accounts-db');
-            const docRef = await addDoc(accountsCollection, values);
-            toast({
-                title: 'Account Created',
-                description: 'The new account has been added successfully.',
+    } else {
+        const accountsCollection = collection(firestore, 'accounts-db');
+        addDoc(accountsCollection, values)
+            .then((docRef) => {
+                toast({
+                    title: 'Account Created',
+                    description: 'The new account has been added successfully.',
+                });
+                router.push(`/dashboard/account/${docRef.id}`);
+            })
+            .catch(async (error) => {
+                const permissionError = new FirestorePermissionError({
+                    path: accountsCollection.path,
+                    operation: 'create',
+                    requestResourceData: values
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-            router.push(`/dashboard/account/${docRef.id}`);
-        }
-    } catch (error: any) {
-      console.error('***ACCOUNT FORM FAILED***:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to save account. Please try again.',
-      });
-    } finally {
-        setIsSubmitting(false);
     }
   };
 
