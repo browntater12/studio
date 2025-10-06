@@ -11,11 +11,10 @@ import type { Firestore } from 'firebase/firestore';
 import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
 
 import type { Account, Product, Contact, AccountProduct } from './types';
-import { PlaceHolderImages } from './placeholder-images';
 
 
 // Data access functions
-export async function getAccounts(db: Firestore): Promise<Account[]> {
+export async function getAccounts(db: Firestore | AdminFirestore): Promise<Account[]> {
   const accountsCol = collection(db, 'accounts-db');
   const accountSnapshot = await getDocs(accountsCol);
   const accounts: Account[] = [];
@@ -26,7 +25,7 @@ export async function getAccounts(db: Firestore): Promise<Account[]> {
 }
 
 export async function getAccountById(
-  db: Firestore,
+  db: Firestore | AdminFirestore,
   id: string
 ): Promise<Account | undefined> {
   const accountRef = doc(db, 'accounts-db', id);
@@ -49,7 +48,7 @@ export async function getAccountById(
   return accountData;
 }
 
-export async function getProducts(db: Firestore): Promise<Product[]> {
+export async function getProducts(db: Firestore | AdminFirestore): Promise<Product[]> {
   const productsCol = collection(db, 'products');
   const productSnapshot = await getDocs(productsCol);
   return productSnapshot.docs.map(

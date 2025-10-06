@@ -24,7 +24,6 @@ import {
   getAccountById as dbGetAccountById,
   getProducts as dbGetProducts,
 } from '@/lib/data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
 import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
 
