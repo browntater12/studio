@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { PlusCircle, Users, Mail, Phone, MapPin, Star, Edit } from 'lucide-react';
-import { type Contact } from '@/lib/types';
+import { type Contact, type Account } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -21,12 +21,12 @@ import {
 import { ContactForm } from '../forms/contact-form';
 import { Badge } from '../ui/badge';
 
-function AddContactDialog({ accountId }: { accountId: string }) {
+function AddContactDialog({ accountNumber }: { accountNumber: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" disabled={!accountNumber}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Contact
         </Button>
@@ -35,13 +35,13 @@ function AddContactDialog({ accountId }: { accountId: string }) {
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
         </DialogHeader>
-        <ContactForm accountId={accountId} onSuccess={() => setOpen(false)} />
+        <ContactForm accountNumber={accountNumber} onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function EditContactDialog({ accountId, contact, children }: { accountId: string, contact: Contact, children: React.ReactNode }) {
+function EditContactDialog({ contact, children }: { contact: Contact, children: React.ReactNode }) {
     const [open, setOpen] = React.useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -50,17 +50,17 @@ function EditContactDialog({ accountId, contact, children }: { accountId: string
                 <DialogHeader>
                     <DialogTitle>Edit Contact</DialogTitle>
                 </DialogHeader>
-                <ContactForm accountId={accountId} contact={contact} onSuccess={() => setOpen(false)} />
+                <ContactForm contact={contact} onSuccess={() => setOpen(false)} accountNumber={contact.accountNumber} />
             </DialogContent>
         </Dialog>
     );
 }
 
 export function ContactList({
-  accountId,
+  account,
   contacts,
 }: {
-  accountId: string;
+  account: Account;
   contacts: Contact[];
 }) {
   return (
@@ -75,7 +75,7 @@ export function ContactList({
             Key personnel associated with this account.
           </CardDescription>
         </div>
-        <AddContactDialog accountId={accountId} />
+        <AddContactDialog accountNumber={account.accountNumber!} />
       </CardHeader>
       <CardContent>
         {contacts.length > 0 ? (
@@ -109,7 +109,7 @@ export function ContactList({
                     </div>
                   </div>
                 </div>
-                <EditContactDialog accountId={accountId} contact={contact}>
+                <EditContactDialog contact={contact}>
                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
                         <Edit className="h-4 w-4" />
                     </Button>

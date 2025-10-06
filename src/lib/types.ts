@@ -2,12 +2,13 @@ import { DocumentReference, Timestamp } from 'firebase/firestore';
 
 export type Contact = {
   id: string;
+  accountNumber: string; // Added to link to account
   name: string;
   phone: string;
   email: string;
   location: string;
   isMainContact: boolean;
-  avatarUrl?: string; // Made optional
+  avatarUrl?: string;
 };
 
 export type AccountProduct = {
@@ -23,8 +24,7 @@ export type Account = {
   status: 'lead' | 'customer';
   details: string;
   address?: string;
-  // These are now fetched from subcollections
-  contacts?: Contact[];
+  // Contacts are no longer a subcollection, so they are not part of the Account type
   accountProducts?: AccountProduct[];
 };
 

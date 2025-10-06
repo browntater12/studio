@@ -18,7 +18,7 @@ import {
 } from '@/lib/schema';
 import {
   updateAccount as dbUpdateAccount,
-  addContactToAccount as dbAddContact,
+  addContact as dbAddContact,
   updateContact as dbUpdateContact,
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
@@ -26,6 +26,7 @@ import {
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
 } from '@/lib/data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 
 export async function updateAccount(prevState: any, formData: FormData) {
@@ -67,7 +68,7 @@ export async function updateAccount(prevState: any, formData: FormData) {
 
 export async function addContact(prevState: any, formData: FormData) {
     const validatedFields = addContactSchema.safeParse({
-        accountId: formData.get('accountId'),
+        accountNumber: formData.get('accountNumber'),
         name: formData.get('name'),
         phone: formData.get('phone'),
         email: formData.get('email'),
@@ -83,13 +84,13 @@ export async function addContact(prevState: any, formData: FormData) {
         };
     }
     
-    const { accountId, ...contactData } = validatedFields.data;
+    const { ...contactData } = validatedFields.data;
 
     try {
         const app = initializeServerApp();
         const firestore = getFirestore(app);
-        await dbAddContact(firestore, accountId, contactData);
-        revalidatePath(`/dashboard/account/${accountId}`);
+        await dbAddContact(firestore, contactData);
+        revalidatePath(`/dashboard/account`); // Revalidate all accounts in case they are viewing a list
         return { type: 'success', message: 'Contact added successfully.' };
     } catch (e) {
         return { type: 'error', message: 'Database Error: Failed to add contact.' };
@@ -98,8 +99,8 @@ export async function addContact(prevState: any, formData: FormData) {
 
 export async function updateContact(prevState: any, formData: FormData) {
     const validatedFields = editContactSchema.safeParse({
-        accountId: formData.get('accountId'),
         contactId: formData.get('contactId'),
+        accountNumber: formData.get('accountNumber'),
         name: formData.get('name'),
         phone: formData.get('phone'),
         email: formData.get('email'),
@@ -115,13 +116,13 @@ export async function updateContact(prevState: any, formData: FormData) {
         };
     }
 
-    const { accountId, contactId, ...contactData } = validatedFields.data;
+    const { contactId, ...contactData } = validatedFields.data;
     
     try {
         const app = initializeServerApp();
         const firestore = getFirestore(app);
-        await dbUpdateContact(firestore, accountId, contactId, contactData);
-        revalidatePath(`/dashboard/account/${accountId}`);
+        await dbUpdateContact(firestore, contactId, contactData);
+        revalidatePath(`/dashboard/account`);
         return { type: 'success', message: 'Contact updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update contact.' };

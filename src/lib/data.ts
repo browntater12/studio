@@ -39,12 +39,6 @@ export async function getAccountById(
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
   // Fetch subcollections
-  const contactsCol = collection(db, 'accounts-db', id, 'contacts');
-  const contactsSnap = await getDocs(contactsCol);
-  accountData.contacts = contactsSnap.docs.map(
-    (doc) => ({ id: doc.id, ...doc.data() } as Contact)
-  );
-
   const productsCol = collection(db, 'accounts-db', id, 'products');
   const productsSnap = await getDocs(productsCol);
   // The document ID is the productId for this subcollection
@@ -83,15 +77,14 @@ export async function updateAccount(
   await accountRef.update(data);
 }
 
-export async function addContactToAccount(
+export async function addContact(
   db: AdminFirestore,
-  accountId: string,
   contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const contactsCol = db.collection('accounts-db').doc(accountId).collection('contacts');
+  const contactsCol = db.collection('contacts');
   
   if (contactData.isMainContact) {
-    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
+    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).where('accountNumber', '==', contactData.accountNumber).get();
     const batch = db.batch();
     mainContactsSnap.forEach(doc => {
       batch.update(doc.ref, { isMainContact: false });
@@ -107,15 +100,14 @@ export async function addContactToAccount(
 
 export async function updateContact(
   db: AdminFirestore,
-  accountId: string,
   contactId: string,
   contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const contactRef = db.collection('accounts-db').doc(accountId).collection('contacts').doc(contactId);
+  const contactRef = db.collection('contacts').doc(contactId);
   
   if (contactData.isMainContact) {
-    const contactsCol = db.collection('accounts-db').doc(accountId).collection('contacts');
-    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
+    const contactsCol = db.collection('contacts');
+    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).where('accountNumber', '==', contactData.accountNumber).get();
     const batch = db.batch();
     mainContactsSnap.forEach(doc => {
       if (doc.id !== contactId) {

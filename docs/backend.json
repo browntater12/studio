@@ -54,6 +54,10 @@
       "type": "object",
       "description": "Represents a contact associated with an account.",
       "properties": {
+        "accountNumber": {
+          "type": "string",
+          "description": "The account number of the account this contact is associated with."
+        },
         "name": {
           "type": "string",
           "description": "Name of the contact."
@@ -80,7 +84,7 @@
             "description": "URL for the contact's avatar."
         }
       },
-      "required": ["name", "phone", "email", "location", "isMainContact"]
+      "required": ["accountNumber", "name", "phone", "email", "location", "isMainContact"]
     },
     "Product": {
       "title": "Product",
@@ -139,11 +143,11 @@
       },
       "description": "Top-level collection for all sales accounts."
     },
-    "/accounts-db/{accountId}/contacts/{contactId}": {
+    "/contacts/{contactId}": {
       "schema": {
         "$ref": "#/entities/Contact"
       },
-      "description": "Sub-collection for contacts associated with a specific account."
+      "description": "Top-level collection for all contacts, linked to accounts by accountNumber."
     },
     "/accounts-db/{accountId}/products/{productId}": {
       "schema": {

@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { type Account, type Contact, type AccountProduct, type Product } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
@@ -22,11 +22,11 @@ export default function AccountPage() {
   }, [firestore, id, isUserLoading]);
   const { data: account, isLoading: accountLoading } = useDoc<Account>(accountRef);
 
-  const contactsRef = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !id) return null;
-    return collection(firestore, 'accounts-db', id, 'contacts');
-  }, [firestore, id, isUserLoading]);
-  const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsRef);
+  const contactsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !firestore || !account?.accountNumber) return null;
+    return query(collection(firestore, 'contacts'), where('accountNumber', '==', account.accountNumber));
+  }, [firestore, isUserLoading, account?.accountNumber]);
+  const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsQuery);
 
   const accountProductsRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore || !id) return null;
@@ -74,7 +74,6 @@ export default function AccountPage() {
   // Combine data after fetching
   const fullAccount: Account = {
       ...account,
-      contacts: contacts || [],
       accountProducts: accountProducts || [],
   };
 
@@ -83,7 +82,7 @@ export default function AccountPage() {
       <AccountHeader account={fullAccount} />
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
-          <ContactList accountId={fullAccount.id} contacts={fullAccount.contacts} />
+          <ContactList account={fullAccount} contacts={contacts || []} />
           <ProductList
             accountId={fullAccount.id}
             accountProducts={fullAccount.accountProducts}

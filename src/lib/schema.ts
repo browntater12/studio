@@ -18,7 +18,7 @@ const baseEditAccountSchema = baseAccountSchema.extend({
 export const editAccountSchema = baseEditAccountSchema;
 
 export const addContactSchema = z.object({
-  accountId: z.string(),
+  accountNumber: z.string().min(1, { message: "Account number is required." }),
   name: z.string().min(2, { message: "Contact name must be at least 2 characters." }),
   phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }),
   email: z.string().email({ message: "Invalid email address." }),

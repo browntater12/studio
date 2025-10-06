@@ -37,12 +37,12 @@ function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
 }
 
 type ContactFormProps = {
-  accountId: string;
+  accountNumber: string;
   contact?: Contact;
   onSuccess: () => void;
 };
 
-export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps) {
+export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormProps) {
   const isEditMode = !!contact;
   const action = isEditMode ? updateContact : addContact;
   const schema = isEditMode ? editContactSchema : addContactSchema;
@@ -74,7 +74,7 @@ export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps)
           contactId: contact.id,
         }
       : {
-          accountId,
+          accountNumber,
           name: '',
           phone: '',
           email: '',
@@ -102,7 +102,7 @@ export function ContactForm({ accountId, contact, onSuccess }: ContactFormProps)
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
-        <input type="hidden" name="accountId" value={accountId} />
+        <input type="hidden" name="accountNumber" value={accountNumber} />
         {isEditMode && <input type="hidden" name="contactId" value={contact.id} />}
         <FormField
           control={form.control}
