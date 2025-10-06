@@ -51,8 +51,8 @@ export async function addAccount(prevState: any, formData: FormData) {
 
   let docRef;
   try {
-    initializeServerApp();
-    const firestore = getServerFirestore();
+    const app = initializeServerApp();
+    const firestore = getServerFirestore(app);
     const accountsCol = collection(firestore, 'accounts');
     docRef = await addDoc(accountsCol, validatedFields.data);
   } catch (e) {
