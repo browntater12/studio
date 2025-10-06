@@ -91,7 +91,7 @@ export async function addAccount(
 ): Promise<Account> {
   const db = getDb();
   const accountsCol = collection(db, 'accounts');
-  const docRef = await addDocumentNonBlocking(accountsCol, data);
+  const docRef = await addDoc(accountsCol, data);
   return {
     ...data,
     id: docRef.id,
