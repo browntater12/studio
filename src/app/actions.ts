@@ -21,9 +21,11 @@ import {
   getAccountById as dbGetAccountById,
   getProducts as dbGetProducts,
   addProductToAccount as dbAddProductToAccount,
+  getAccountProductNotes as dbGetAccountProductNotes,
 } from '@/lib/data';
 import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
 import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
+import { type AccountProduct } from '@/lib/types';
 
 
 export async function updateAccount(prevState: any, formData: FormData) {
@@ -235,6 +237,19 @@ export async function generateSalesInsights(accountId: string) {
     };
   } catch (e: any) {
     console.error('Error generating sales insights:', e);
+    return { error: e.message || 'An unexpected error occurred.' };
+  }
+}
+
+export async function getAccountProductNotes(accountId: string): Promise<{error?: string, notes?: AccountProduct[]}> {
+  try {
+    const app = initializeServerApp();
+    const firestore = getFirestore(app);
+    const notes = await dbGetAccountProductNotes(firestore, accountId);
+    // The data fetched from firestore is not serializable, so we need to re-map it.
+    return { notes: notes.map(n => ({...n})) };
+  } catch (e: any) {
+    console.error('Error fetching account product notes:', e);
     return { error: e.message || 'An unexpected error occurred.' };
   }
 }

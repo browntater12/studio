@@ -7,8 +7,8 @@ import { type Account, type Contact, type AccountProduct, type Product } from '@
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
-import { ProductList } from '@/components/account/product-list';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AccountProductNotes } from '@/components/account/account-product-notes';
 
 export default function AccountPage() {
   const params = useParams();
@@ -28,19 +28,13 @@ export default function AccountPage() {
   }, [firestore, isUserLoading, account?.accountNumber]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsQuery);
 
-  const accountProductsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !id) return null;
-    return query(collection(firestore, 'account-products'), where('accountId', '==', id));
-  }, [firestore, id, isUserLoading]);
-  const { data: accountProducts, isLoading: accountProductsLoading } = useCollection<AccountProduct>(accountProductsQuery);
-
   const productsRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore) return null;
     return collection(firestore, 'products');
   }, [firestore, isUserLoading]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
-  const isLoading = isUserLoading || accountLoading || contactsLoading || accountProductsLoading || productsLoading;
+  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading;
   
   if (isLoading) {
     return (
@@ -68,27 +62,17 @@ export default function AccountPage() {
   if (!account) {
     return <div>Account not found.</div>;
   }
-  
-  // Combine data after fetching
-  const fullAccount: Account = {
-      ...account,
-      accountProducts: accountProducts || [],
-  };
 
   return (
     <div className="space-y-8">
-      <AccountHeader account={fullAccount} />
+      <AccountHeader account={account} />
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
-          <ContactList account={fullAccount} contacts={contacts || []} />
-          <ProductList
-            accountId={fullAccount.id}
-            accountProducts={fullAccount.accountProducts}
-            allProducts={allProducts || []}
-          />
+          <ContactList account={account} contacts={contacts || []} />
+          <AccountProductNotes accountId={id} allProducts={allProducts || []} />
         </div>
         <div className="lg:col-span-1">
-          <AccountInfo account={fullAccount} />
+          <AccountInfo account={account} />
         </div>
       </div>
     </div>

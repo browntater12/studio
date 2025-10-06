@@ -25,6 +25,12 @@ export async function getAccounts(db: Firestore | AdminFirestore): Promise<Accou
   return accounts;
 }
 
+export async function getAccountProductNotes(db: AdminFirestore, accountId: string): Promise<AccountProduct[]> {
+    const q = query(collection(db, 'account-products'), where('accountId', '==', accountId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AccountProduct));
+}
+
 export async function getAccountById(
   db: Firestore | AdminFirestore,
   id: string
