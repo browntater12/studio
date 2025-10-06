@@ -31,38 +31,37 @@ import {
 
 
 export async function addAccount(prevState: any, formData: FormData) {
-  const validatedFields = addAccountSchema.safeParse({
-    name: formData.get('name'),
-    accountNumber: formData.get('accountNumber'),
-    industry: formData.get('industry'),
-    status: formData.get('status'),
-    details: formData.get('details'),
-    address: formData.get('address'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      type: 'error',
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Create Account.',
-    };
-  }
-
-  let docRef;
   try {
     const app = initializeServerApp();
     const firestore = getServerFirestore(app);
-    docRef = await firestore.collection('accounts').add(validatedFields.data);
+    
+    // For testing, create a hardcoded dummy account
+    const dummyData = {
+        name: `Test Account - ${new Date().getTime()}`,
+        status: 'lead',
+        industry: 'Testing',
+        accountNumber: 'TEST-001',
+        details: 'This is a test account created to verify the database connection.',
+        address: '123 Test St',
+    };
+
+    const docRef = await firestore.collection('accounts').add(dummyData);
+
+    revalidatePath('/dashboard');
+    // Temporarily remove redirect to see success message
+    // redirect(`/dashboard/account/${docRef.id}`);
+    return {
+        type: 'success',
+        message: `Test account created successfully with ID: ${docRef.id}`,
+    }
+
   } catch (e) {
-    console.error(e);
+    console.error('***ADD ACCOUNT FAILED***:', e);
     return {
       type: 'error',
-      message: 'Database Error: Failed to Create Account.',
+      message: 'Database Error: Failed to Create Test Account.',
     };
   }
-
-  revalidatePath('/dashboard');
-  redirect(`/dashboard/account/${docRef.id}`);
 }
 
 export async function updateAccount(prevState: any, formData: FormData) {
