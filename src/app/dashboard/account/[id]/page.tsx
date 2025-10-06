@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useDoc, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { type Account, type Contact, type AccountProduct, type Product } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
@@ -14,34 +14,35 @@ export default function AccountPage() {
   const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
+  const { isUserLoading } = useUser();
 
   const accountRef = useMemoFirebase(() => {
-    if (!firestore || !id) return null;
+    if (isUserLoading || !firestore || !id) return null;
     return doc(firestore, 'accounts', id);
-  }, [firestore, id]);
+  }, [firestore, id, isUserLoading]);
   const { data: account, isLoading: accountLoading } = useDoc<Account>(accountRef);
 
   const contactsRef = useMemoFirebase(() => {
-    if (!firestore || !id) return null;
+    if (isUserLoading || !firestore || !id) return null;
     return collection(firestore, 'accounts', id, 'contacts');
-  }, [firestore, id]);
+  }, [firestore, id, isUserLoading]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsRef);
 
   const accountProductsRef = useMemoFirebase(() => {
-    if (!firestore || !id) return null;
+    if (isUserLoading || !firestore || !id) return null;
     return collection(firestore, 'accounts', id, 'products');
-  }, [firestore, id]);
+  }, [firestore, id, isUserLoading]);
   const { data: accountProducts, isLoading: accountProductsLoading } = useCollection<AccountProduct>(accountProductsRef, {
     idField: 'productId',
   });
 
   const productsRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (isUserLoading || !firestore) return null;
     return collection(firestore, 'products');
-  }, [firestore]);
+  }, [firestore, isUserLoading]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
-  const isLoading = accountLoading || contactsLoading || accountProductsLoading || productsLoading;
+  const isLoading = isUserLoading || accountLoading || contactsLoading || accountProductsLoading || productsLoading;
   
   if (isLoading) {
     return (
