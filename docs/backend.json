@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "Account": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Account",
+      "type": "object",
+      "description": "Represents a sales account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Account entity."
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "Account number."
+        },
+        "accountName": {
+          "type": "string",
+          "description": "Name of the account."
+        },
+        "industry": {
+          "type": "string",
+          "description": "Industry of the account."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the account (e.g., Lead, Customer)."
+        },
+        "details": {
+          "type": "string",
+          "description": "Details about the account."
+        }
+      },
+      "required": [
+        "id",
+        "accountNumber",
+        "accountName",
+        "industry",
+        "status",
+        "details"
+      ]
+    },
+    "Contact": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Contact",
+      "type": "object",
+      "description": "Represents a contact associated with an account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Contact entity."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to Account. (Relationship: Account 1:N Contact)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the contact."
+        },
+        "number": {
+          "type": "string",
+          "description": "Phone number of the contact."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the contact.",
+          "format": "email"
+        },
+        "location": {
+          "type": "string",
+          "description": "Location of the contact."
+        },
+        "isMainContact": {
+          "type": "boolean",
+          "description": "Indicates if this is the main contact for the account."
+        }
+      },
+      "required": [
+        "id",
+        "accountId",
+        "name",
+        "number",
+        "email",
+        "location",
+        "isMainContact"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the catalog.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "number": {
+          "type": "string",
+          "description": "Product number."
+        },
+        "volumeSelection": {
+          "type": "string",
+          "description": "Available volume selections (e.g., pails, drums, totes, bulk)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "number",
+        "volumeSelection"
+      ]
+    },
+    "AccountProductNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AccountProductNote",
+      "type": "object",
+      "description": "Represents a note about a specific product for an individual account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AccountProductNote entity."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to Account. (Relationship: Account 1:N AccountProductNote)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N AccountProductNote)"
+        },
+        "note": {
+          "type": "string",
+          "description": "Note about the product for the specific account."
+        }
+      },
+      "required": [
+        "id",
+        "accountId",
+        "productId",
+        "note"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/accounts/{accountId}",
+        "definition": {
+          "entityName": "Account",
+          "schema": {
+            "$ref": "#/backend/entities/Account"
+          },
+          "description": "Represents a sales account owned by a specific user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The ID of the user who owns the account."
+            },
+            {
+              "name": "accountId",
+              "description": "The unique ID of the sales account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/accounts/{accountId}/contacts/{contactId}",
+        "definition": {
+          "entityName": "Contact",
+          "schema": {
+            "$ref": "#/backend/entities/Contact"
+          },
+          "description": "Represents a contact associated with a specific account, owned by a user. Includes denormalized 'accountId' to enforce the parent relationship.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The ID of the user who owns the account."
+            },
+            {
+              "name": "accountId",
+              "description": "The ID of the account to which the contact belongs."
+            },
+            {
+              "name": "contactId",
+              "description": "The unique ID of the contact."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Represents a product in the global catalog.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique ID of the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}/accountProductNotes/{noteId}",
+        "definition": {
+          "entityName": "AccountProductNote",
+          "schema": {
+            "$ref": "#/backend/entities/AccountProductNote"
+          },
+          "description": "Represents a note about a specific product for an individual account. Includes denormalized 'accountId' and 'productId' to enforce the relationships.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The ID of the product that the note refers to."
+            },
+            {
+              "name": "noteId",
+              "description": "The unique ID of the account product note."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to manage sales accounts, contacts, products, and account-specific product notes. It follows a hierarchical structure with path-based ownership for user-specific data (accounts and contacts) and a global collection for products. This structure is optimized for security, scalability, and query efficiency.\n\n**Authorization Independence (CRITICAL):** Authorization independence is achieved by avoiding `get()` calls in security rules.  The `contacts` and `accountProductNotes` subcollections denormalize any authorization information needed from their parent `accounts` document. Since access to these subcollections depends on account ownership, no additional data is needed.\n\n**QAPs (Rules are not Filters):** The structure supports secure `list` operations by ensuring that all documents within a collection share the same security requirements and by using path-based ownership. Access to accounts and contacts is restricted based on the user ID in the path, while products are accessible to all authenticated users. Segregation of data with different access needs (e.g., global products vs. user-specific accounts) ensures that rules can be written to securely filter lists.\n\n**Invariants:** The structure helps maintain invariants by enforcing clear ownership through path-based access control. Timestamps can be added to the entities to track creation and modification times, and denormalized data (e.g., account details in contacts) can be kept consistent using Cloud Functions triggered by document updates.\n\nSpecifically:\n\n*   `/users/{userId}/accounts/{accountId}`:  Accounts are owned by the user identified by `{userId}`. This enables simple security rules based on `request.auth.uid == userId`.\n*   `/users/{userId}/accounts/{accountId}/contacts/{contactId}`: Contacts are owned by the user and associated with a specific account. The path includes the userId and accountId, ensuring that contacts can only be accessed by the owner of the account.\n*   `/products/{productId}`: Products are global and accessible to all users. The security rules for this collection will allow read access to any authenticated user.\n*   `/products/{productId}/accountProductNotes/{noteId}`: Account Product Notes are global. The security rules for this collection will allow read access to any authenticated user.\n\nThis data structure promotes clarity, avoids complex security rules, and ensures efficient data retrieval for the Sales Territory Manager application."
+  }
+}
