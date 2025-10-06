@@ -51,17 +51,27 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <div className="p-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search accounts..." 
-              className="pl-8" 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+        <div className="p-2 space-y-2">
+            <Link href="/dashboard/products" passHref>
+                <Button
+                    variant={pathname === '/dashboard/products' ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                >
+                    <Package />
+                    <span>Products</span>
+                </Button>
+            </Link>
+            <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                placeholder="Search accounts..." 
+                className="pl-8" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
         </div>
+
         <SidebarMenu>
           <Button asChild className="m-2">
               <Link href="/dashboard/account/new">
@@ -97,20 +107,6 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
           {!isLoading && filteredAccounts.length === 0 && (
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
-        </SidebarMenu>
-        <SidebarSeparator />
-         <SidebarMenu>
-            <SidebarMenuItem>
-                <Link href="/dashboard/products" passHref>
-                    <SidebarMenuButton
-                    isActive={pathname === '/dashboard/products'}
-                    className="w-full justify-start"
-                    >
-                    <Package />
-                    <span>Products</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 
