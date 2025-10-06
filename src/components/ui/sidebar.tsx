@@ -650,12 +650,11 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-
   return (
     <div
       ref={ref}
       data-sidebar="menu-skeleton"
-      className={cn('h-8 flex items-center gap-2 rounded-md px-2', className)}
+      className={cn("h-8 flex items-center gap-2 rounded-md px-2", className)}
       {...props}
     >
       {showIcon && (
