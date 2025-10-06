@@ -287,52 +287,54 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             )}
         </div>
         
-        <div className="space-y-4 rounded-md border p-4">
-            <FormField
-              control={form.control}
-              name="priceDetails.type"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Price Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                      name={field.name}
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="quote" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Quote</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="last_paid" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Last Price Paid</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="priceDetails.price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g. 15.50" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-        </div>
+        {priceTypeValue !== 'bid' && (
+            <div className="space-y-4 rounded-md border p-4">
+                <FormField
+                control={form.control}
+                name="priceDetails.type"
+                render={({ field }) => (
+                    <FormItem className="space-y-3">
+                    <FormLabel>Price Type</FormLabel>
+                    <FormControl>
+                        <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                        name={field.name}
+                        >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                            <RadioGroupItem value="quote" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Quote</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                            <RadioGroupItem value="last_paid" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Last Price Paid</FormLabel>
+                        </FormItem>
+                        </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="priceDetails.price"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g. 15.50" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+        )}
         
         <SubmitButton />
       </form>
