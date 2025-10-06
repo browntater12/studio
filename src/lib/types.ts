@@ -14,10 +14,10 @@ export type Contact = {
 export type AccountProduct = {
   productId: string;
   notes: string;
-  priceType?: 'spot' | 'bid';
-  bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
-  lastBidPrice?: number;
-  winningBidPrice?: number;
+  priceDetails?: {
+    type: 'quote' | 'last_paid';
+    price?: number;
+  };
 };
 
 export type Account = {
