@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
@@ -62,6 +62,8 @@ export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
     },
   });
 
+  const watchedVolumes = useWatch({ control: form.control, name: 'volumes' }) || [];
+
   React.useEffect(() => {
     if (state.type === 'success') {
       toast({ title: 'Success!', description: state.message });
@@ -83,6 +85,9 @@ export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
+        {watchedVolumes.map((volume) => (
+            <input key={volume} type="hidden" name="volumes" value={volume} />
+        ))}
         <FormField
           control={form.control}
           name="name"
