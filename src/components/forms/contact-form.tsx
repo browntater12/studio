@@ -1,15 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { type Contact } from '@/lib/types';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 
-import { addContact, updateContact } from '@/app/actions';
 import { addContactSchema, editContactSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,14 +22,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const initialState = { type: '', message: '', errors: undefined };
-
-function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean; isSubmitting: boolean }) {
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+    <Button type="submit" disabled={isSubmitting} className="w-full">
+      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
       {isEditMode ? 'Save Changes' : 'Add Contact'}
     </Button>
   );
@@ -44,27 +41,12 @@ type ContactFormProps = {
 
 export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormProps) {
   const isEditMode = !!contact;
-  const action = isEditMode ? updateContact : addContact;
   const schema = isEditMode ? editContactSchema : addContactSchema;
   type SchemaType = z.infer<typeof schema>;
-
-  const [state, formAction] = useActionState(action, initialState);
+  
+  const firestore = useFirestore();
   const { toast } = useToast();
-
-  const serverErrors = React.useMemo(() => {
-    return state?.errors
-      ? Object.keys(state.errors).reduce((acc, key) => {
-          const fieldKey = key as keyof SchemaType;
-          if (state.errors?.[fieldKey]) {
-            (acc as any)[fieldKey] = {
-              type: 'server',
-              message: state.errors[fieldKey]?.[0] || 'Server validation failed',
-            };
-          }
-          return acc;
-        }, {})
-      : {};
-  }, [state?.errors]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
@@ -81,29 +63,58 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           location: '',
           isMainContact: false,
         },
-    errors: serverErrors,
   });
-
-  React.useEffect(() => {
-    if (state.type === 'success') {
-      toast({ title: 'Success!', description: state.message });
-      onSuccess();
-    } else if (state.type === 'error') {
-      toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      Object.keys(form.getValues()).forEach(key => {
-        const fieldKey = key as keyof SchemaType;
-        if (state.errors?.[fieldKey]) {
-          form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+  
+  const onSubmit = async (values: SchemaType) => {
+    setIsSubmitting(true);
+    try {
+        if (!firestore) {
+            throw new Error("Firestore is not initialized");
         }
-      });
+
+        const contactsCol = collection(firestore, 'contacts');
+
+        if (values.isMainContact) {
+            const batch = writeBatch(firestore);
+            const mainContactsQuery = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true));
+            const mainContactsSnap = await getDocs(mainContactsQuery);
+            mainContactsSnap.forEach(doc => {
+                if (!isEditMode || (isEditMode && doc.id !== contact.id)) {
+                    batch.update(doc.ref, { isMainContact: false });
+                }
+            });
+            await batch.commit();
+        }
+
+        if (isEditMode) {
+            const { contactId, ...contactData } = values as z.infer<typeof editContactSchema>;
+            const contactRef = doc(firestore, 'contacts', contactId);
+            await updateDoc(contactRef, contactData);
+            toast({ title: 'Success!', description: 'Contact updated successfully.' });
+        } else {
+            await addDoc(contactsCol, {
+                ...values,
+                avatarUrl: PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)].imageUrl,
+            });
+            toast({ title: 'Success!', description: 'Contact added successfully.' });
+        }
+        
+        onSuccess();
+    } catch (error: any) {
+        console.error("Contact form error:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'An unexpected error occurred.',
+        });
+    } finally {
+        setIsSubmitting(false);
     }
-  }, [state, onSuccess, toast, form]);
+  };
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-4">
-        <input type="hidden" name="accountNumber" value={accountNumber} />
-        {isEditMode && <input type="hidden" name="contactId" value={contact.id} />}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -166,7 +177,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
             </FormItem>
           )}
         />
-        <SubmitButton isEditMode={isEditMode} />
+        <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
       </form>
     </Form>
   );

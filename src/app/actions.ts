@@ -8,8 +8,6 @@ import { initializeServerApp } from '@/firebase/server';
 
 import {
   editAccountSchema,
-  addContactSchema,
-  editContactSchema,
   addProductToAccountSchema,
   editProductNoteSchema,
   createProductSchema,
@@ -18,8 +16,6 @@ import {
 } from '@/lib/schema';
 import {
   updateAccount as dbUpdateAccount,
-  addContact as dbAddContact,
-  updateContact as dbUpdateContact,
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
   addProduct as dbAddProductGlobal,
@@ -65,70 +61,6 @@ export async function updateAccount(prevState: any, formData: FormData) {
     revalidatePath(`/dashboard/account/${id}`);
     redirect(`/dashboard/account/${id}`);
 }
-
-export async function addContact(prevState: any, formData: FormData) {
-    const validatedFields = addContactSchema.safeParse({
-        accountNumber: formData.get('accountNumber'),
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        location: formData.get('location'),
-        isMainContact: formData.get('isMainContact') === 'on',
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to add contact.',
-        };
-    }
-    
-    const { ...contactData } = validatedFields.data;
-
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbAddContact(firestore, contactData);
-        revalidatePath(`/dashboard/account`); // Revalidate all accounts in case they are viewing a list
-        return { type: 'success', message: 'Contact added successfully.' };
-    } catch (e) {
-        return { type: 'error', message: 'Database Error: Failed to add contact.' };
-    }
-}
-
-export async function updateContact(prevState: any, formData: FormData) {
-    const validatedFields = editContactSchema.safeParse({
-        contactId: formData.get('contactId'),
-        accountNumber: formData.get('accountNumber'),
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        location: formData.get('location'),
-        isMainContact: formData.get('isMainContact') === 'on',
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to update contact.',
-        };
-    }
-
-    const { contactId, ...contactData } = validatedFields.data;
-    
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbUpdateContact(firestore, contactId, contactData);
-        revalidatePath(`/dashboard/account`);
-        return { type: 'success', message: 'Contact updated successfully.' };
-    } catch (e: any) {
-        return { type: 'error', message: e.message || 'Database Error: Failed to update contact.' };
-    }
-}
-
 
 export async function addProductToAccount(prevState: any, formData: FormData) {
     const validatedFields = addProductToAccountSchema.safeParse({

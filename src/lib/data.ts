@@ -77,49 +77,6 @@ export async function updateAccount(
   await accountRef.update(data);
 }
 
-export async function addContact(
-  db: AdminFirestore,
-  contactData: Omit<Contact, 'id' | 'avatarUrl'>
-): Promise<void> {
-  const contactsCol = db.collection('contacts');
-  
-  if (contactData.isMainContact) {
-    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).where('accountNumber', '==', contactData.accountNumber).get();
-    const batch = db.batch();
-    mainContactsSnap.forEach(doc => {
-      batch.update(doc.ref, { isMainContact: false });
-    });
-    await batch.commit();
-  }
-
-  await contactsCol.add({
-    ...contactData,
-    avatarUrl: PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)].imageUrl,
-  });
-}
-
-export async function updateContact(
-  db: AdminFirestore,
-  contactId: string,
-  contactData: Omit<Contact, 'id' | 'avatarUrl'>
-): Promise<void> {
-  const contactRef = db.collection('contacts').doc(contactId);
-  
-  if (contactData.isMainContact) {
-    const contactsCol = db.collection('contacts');
-    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).where('accountNumber', '==', contactData.accountNumber).get();
-    const batch = db.batch();
-    mainContactsSnap.forEach(doc => {
-      if (doc.id !== contactId) {
-        batch.update(doc.ref, { isMainContact: false });
-      }
-    });
-    await batch.commit();
-  }
-  
-  await contactRef.update(contactData);
-}
-
 export async function addProductToAccount(
   db: AdminFirestore,
   accountId: string,
