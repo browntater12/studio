@@ -7,7 +7,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 
 import {
-  addAccountSchema,
   editAccountSchema,
   addContactSchema,
   editContactSchema,
@@ -26,45 +25,8 @@ import {
   addProduct as dbAddProductGlobal,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
-  getAccountById,
 } from '@/lib/data';
 
-
-export async function addAccount(prevState: any, formData: FormData) {
-  try {
-    const app = initializeServerApp();
-    const firestore = getFirestore(app);
-    
-    const validatedFields = addAccountSchema.safeParse({
-        name: formData.get('name'),
-        accountNumber: formData.get('accountNumber'),
-        industry: formData.get('industry'),
-        status: formData.get('status'),
-        details: formData.get('details'),
-        address: formData.get('address'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Create Account.',
-        };
-    }
-
-    const docRef = await firestore.collection('accounts-db').add(validatedFields.data);
-
-    revalidatePath('/dashboard');
-    redirect(`/dashboard/account/${docRef.id}`);
-
-  } catch (e) {
-    console.error('***ADD ACCOUNT FAILED***:', e);
-    return {
-      type: 'error',
-      message: 'Database Error: Failed to Create Account.',
-    };
-  }
-}
 
 export async function updateAccount(prevState: any, formData: FormData) {
     const validatedFields = editAccountSchema.safeParse({

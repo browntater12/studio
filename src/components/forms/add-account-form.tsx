@@ -8,8 +8,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useFirestore } from '@/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 
-import { addAccount, updateAccount } from '@/app/actions';
+import { updateAccount } from '@/app/actions';
 import { addAccountSchema, editAccountSchema } from '@/lib/schema';
 import { type Account } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -32,7 +34,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-const initialState = {
+const editInitialState = {
   type: '',
   message: '',
   errors: undefined,
@@ -54,31 +56,16 @@ type AddAccountFormProps = {
 
 export function AddAccountForm({ account }: AddAccountFormProps) {
   const isEditMode = !!account;
-  const action = isEditMode ? updateAccount : addAccount;
-  const schema = isEditMode ? editAccountSchema : addAccountSchema;
-  type SchemaType = z.infer<typeof schema>;
-
-  const [state, formAction] = useActionState(action, initialState);
-  const { toast } = useToast();
+  const firestore = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const serverErrors = React.useMemo(() => {
-    return state?.errors
-      ? Object.keys(state.errors).reduce((acc, key) => {
-          const fieldKey = key as keyof typeof state.errors;
-          if (state.errors && state.errors[fieldKey]) {
-            (acc as any)[fieldKey] = {
-              type: 'server',
-              message: state.errors[fieldKey]?.[0] || 'Server validation failed',
-            };
-          }
-          return acc;
-        }, {})
-      : {};
-  }, [state?.errors]);
+  // For handling the edit mode which still uses a server action
+  const [editState, editFormAction] = useActionState(updateAccount, editInitialState);
 
-  const form = useForm<SchemaType>({
-    resolver: zodResolver(schema),
+  const form = useForm<z.infer<typeof addAccountSchema>>({
+    resolver: zodResolver(isEditMode ? editAccountSchema : addAccountSchema),
     defaultValues: isEditMode
       ? account
       : {
@@ -89,29 +76,46 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
           details: '',
           address: '',
         },
-    errors: serverErrors,
   });
 
-  React.useEffect(() => {
-    if (state.type === 'error') {
-      toast({
-        title: 'Error',
-        description: state.message,
-        variant: 'destructive',
-      });
-      // Reset server errors on the form
-      Object.keys(form.getValues()).forEach((key) => {
-        const fieldKey = key as keyof z.infer<typeof addAccountSchema>;
-        if (state.errors?.[fieldKey]) {
-            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
-        }
-      });
+  const onSubmit = async (values: z.infer<typeof addAccountSchema>) => {
+    if (isEditMode) {
+      // This should not happen if we separate forms, but as a fallback
+      return;
     }
-  }, [state, router, toast, form]);
+    
+    setIsSubmitting(true);
+    try {
+      if (!firestore) {
+          throw new Error("Firestore is not initialized");
+      }
+      const accountsCollection = collection(firestore, 'accounts-db');
+      const docRef = await addDoc(accountsCollection, values);
+      
+      toast({
+        title: 'Account Created',
+        description: 'The new account has been added successfully.',
+      });
+
+      router.push(`/dashboard/account/${docRef.id}`);
+
+    } catch (error: any) {
+      console.error('***ADD ACCOUNT FAILED***:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to create account. Please try again.',
+      });
+      setIsSubmitting(false);
+    }
+  };
+  
+  const action = isEditMode ? editFormAction : form.handleSubmit(onSubmit);
+
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-4">
+      <form action={action as any} className="space-y-4">
         {isEditMode && <input type="hidden" name="id" value={account.id} />}
         <FormField
           control={form.control}
@@ -199,7 +203,10 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
             </FormItem>
           )}
         />
-        <SubmitButton isEditMode={isEditMode}/>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isEditMode ? 'Save Changes' : 'Add Account'}
+        </Button>
       </form>
     </Form>
   );
