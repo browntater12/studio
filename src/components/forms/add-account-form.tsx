@@ -91,8 +91,6 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
     errors: serverErrors,
   });
 
-  const status = form.watch('status');
-
   React.useEffect(() => {
     if (state.type === 'error') {
       toast({
@@ -174,21 +172,19 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
             </FormItem>
           )}
         />
-        {status === 'lead' && (
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="123 Main St, Anytown USA" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="123 Main St, Anytown USA" {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="details"

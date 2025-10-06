@@ -9,29 +9,13 @@ const baseAccountSchema = z.object({
   address: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
 });
 
-export const addAccountSchema = baseAccountSchema.superRefine((data, ctx) => {
-  if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['address'],
-      message: 'Address is required for leads.',
-    });
-  }
-});
+export const addAccountSchema = baseAccountSchema;
 
 const baseEditAccountSchema = baseAccountSchema.extend({
     id: z.string(),
 });
 
-export const editAccountSchema = baseEditAccountSchema.superRefine((data, ctx) => {
-    if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['address'],
-            message: 'Address is required for leads.',
-        });
-    }
-});
+export const editAccountSchema = baseEditAccountSchema;
 
 export const addContactSchema = z.object({
   accountId: z.string(),
