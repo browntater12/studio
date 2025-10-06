@@ -34,6 +34,10 @@ export const addProductToAccountSchema = z.object({
   accountId: z.string({ required_error: "Please select a product." }),
   productId: z.string({ required_error: "Please select a product." }).min(1, { message: "Please select a product." }),
   notes: z.string().optional(),
+  priceType: z.enum(['spot', 'bid']).default('spot'),
+  bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
+  lastBidPrice: z.coerce.number().optional(),
+  winningBidPrice: z.coerce.number().optional(),
 });
 
 export const editProductNoteSchema = z.object({
