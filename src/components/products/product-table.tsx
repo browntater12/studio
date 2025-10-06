@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Edit } from 'lucide-react';
 import { type Product } from '@/lib/types';
 
 import {
@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardHeader } from '../ui/card';
 import { CreateProductForm } from '../forms/create-product-form';
 
 function CreateProductDialog() {
@@ -43,6 +43,21 @@ function CreateProductDialog() {
       </DialogContent>
     </Dialog>
   );
+}
+
+function EditProductDialog({ product, children }: { product: Product, children: React.ReactNode }) {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Product</DialogTitle>
+                </DialogHeader>
+                <CreateProductForm product={product} onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 export function ProductTable({ products }: { products: Product[] }) {
@@ -77,6 +92,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                     <TableHead>Name</TableHead>
                     <TableHead>Product Number</TableHead>
                     <TableHead>Volumes</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -92,6 +108,13 @@ export function ProductTable({ products }: { products: Product[] }) {
                             </Badge>
                         ))}
                         </div>
+                    </TableCell>
+                    <TableCell>
+                        <EditProductDialog product={product}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                        </EditProductDialog>
                     </TableCell>
                     </TableRow>
                 ))}

@@ -12,6 +12,7 @@ import {
   addProductToAccountSchema,
   editProductNoteSchema,
   createProductSchema,
+  editProductSchema,
 } from '@/lib/schema';
 import {
   addAccount as dbAddAccount,
@@ -21,6 +22,7 @@ import {
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
   addProduct as dbAddProductGlobal,
+  updateProduct as dbUpdateProduct,
   getAccountById,
 } from '@/lib/data';
 
@@ -252,5 +254,30 @@ export async function createProduct(prevState: any, formData: FormData) {
         return { type: 'success', message: 'Product created successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to create product.' };
+    }
+}
+
+export async function updateProduct(prevState: any, formData: FormData) {
+    const validatedFields = editProductSchema.safeParse({
+        id: formData.get('id'),
+        name: formData.get('name'),
+        productNumber: formData.get('productNumber'),
+        volumes: formData.getAll('volumes'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Invalid fields. Failed to update product.',
+        };
+    }
+
+    try {
+        await dbUpdateProduct(validatedFields.data.id, validatedFields.data);
+        revalidatePath('/dashboard/products');
+        return { type: 'success', message: 'Product updated successfully.' };
+    } catch (e: any) {
+        return { type: 'error', message: e.message || 'Database Error: Failed to update product.' };
     }
 }

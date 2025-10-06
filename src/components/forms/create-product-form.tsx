@@ -8,9 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 
-import { createProduct } from '@/app/actions';
-import { createProductSchema } from '@/lib/schema';
-import { type ProductVolume } from '@/lib/types';
+import { createProduct, updateProduct } from '@/app/actions';
+import { createProductSchema, editProductSchema } from '@/lib/schema';
+import { type Product, type ProductVolume } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,31 +35,39 @@ const VOLUMES: { id: ProductVolume; label: string }[] = [
   { id: 'bulk', label: 'Bulk' },
 ];
 
-function SubmitButton() {
+function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Create Product
+      {isEditMode ? 'Save Changes' : 'Create Product'}
     </Button>
   );
 }
 
 type CreateProductFormProps = {
+  product?: Product;
   onSuccess: () => void;
 };
 
-export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
-  const [state, formAction] = useActionState(createProduct, initialState);
+export function CreateProductForm({ product, onSuccess }: CreateProductFormProps) {
+  const isEditMode = !!product;
+  const action = isEditMode ? updateProduct : createProduct;
+  const schema = isEditMode ? editProductSchema : createProductSchema;
+  type SchemaType = z.infer<typeof schema>;
+
+  const [state, formAction] = useActionState(action, initialState);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof createProductSchema>>({
-    resolver: zodResolver(createProductSchema),
-    defaultValues: {
-      name: '',
-      productNumber: '',
-      volumes: [],
-    },
+  const form = useForm<SchemaType>({
+    resolver: zodResolver(schema),
+    defaultValues: isEditMode
+      ? product
+      : {
+          name: '',
+          productNumber: '',
+          volumes: [],
+        },
   });
 
   const watchedVolumes = useWatch({ control: form.control, name: 'volumes' }) || [];
@@ -70,10 +78,10 @@ export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
       onSuccess();
     } else if (state.type === 'error') {
       toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      const errors = state.errors as z.ZodError<z.infer<typeof createProductSchema>>['formErrors']['fieldErrors'] | undefined;
+      const errors = state.errors as z.ZodError<SchemaType>['formErrors']['fieldErrors'] | undefined;
       if (errors) {
         Object.keys(errors).forEach((key) => {
-            const fieldKey = key as keyof z.infer<typeof createProductSchema>;
+            const fieldKey = key as keyof SchemaType;
             if (errors[fieldKey]) {
                 form.setError(fieldKey, { type: 'server', message: errors[fieldKey]?.[0] });
             }
@@ -85,6 +93,7 @@ export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
+        {isEditMode && <input type="hidden" name="id" value={product.id} />}
         {watchedVolumes.map((volume) => (
             <input key={volume} type="hidden" name="volumes" value={volume} />
         ))}
@@ -163,7 +172,7 @@ export function CreateProductForm({ onSuccess }: CreateProductFormProps) {
           )}
         />
 
-        <SubmitButton />
+        <SubmitButton isEditMode={isEditMode} />
       </form>
     </Form>
   );

@@ -182,3 +182,22 @@ export async function addProduct(data: Omit<Product, 'id'>): Promise<Product> {
     products.push(newProduct);
     return newProduct;
 }
+
+
+export async function updateProduct(id: string, data: Omit<Product, 'id'>): Promise<Product> {
+    const productIndex = products.findIndex(p => p.id === id);
+    if (productIndex === -1) {
+        throw new Error('Product not found');
+    }
+    const product = products[productIndex];
+    if (data.productNumber !== product.productNumber && products.some(p => p.productNumber === data.productNumber)) {
+        throw new Error('A product with this product number already exists.');
+    }
+
+    const updatedProduct = {
+        ...product,
+        ...data
+    };
+    products[productIndex] = updatedProduct;
+    return updatedProduct;
+}
