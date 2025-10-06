@@ -10,6 +10,8 @@ import {
 } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
 import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
+import { initializeServerApp } from '@/firebase/server';
+import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 
 import type { Account, Product, Contact, AccountProduct } from './types';
 
@@ -45,8 +47,10 @@ export async function getAccountById(
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
   // Fetch related AccountProduct notes
+  const app = initializeServerApp();
+  const firestore = getAdminFirestore(app);
   const accountProductsQuery = query(
-    collection(db, 'account-products'),
+    collection(firestore, 'account-products'),
     where('accountId', '==', id)
   );
   const accountProductsSnap = await getDocs(accountProductsQuery);

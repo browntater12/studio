@@ -86,7 +86,7 @@ export async function addProductToAccount(prevState: any, formData: FormData) {
         bidFrequency: rawData.priceType === 'bid' ? rawData.bidFrequency : undefined,
         lastBidPrice: rawData.priceType === 'bid' ? rawData.lastBidPrice : undefined,
         winningBidPrice: rawData.priceType === 'bid' ? rawData.winningBidPrice : undefined,
-        priceDetails: rawData.priceType !== 'bid' ? {
+        priceDetails: rawData.priceType !== 'bid' && (rawData.priceDetails_type || rawData.priceDetails_price) ? {
             type: rawData.priceDetails_type,
             price: rawData.priceDetails_price,
         } : undefined,
