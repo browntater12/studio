@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 
 
 import { addProductToAccountSchema } from '@/lib/schema';
@@ -88,11 +88,9 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             throw new Error("Firestore is not available.");
         }
 
-        const { accountId, productId, ...rest } = values;
-
         // Create a clean data object to avoid sending `undefined` to Firestore
         const productData: { [key: string]: any } = {};
-        Object.entries(rest).forEach(([key, value]) => {
+        Object.entries(values).forEach(([key, value]) => {
             if (value !== undefined) {
                 if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
                     const cleanPriceDetails: { [key: string]: any } = {};
@@ -101,16 +99,17 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             cleanPriceDetails[pdKey] = pdValue;
                         }
                     });
-                    productData[key] = cleanPriceDetails;
+                    if(Object.keys(cleanPriceDetails).length > 0) {
+                      productData[key] = cleanPriceDetails;
+                    }
                 } else {
                     productData[key] = value;
                 }
             }
         });
 
-        const productRef = doc(firestore, 'accounts-db', accountId, 'products', productId);
-        
-        await setDoc(productRef, productData);
+        const accountProductsCollection = collection(firestore, 'account-products');
+        await addDoc(accountProductsCollection, productData);
 
         toast({ title: 'Success!', description: 'Product added to account successfully.' });
         onSuccess();

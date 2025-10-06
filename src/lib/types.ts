@@ -12,6 +12,8 @@ export type Contact = {
 };
 
 export type AccountProduct = {
+  id?: string;
+  accountId: string;
   productId: string;
   notes: string;
   priceType?: 'spot' | 'bid';

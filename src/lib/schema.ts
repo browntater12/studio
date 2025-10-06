@@ -44,8 +44,7 @@ export const addProductToAccountSchema = z.object({
   }).optional()
 }).refine(data => {
     if (data.priceType === 'bid') {
-        // When bid is selected, we don't require priceDetails, but bidFrequency is good to have.
-        return data.bidFrequency !== undefined;
+        return true; // No validation needed here now for bid
     }
     return true;
 }, {
@@ -53,8 +52,8 @@ export const addProductToAccountSchema = z.object({
     path: ['bidFrequency'],
 }).refine(data => {
     if (data.priceType !== 'bid' && data.priceDetails) {
-        // When spot price is selected, price is required.
-        return data.priceDetails.price !== undefined && data.priceDetails.price !== null;
+        // When spot price is selected, price can be optional if the user is just taking notes.
+        return true;
     }
     return true;
 }, {

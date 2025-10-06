@@ -28,13 +28,11 @@ export default function AccountPage() {
   }, [firestore, isUserLoading, account?.accountNumber]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsQuery);
 
-  const accountProductsRef = useMemoFirebase(() => {
+  const accountProductsQuery = useMemoFirebase(() => {
     if (isUserLoading || !firestore || !id) return null;
-    return collection(firestore, 'accounts-db', id, 'products');
+    return query(collection(firestore, 'account-products'), where('accountId', '==', id));
   }, [firestore, id, isUserLoading]);
-  const { data: accountProducts, isLoading: accountProductsLoading } = useCollection<AccountProduct>(accountProductsRef, {
-    idField: 'productId',
-  });
+  const { data: accountProducts, isLoading: accountProductsLoading } = useCollection<AccountProduct>(accountProductsQuery);
 
   const productsRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore) return null;

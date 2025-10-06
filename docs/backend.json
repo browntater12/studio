@@ -115,6 +115,10 @@
       "type": "object",
       "description": "Represents a note about a specific product for an individual account.",
       "properties": {
+        "accountId": {
+          "type": "string",
+          "description": "Reference to Account."
+        },
         "productId": {
           "type": "string",
           "description": "Reference to Product."
@@ -150,7 +154,7 @@
           }
         }
       },
-      "required": ["notes"]
+      "required": ["accountId", "productId", "notes"]
     }
   },
   "auth": {
@@ -175,11 +179,11 @@
       },
       "description": "Top-level collection for all contacts, linked to accounts by accountNumber."
     },
-    "/accounts-db/{accountId}/products/{productId}": {
+    "/account-products/{accountProductId}": {
       "schema": {
         "$ref": "#/entities/AccountProductNote"
       },
-      "description": "Sub-collection for product notes specific to an account."
+      "description": "Top-level collection for product notes, linking an account to a product."
     },
     "/products/{productId}": {
       "schema": {
