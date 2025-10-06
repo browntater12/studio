@@ -84,8 +84,12 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       productId: '',
       notes: '',
       priceType: 'spot',
+      bidFrequency: undefined,
+      lastBidPrice: undefined,
+      winningBidPrice: undefined,
       priceDetails: {
         type: 'quote',
+        price: undefined,
       }
     },
     errors: serverErrors,
@@ -264,7 +268,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormItem>
                             <FormLabel>Last Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 12.00" {...field} />
+                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -277,7 +281,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormItem>
                             <FormLabel>Winning Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 11.50" {...field} />
+                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -327,7 +331,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     <FormItem>
                     <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g. 15.50" {...field} />
+                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
