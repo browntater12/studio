@@ -88,7 +88,25 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             throw new Error("Firestore is not available.");
         }
 
-        const { accountId, productId, ...productData } = values;
+        const { accountId, productId, ...rest } = values;
+
+        // Create a clean data object to avoid sending `undefined` to Firestore
+        const productData: { [key: string]: any } = {};
+        Object.entries(rest).forEach(([key, value]) => {
+            if (value !== undefined) {
+                if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
+                    const cleanPriceDetails: { [key: string]: any } = {};
+                    Object.entries(value).forEach(([pdKey, pdValue]) => {
+                        if (pdValue !== undefined) {
+                            cleanPriceDetails[pdKey] = pdValue;
+                        }
+                    });
+                    productData[key] = cleanPriceDetails;
+                } else {
+                    productData[key] = value;
+                }
+            }
+        });
 
         const productRef = doc(firestore, 'accounts-db', accountId, 'products', productId);
         
