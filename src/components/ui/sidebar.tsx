@@ -646,30 +646,31 @@ SidebarMenuBadge.displayName = "SidebarMenuBadge"
 
 const SidebarMenuSkeleton = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    showIcon?: boolean
+  React.ComponentProps<'div'> & {
+    showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
+
   return (
     <div
       ref={ref}
       data-sidebar="menu-skeleton"
-      className={cn("rounded-md h-8 flex gap-2 px-2 items-center", className)}
+      className={cn('h-8 flex items-center gap-2 rounded-md px-2', className)}
       {...props}
     >
       {showIcon && (
         <Skeleton
-          className="size-4 rounded-md"
           data-sidebar="menu-skeleton-icon"
+          className="size-4 rounded-md"
         />
       )}
       <Skeleton
-        className="h-4 flex-1"
         data-sidebar="menu-skeleton-text"
+        className="h-4 flex-1"
       />
     </div>
-  )
-})
+  );
+});
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
 const SidebarMenuSub = React.forwardRef<
