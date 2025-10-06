@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -57,7 +58,7 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
   const schema = isEditMode ? editAccountSchema : addAccountSchema;
   type SchemaType = z.infer<typeof schema>;
 
-  const [state, formAction] = useFormState(action, initialState);
+  const [state, formAction] = useActionState(action, initialState);
   const { toast } = useToast();
   const router = useRouter();
 
