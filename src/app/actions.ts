@@ -21,8 +21,12 @@ import {
   addProduct as dbAddProductGlobal,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
+  getAccountById as dbGetAccountById,
+  getProducts as dbGetProducts,
 } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
+import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
 
 
 export async function updateAccount(prevState: any, formData: FormData) {
@@ -196,5 +200,52 @@ export async function deleteProduct(prevState: any, formData: FormData) {
     return { type: 'success', message: 'Product deleted successfully.' };
   } catch (e: any) {
     return { type: 'error', message: e.message || 'Database Error: Failed to delete product.' };
+  }
+}
+
+export async function generateSalesInsights(accountId: string) {
+  try {
+    const app = initializeServerApp();
+    const firestore = getFirestore(app);
+
+    const account = await dbGetAccountById(firestore, accountId);
+    if (!account) {
+      return { error: 'Account not found.' };
+    }
+
+    const allProducts = await dbGetProducts(firestore);
+
+    const productNotesText =
+      account.accountProducts
+        ?.map(ap => {
+          const product = allProducts.find(p => p.id === ap.productId);
+          return `- ${product?.name || 'Unknown Product'}: ${ap.notes}`;
+        })
+        .join('\n') || 'No product notes.';
+
+    const allNotes = [
+      `Account Details: ${account.details || 'N/A'}`,
+      `Product Notes:\n${productNotesText}`,
+    ].join('\n\n');
+
+    const [summaryResult, actionsResult] = await Promise.all([
+      summarizeAccountNotes({
+        accountName: account.name,
+        notes: allNotes,
+      }),
+      generatePotentialActions({
+        accountName: account.name,
+        accountDetails: account.details || 'N/A',
+        productNotes: productNotesText,
+      }),
+    ]);
+
+    return {
+      summary: summaryResult.summary,
+      potentialActions: actionsResult.potentialActions,
+    };
+  } catch (e: any) {
+    console.error('Error generating sales insights:', e);
+    return { error: e.message || 'An unexpected error occurred.' };
   }
 }

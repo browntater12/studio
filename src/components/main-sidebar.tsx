@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
@@ -96,6 +97,20 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
           {!isLoading && filteredAccounts.length === 0 && (
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
+        </SidebarMenu>
+        <SidebarSeparator />
+         <SidebarMenu>
+            <SidebarMenuItem>
+                <Link href="/dashboard/products" passHref>
+                    <SidebarMenuButton
+                    isActive={pathname === '/dashboard/products'}
+                    className="w-full justify-start"
+                    >
+                    <Package />
+                    <span>Products</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 
