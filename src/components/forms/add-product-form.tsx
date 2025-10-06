@@ -99,15 +99,15 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             cleanPriceDetails[pdKey] = pdValue;
                         }
                     });
-                    if(Object.keys(cleanPriceDetails).length > 0) {
+                    if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
                       productData[key] = cleanPriceDetails;
                     }
-                } else {
+                } else if (value !== '') { // Also filter out empty strings for optional fields
                     productData[key] = value;
                 }
             }
         });
-
+        
         const accountProductsCollection = collection(firestore, 'account-products');
         await addDoc(accountProductsCollection, productData);
 

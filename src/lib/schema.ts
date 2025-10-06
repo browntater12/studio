@@ -31,7 +31,7 @@ export const editContactSchema = addContactSchema.extend({
 });
 
 export const addProductToAccountSchema = z.object({
-  accountId: z.string(),
+  accountId: z.string().min(1, { message: "Account ID is required."}),
   productId: z.string().min(1, { message: "Please select a product." }),
   notes: z.string().optional(),
   priceType: z.enum(['spot', 'bid']).optional(),
