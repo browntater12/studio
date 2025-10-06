@@ -1,15 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
-import { addProductToAccount } from '@/app/actions';
+
 import { addProductToAccountSchema } from '@/lib/schema';
 import { type Product } from '@/lib/types';
 
@@ -43,13 +43,10 @@ import {
     SelectValue,
   } from '@/components/ui/select';
 
-const initialState = { type: '', message: '', errors: undefined };
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+    <Button type="submit" disabled={isSubmitting} className="w-full">
+      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
       Add Product
     </Button>
   );
@@ -62,20 +59,10 @@ type AddProductToAccountFormProps = {
 };
 
 export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: AddProductToAccountFormProps) {
-  const [state, formAction] = useActionState(addProductToAccount, initialState);
   const { toast } = useToast();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
-
-
-  const serverErrors = React.useMemo(() => {
-    return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
-        const fieldKey = key as keyof z.infer<typeof addProductToAccountSchema>;
-        if (state.errors?.[fieldKey]) {
-            acc[fieldKey] = { type: 'server', message: state.errors[fieldKey]?.[0] };
-        }
-        return acc;
-    }, {} as any)) : {};
-  }, [state?.errors]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof addProductToAccountSchema>>({
     resolver: zodResolver(addProductToAccountSchema),
@@ -92,25 +79,37 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         price: undefined,
       }
     },
-    errors: serverErrors,
   });
 
-  React.useEffect(() => {
-    if (state.type === 'success') {
-      toast({ title: 'Success!', description: state.message });
-      onSuccess();
-    } else if (state.type === 'error') {
-      toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      Object.keys(form.getValues()).forEach((key) => {
-        const fieldKey = key as keyof z.infer<typeof addProductToAccountSchema>;
-        if (state.errors?.[fieldKey]) {
-            form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+  const onSubmit = async (values: z.infer<typeof addProductToAccountSchema>) => {
+    setIsSubmitting(true);
+    try {
+        if (!firestore) {
+            throw new Error("Firestore is not available.");
         }
-      });
-    }
-  }, [state, onSuccess, toast, form]);
 
-  const productIdValue = form.watch('productId');
+        const { accountId, productId, ...productData } = values;
+
+        const productRef = doc(firestore, 'accounts-db', accountId, 'products', productId);
+        
+        await setDoc(productRef, productData);
+
+        toast({ title: 'Success!', description: 'Product added to account successfully.' });
+        onSuccess();
+
+    } catch(error: any) {
+        console.error("Error adding product to account: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message || "Failed to add product to account."
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
+  }
+
+
   const priceTypeValue = useWatch({
     control: form.control,
     name: 'priceType',
@@ -122,9 +121,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-4">
-        <input type="hidden" name="accountId" value={accountId} />
-        {productIdValue && <input type="hidden" name="productId" value={productIdValue} />}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         
         <FormField
           control={form.control}
@@ -268,7 +265,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormItem>
                             <FormLabel>Last Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} />
+                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -281,7 +278,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormItem>
                             <FormLabel>Winning Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} />
+                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -331,7 +328,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     <FormItem>
                     <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} />
+                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -340,7 +337,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             </div>
         )}
         
-        <SubmitButton />
+        <SubmitButton isSubmitting={isSubmitting} />
       </form>
     </Form>
   );

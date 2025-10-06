@@ -76,24 +76,6 @@ export async function updateAccount(
   await accountRef.update(data);
 }
 
-export async function addProductToAccount(
-  db: AdminFirestore,
-  accountId: string,
-  productData: Omit<AccountProduct, 'productId'> & { productId: string }
-): Promise<void> {
-  const { productId, ...restOfProductData } = productData;
-  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productId);
-  const docSnap = await productRef.get();
-
-  if (docSnap.exists) {
-    throw new Error(
-      'Product already exists for this account. You can edit the notes from the product list.'
-    );
-  }
-
-  await productRef.set(restOfProductData);
-}
-
 export async function updateAccountProductNote(
   db: AdminFirestore,
   accountId: string,

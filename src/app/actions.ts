@@ -8,14 +8,12 @@ import { initializeServerApp } from '@/firebase/server';
 
 import {
   editAccountSchema,
-  addProductToAccountSchema,
   editProductNoteSchema,
   editProductSchema,
   deleteProductSchema,
 } from '@/lib/schema';
 import {
   updateAccount as dbUpdateAccount,
-  addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
@@ -61,44 +59,6 @@ export async function updateAccount(prevState: any, formData: FormData) {
     revalidatePath('/dashboard');
     revalidatePath(`/dashboard/account/${id}`);
     redirect(`/dashboard/account/${id}`);
-}
-
-export async function addProductToAccount(prevState: any, formData: FormData) {
-    const rawData = {
-        accountId: formData.get('accountId'),
-        productId: formData.get('productId'),
-        notes: formData.get('notes'),
-        priceType: formData.get('priceType'),
-        bidFrequency: formData.get('bidFrequency'),
-        lastBidPrice: formData.get('lastBidPrice') ? parseFloat(formData.get('lastBidPrice') as string) : undefined,
-        winningBidPrice: formData.get('winningBidPrice') ? parseFloat(formData.get('winningBidPrice') as string) : undefined,
-        priceDetails: (formData.get('priceType') !== 'bid') ? {
-            type: formData.get('priceDetails.type'),
-            price: formData.get('priceDetails.price') ? parseFloat(formData.get('priceDetails.price') as string) : undefined,
-        } : undefined,
-    };
-    
-    const validatedFields = addProductToAccountSchema.safeParse(rawData);
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to add product.',
-        };
-    }
-
-    const { accountId, ...productData } = validatedFields.data;
-
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbAddProduct(firestore, accountId, productData);
-        revalidatePath(`/dashboard/account/${accountId}`);
-        return { type: 'success', message: 'Product added successfully.' };
-    } catch (e: any) {
-        return { type: 'error', message: e.message || 'Database Error: Failed to add product.' };
-    }
 }
 
 export async function updateProductNote(prevState: any, formData: FormData) {
