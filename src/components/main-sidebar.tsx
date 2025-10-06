@@ -46,24 +46,24 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
-          <span className="text-lg font-semibold">Sales TM</span>
+          <span className="text-lg font-semibold">Territory Manager</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <div className="p-2 space-y-2">
-          <Link href="/dashboard/products" passHref>
-            <Button
-                asChild
-                variant={pathname === '/dashboard/products' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-            >
-                <div>
-                    <Package />
-                    <span>Products</span>
-                </div>
-            </Button>
-          </Link>
+            <Link href="/dashboard/products">
+                <Button
+                    asChild
+                    variant={pathname === '/dashboard/products' ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                >
+                    <div>
+                        <Package />
+                        <span>Products</span>
+                    </div>
+                </Button>
+            </Link>
             <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
