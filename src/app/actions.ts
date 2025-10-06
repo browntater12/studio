@@ -13,6 +13,7 @@ import {
   editProductNoteSchema,
   createProductSchema,
   editProductSchema,
+  deleteProductSchema,
 } from '@/lib/schema';
 import {
   addAccount as dbAddAccount,
@@ -23,6 +24,7 @@ import {
   updateAccountProductNote as dbUpdateNote,
   addProduct as dbAddProductGlobal,
   updateProduct as dbUpdateProduct,
+  deleteProduct as dbDeleteProduct,
   getAccountById,
 } from '@/lib/data';
 
@@ -280,4 +282,26 @@ export async function updateProduct(prevState: any, formData: FormData) {
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update product.' };
     }
+}
+
+export async function deleteProduct(prevState: any, formData: FormData) {
+  const validatedFields = deleteProductSchema.safeParse({
+    id: formData.get('id'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      type: 'error',
+      message: 'Invalid product ID.',
+    };
+  }
+
+  try {
+    await dbDeleteProduct(validatedFields.data.id);
+    revalidatePath('/dashboard/products');
+    revalidatePath('/dashboard'); // To refresh account pages that might have the product
+    return { type: 'success', message: 'Product deleted successfully.' };
+  } catch (e: any) {
+    return { type: 'error', message: e.message || 'Database Error: Failed to delete product.' };
+  }
 }

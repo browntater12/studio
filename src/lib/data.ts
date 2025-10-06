@@ -190,7 +190,7 @@ export async function updateProduct(id: string, data: Omit<Product, 'id'>): Prom
         throw new Error('Product not found');
     }
     const product = products[productIndex];
-    if (data.productNumber !== product.productNumber && products.some(p => p.productNumber === data.productNumber)) {
+    if (data.productNumber !== product.productNumber && products.some(p => p.productNumber === data.productNumber && p.id !== id)) {
         throw new Error('A product with this product number already exists.');
     }
 
@@ -200,4 +200,21 @@ export async function updateProduct(id: string, data: Omit<Product, 'id'>): Prom
     };
     products[productIndex] = updatedProduct;
     return updatedProduct;
+}
+
+export async function deleteProduct(id: string): Promise<{ success: boolean }> {
+  const productIndex = products.findIndex(p => p.id === id);
+  if (productIndex === -1) {
+    throw new Error('Product not found');
+  }
+
+  // Remove product from global list
+  products.splice(productIndex, 1);
+
+  // Remove product from all accounts
+  accounts.forEach(account => {
+    account.accountProducts = account.accountProducts.filter(ap => ap.productId !== id);
+  });
+
+  return { success: true };
 }

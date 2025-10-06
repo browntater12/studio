@@ -65,3 +65,7 @@ export const createProductSchema = z.object({
 export const editProductSchema = createProductSchema.extend({
   id: z.string(),
 });
+
+export const deleteProductSchema = z.object({
+    id: z.string(),
+});
