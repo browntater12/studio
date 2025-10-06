@@ -16,7 +16,7 @@ export default function EditAccountPage() {
 
   const accountRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
-    return doc(firestore, 'accounts', id);
+    return doc(firestore, 'accounts-db', id);
   }, [firestore, id]);
 
   const { data: account, isLoading } = useDoc<Account>(accountRef);

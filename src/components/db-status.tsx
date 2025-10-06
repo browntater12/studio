@@ -14,7 +14,7 @@ export function DbStatus() {
     async function checkDb() {
       if (!firestore) return;
       try {
-        const q = query(collection(firestore, 'accounts'), limit(1));
+        const q = query(collection(firestore, 'accounts-db'), limit(1));
         await getDocs(q);
         setStatus('connected');
       } catch (error) {

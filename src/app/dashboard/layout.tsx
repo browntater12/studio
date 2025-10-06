@@ -18,7 +18,7 @@ export default function DashboardLayout({
 
   const accountsQuery = useMemoFirebase(() => {
     if (isUserLoading || !firestore) return null;
-    return query(collection(firestore, 'accounts'), orderBy('name'));
+    return query(collection(firestore, 'accounts-db'), orderBy('name'));
   }, [firestore, isUserLoading]);
 
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);

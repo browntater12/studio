@@ -52,7 +52,7 @@ export async function addAccount(prevState: any, formData: FormData) {
         };
     }
 
-    const docRef = await firestore.collection('accounts').add(validatedFields.data);
+    const docRef = await firestore.collection('accounts-db').add(validatedFields.data);
 
     revalidatePath('/dashboard');
     redirect(`/dashboard/account/${docRef.id}`);

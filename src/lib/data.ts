@@ -16,7 +16,7 @@ import { PlaceHolderImages } from './placeholder-images';
 
 // Data access functions
 export async function getAccounts(db: Firestore): Promise<Account[]> {
-  const accountsCol = collection(db, 'accounts');
+  const accountsCol = collection(db, 'accounts-db');
   const accountSnapshot = await getDocs(accountsCol);
   const accounts: Account[] = [];
   for (const doc of accountSnapshot.docs) {
@@ -29,7 +29,7 @@ export async function getAccountById(
   db: Firestore,
   id: string
 ): Promise<Account | undefined> {
-  const accountRef = doc(db, 'accounts', id);
+  const accountRef = doc(db, 'accounts-db', id);
   const accountSnap = await getDoc(accountRef);
 
   if (!accountSnap.exists()) {
@@ -39,13 +39,13 @@ export async function getAccountById(
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
   // Fetch subcollections
-  const contactsCol = collection(db, 'accounts', id, 'contacts');
+  const contactsCol = collection(db, 'accounts-db', id, 'contacts');
   const contactsSnap = await getDocs(contactsCol);
   accountData.contacts = contactsSnap.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() } as Contact)
   );
 
-  const productsCol = collection(db, 'accounts', id, 'products');
+  const productsCol = collection(db, 'accounts-db', id, 'products');
   const productsSnap = await getDocs(productsCol);
   // The document ID is the productId for this subcollection
   accountData.accountProducts = productsSnap.docs.map(
@@ -79,7 +79,7 @@ export async function updateAccount(
   id: string,
   data: Partial<Omit<Account, 'id' | 'contacts' | 'accountProducts'>>
 ): Promise<void> {
-  const accountRef = db.collection('accounts').doc(id);
+  const accountRef = db.collection('accounts-db').doc(id);
   await accountRef.update(data);
 }
 
@@ -88,7 +88,7 @@ export async function addContactToAccount(
   accountId: string,
   contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const contactsCol = db.collection('accounts').doc(accountId).collection('contacts');
+  const contactsCol = db.collection('accounts-db').doc(accountId).collection('contacts');
   
   if (contactData.isMainContact) {
     const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
@@ -111,10 +111,10 @@ export async function updateContact(
   contactId: string,
   contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const contactRef = db.collection('accounts').doc(accountId).collection('contacts').doc(contactId);
+  const contactRef = db.collection('accounts-db').doc(accountId).collection('contacts').doc(contactId);
   
   if (contactData.isMainContact) {
-    const contactsCol = db.collection('accounts').doc(accountId).collection('contacts');
+    const contactsCol = db.collection('accounts-db').doc(accountId).collection('contacts');
     const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
     const batch = db.batch();
     mainContactsSnap.forEach(doc => {
@@ -133,7 +133,7 @@ export async function addProductToAccount(
   accountId: string,
   productData: { productId: string; notes: string }
 ): Promise<void> {
-  const productRef = db.collection('accounts').doc(accountId).collection('products').doc(productData.productId);
+  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productData.productId);
   const docSnap = await productRef.get();
 
   if (docSnap.exists) {
@@ -151,7 +151,7 @@ export async function updateAccountProductNote(
   productId: string,
   notes: string
 ): Promise<void> {
-  const productRef = db.collection('accounts').doc(accountId).collection('products').doc(productId);
+  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productId);
   await productRef.update({ notes });
 }
 

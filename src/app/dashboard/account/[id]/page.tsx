@@ -18,19 +18,19 @@ export default function AccountPage() {
 
   const accountRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore || !id) return null;
-    return doc(firestore, 'accounts', id);
+    return doc(firestore, 'accounts-db', id);
   }, [firestore, id, isUserLoading]);
   const { data: account, isLoading: accountLoading } = useDoc<Account>(accountRef);
 
   const contactsRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore || !id) return null;
-    return collection(firestore, 'accounts', id, 'contacts');
+    return collection(firestore, 'accounts-db', id, 'contacts');
   }, [firestore, id, isUserLoading]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsRef);
 
   const accountProductsRef = useMemoFirebase(() => {
     if (isUserLoading || !firestore || !id) return null;
-    return collection(firestore, 'accounts', id, 'products');
+    return collection(firestore, 'accounts-db', id, 'products');
   }, [firestore, id, isUserLoading]);
   const { data: accountProducts, isLoading: accountProductsLoading } = useCollection<AccountProduct>(accountProductsRef, {
     idField: 'productId',

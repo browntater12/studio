@@ -133,19 +133,19 @@
       },
       "description": "Stores public-facing user profile information."
     },
-    "/accounts/{accountId}": {
+    "/accounts-db/{accountId}": {
       "schema": {
         "$ref": "#/entities/Account"
       },
       "description": "Top-level collection for all sales accounts."
     },
-    "/accounts/{accountId}/contacts/{contactId}": {
+    "/accounts-db/{accountId}/contacts/{contactId}": {
       "schema": {
         "$ref": "#/entities/Contact"
       },
       "description": "Sub-collection for contacts associated with a specific account."
     },
-    "/accounts/{accountId}/products/{productId}": {
+    "/accounts-db/{accountId}/products/{productId}": {
       "schema": {
         "$ref": "#/entities/AccountProductNote"
       },

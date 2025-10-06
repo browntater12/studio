@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const accountsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     // Get just the first account to redirect to
-    return query(collection(firestore, 'accounts'), orderBy('name'));
+    return query(collection(firestore, 'accounts-db'), orderBy('name'));
   }, [firestore]);
 
   const { data: accounts, isLoading } = useCollection<Account>(accountsQuery);
