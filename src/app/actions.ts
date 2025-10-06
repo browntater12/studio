@@ -3,7 +3,6 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { collection, addDoc } from 'firebase/firestore';
 import { getFirestore as getServerFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 
@@ -53,8 +52,7 @@ export async function addAccount(prevState: any, formData: FormData) {
   try {
     const app = initializeServerApp();
     const firestore = getServerFirestore(app);
-    const accountsCol = collection(firestore, 'accounts');
-    docRef = await addDoc(accountsCol, validatedFields.data);
+    docRef = await firestore.collection('accounts').add(validatedFields.data);
   } catch (e) {
     console.error(e);
     return {
