@@ -52,16 +52,18 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
 
       <SidebarContent>
         <div className="p-2 space-y-2">
+          <Link href="/dashboard/products" passHref>
             <Button
                 asChild
                 variant={pathname === '/dashboard/products' ? 'secondary' : 'ghost'}
                 className="w-full justify-start"
             >
-                <Link href="/dashboard/products">
+                <div>
                     <Package />
                     <span>Products</span>
-                </Link>
+                </div>
             </Button>
+          </Link>
             <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
