@@ -55,6 +55,8 @@ type AddProductToAccountFormProps = {
 export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: AddProductToAccountFormProps) {
   const [state, formAction] = useActionState(addProductToAccount, initialState);
   const { toast } = useToast();
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
+
 
   const serverErrors = React.useMemo(() => {
     return state?.errors ? (Object.keys(state.errors).reduce((acc, key) => {
@@ -91,10 +93,13 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     }
   }, [state, onSuccess, toast, form]);
 
+  const productIdValue = form.watch('productId');
+
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="accountId" value={accountId} />
+        {productIdValue && <input type="hidden" name="productId" value={productIdValue} />}
         
         <FormField
           control={form.control}
@@ -102,7 +107,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Product</FormLabel>
-              <Popover>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -133,7 +138,8 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             value={product.name}
                             key={product.id}
                             onSelect={() => {
-                              form.setValue("productId", product.id)
+                              form.setValue("productId", product.id);
+                              setPopoverOpen(false);
                             }}
                           >
                             <Check

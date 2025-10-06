@@ -19,9 +19,11 @@ export const addAccountSchema = baseAccountSchema.superRefine((data, ctx) => {
   }
 });
 
-export const editAccountSchema = baseAccountSchema.extend({
+const baseEditAccountSchema = baseAccountSchema.extend({
     id: z.string(),
-}).superRefine((data, ctx) => {
+});
+
+export const editAccountSchema = baseEditAccountSchema.superRefine((data, ctx) => {
     if (data.status === 'lead' && (!data.address || data.address.trim() === '')) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -46,8 +48,8 @@ export const editContactSchema = addContactSchema.extend({
 
 export const addProductToAccountSchema = z.object({
   accountId: z.string({ required_error: "Please select a product." }),
-  productId: z.string({ required_error: "Please select a product." }),
-  notes: z.string().min(3, { message: "Notes must be at least 3 characters." }),
+  productId: z.string({ required_error: "Please select a product." }).min(1, { message: "Please select a product." }),
+  notes: z.string().optional(),
 });
 
 export const editProductNoteSchema = z.object({
