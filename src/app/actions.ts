@@ -4,7 +4,8 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
-import { getSdks } from '@/firebase';
+import { getFirestore as getServerFirestore } from 'firebase-admin/firestore';
+import { initializeServerApp } from '@/firebase/server';
 
 import {
   addAccountSchema,
@@ -50,10 +51,12 @@ export async function addAccount(prevState: any, formData: FormData) {
 
   let docRef;
   try {
-    const { firestore } = getSdks();
+    initializeServerApp();
+    const firestore = getServerFirestore();
     const accountsCol = collection(firestore, 'accounts');
     docRef = await addDoc(accountsCol, validatedFields.data);
   } catch (e) {
+    console.error(e);
     return {
       type: 'error',
       message: 'Database Error: Failed to Create Account.',
