@@ -1,36 +1,21 @@
 import {
   collection,
   doc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-  getDocs,
   writeBatch,
   query,
   where,
-  serverTimestamp,
-  Firestore,
+  getDocs,
+  getDoc,
 } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
+import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
 
-import { getSdks } from '@/firebase';
 import type { Account, Product, Contact, AccountProduct } from './types';
 import { PlaceHolderImages } from './placeholder-images';
-import {
-  setDocumentNonBlocking,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking,
-} from '@/firebase';
 
-function getDb() {
-  return getSdks(undefined as any).firestore;
-}
 
 // Data access functions
-export async function getAccounts(): Promise<Account[]> {
-  const db = getDb();
+export async function getAccounts(db: Firestore): Promise<Account[]> {
   const accountsCol = collection(db, 'accounts');
   const accountSnapshot = await getDocs(accountsCol);
   const accounts: Account[] = [];
@@ -40,8 +25,10 @@ export async function getAccounts(): Promise<Account[]> {
   return accounts;
 }
 
-export async function getAccountById(id: string): Promise<Account | undefined> {
-  const db = getDb();
+export async function getAccountById(
+  db: Firestore,
+  id: string
+): Promise<Account | undefined> {
   const accountRef = doc(db, 'accounts', id);
   const accountSnap = await getDoc(accountRef);
 
@@ -68,8 +55,7 @@ export async function getAccountById(id: string): Promise<Account | undefined> {
   return accountData;
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const db = getDb();
+export async function getProducts(db: Firestore): Promise<Product[]> {
   const productsCol = collection(db, 'products');
   const productSnapshot = await getDocs(productsCol);
   return productSnapshot.docs.map(
@@ -77,8 +63,10 @@ export async function getProducts(): Promise<Product[]> {
   );
 }
 
-export async function getProductById(id: string): Promise<Product | undefined> {
-  const db = getDb();
+export async function getProductById(
+  db: Firestore,
+  id: string
+): Promise<Product | undefined> {
   const productRef = doc(db, 'products', id);
   const productSnap = await getDoc(productRef);
   return productSnap.exists()
@@ -87,122 +75,118 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 }
 
 export async function updateAccount(
+  db: AdminFirestore,
   id: string,
   data: Partial<Omit<Account, 'id' | 'contacts' | 'accountProducts'>>
 ): Promise<void> {
-  const db = getDb();
-  const accountRef = doc(db, 'accounts', id);
-  updateDocumentNonBlocking(accountRef, data);
+  const accountRef = db.collection('accounts').doc(id);
+  await accountRef.update(data);
 }
 
 export async function addContactToAccount(
+  db: AdminFirestore,
   accountId: string,
   contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const db = getDb();
-  const contactsCol = collection(db, 'accounts', accountId, 'contacts');
+  const contactsCol = db.collection('accounts').doc(accountId).collection('contacts');
   
   if (contactData.isMainContact) {
-    const q = query(contactsCol, where('isMainContact', '==', true));
-    const mainContactsSnap = await getDocs(q);
-    const batch = writeBatch(db);
+    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
+    const batch = db.batch();
     mainContactsSnap.forEach(doc => {
       batch.update(doc.ref, { isMainContact: false });
     });
     await batch.commit();
   }
 
-  addDocumentNonBlocking(contactsCol, {
+  await contactsCol.add({
     ...contactData,
     avatarUrl: PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)].imageUrl,
   });
 }
 
 export async function updateContact(
+  db: AdminFirestore,
   accountId: string,
-  contactData: Omit<Contact, 'avatarUrl'> & { contactId: string }
+  contactId: string,
+  contactData: Omit<Contact, 'id' | 'avatarUrl'>
 ): Promise<void> {
-  const db = getDb();
-  const contactRef = doc(db, 'accounts', accountId, 'contacts', contactData.contactId);
+  const contactRef = db.collection('accounts').doc(accountId).collection('contacts').doc(contactId);
   
   if (contactData.isMainContact) {
-    const contactsCol = collection(db, 'accounts', accountId, 'contacts');
-    const q = query(contactsCol, where('isMainContact', '==', true));
-    const mainContactsSnap = await getDocs(q);
-    const batch = writeBatch(db);
+    const contactsCol = db.collection('accounts').doc(accountId).collection('contacts');
+    const mainContactsSnap = await contactsCol.where('isMainContact', '==', true).get();
+    const batch = db.batch();
     mainContactsSnap.forEach(doc => {
-      if (doc.id !== contactData.contactId) {
+      if (doc.id !== contactId) {
         batch.update(doc.ref, { isMainContact: false });
       }
     });
     await batch.commit();
   }
   
-  updateDocumentNonBlocking(contactRef, contactData);
+  await contactRef.update(contactData);
 }
 
 export async function addProductToAccount(
+  db: AdminFirestore,
   accountId: string,
   productData: { productId: string; notes: string }
 ): Promise<void> {
-  const db = getDb();
-  const productRef = doc(db, 'accounts', accountId, 'products', productData.productId);
-  const docSnap = await getDoc(productRef);
+  const productRef = db.collection('accounts').doc(accountId).collection('products').doc(productData.productId);
+  const docSnap = await productRef.get();
 
-  if (docSnap.exists()) {
+  if (docSnap.exists) {
     throw new Error(
       'Product already exists for this account. You can edit the notes from the product list.'
     );
   }
 
-  setDocumentNonBlocking(productRef, { notes: productData.notes }, {});
+  await productRef.set({ notes: productData.notes });
 }
 
 export async function updateAccountProductNote(
+  db: AdminFirestore,
   accountId: string,
   productId: string,
   notes: string
 ): Promise<void> {
-  const db = getDb();
-  const productRef = doc(db, 'accounts', accountId, 'products', productId);
-  updateDocumentNonBlocking(productRef, { notes });
+  const productRef = db.collection('accounts').doc(accountId).collection('products').doc(productId);
+  await productRef.update({ notes });
 }
 
-export async function addProduct(data: Omit<Product, 'id'>): Promise<void> {
-  const db = getDb();
-  const q = query(collection(db, 'products'), where('productNumber', '==', data.productNumber));
-  const existing = await getDocs(q);
+export async function addProduct(db: AdminFirestore, data: Omit<Product, 'id'>): Promise<void> {
+  const q = db.collection('products').where('productNumber', '==', data.productNumber);
+  const existing = await q.get();
 
   if (!existing.empty) {
       throw new Error('A product with this product number already exists.');
   }
 
-  addDocumentNonBlocking(collection(db, 'products'), data);
+  await db.collection('products').add(data);
 }
 
 export async function updateProduct(
+  db: AdminFirestore,
   id: string,
   data: Partial<Omit<Product, 'id'>>
 ): Promise<void> {
-  const db = getDb();
-  const productRef = doc(db, 'products', id);
+  const productRef = db.collection('products').doc(id);
   if (data.productNumber) {
-    const q = query(collection(db, 'products'), where('productNumber', '==', data.productNumber));
-    const existing = await getDocs(q);
+    const q = db.collection('products').where('productNumber', '==', data.productNumber);
+    const existing = await q.get();
     if (!existing.empty && existing.docs.some(doc => doc.id !== id)) {
         throw new Error('A product with this product number already exists.');
     }
   }
-  updateDocumentNonBlocking(productRef, data);
+  await productRef.update(data);
 }
 
-export async function deleteProduct(id: string): Promise<void> {
-  const db = getDb();
-  const productRef = doc(db, 'products', id);
+export async function deleteProduct(db: AdminFirestore, id: string): Promise<void> {
+  const productRef = db.collection('products').doc(id);
 
-  // This is a complex operation to do on the client.
-  // In a real app, this would be a Cloud Function.
+  // In a real app, this might be a Cloud Function for safety.
   // For now, we will just delete the product doc.
-  // The references in account subcollections will be orphaned.
-  deleteDocumentNonBlocking(productRef);
+  // Note: References in account subcollections will be orphaned.
+  await productRef.delete();
 }

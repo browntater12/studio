@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getFirestore as getServerFirestore } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 
 import {
@@ -33,33 +33,35 @@ import {
 export async function addAccount(prevState: any, formData: FormData) {
   try {
     const app = initializeServerApp();
-    const firestore = getServerFirestore(app);
+    const firestore = getFirestore(app);
     
-    // For testing, create a hardcoded dummy account
-    const dummyData = {
-        name: `Test Account - ${new Date().getTime()}`,
-        status: 'lead',
-        industry: 'Testing',
-        accountNumber: 'TEST-001',
-        details: 'This is a test account created to verify the database connection.',
-        address: '123 Test St',
-    };
+    const validatedFields = addAccountSchema.safeParse({
+        name: formData.get('name'),
+        accountNumber: formData.get('accountNumber'),
+        industry: formData.get('industry'),
+        status: formData.get('status'),
+        details: formData.get('details'),
+        address: formData.get('address'),
+    });
 
-    const docRef = await firestore.collection('accounts').add(dummyData);
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Account.',
+        };
+    }
+
+    const docRef = await firestore.collection('accounts').add(validatedFields.data);
 
     revalidatePath('/dashboard');
-    // Temporarily remove redirect to see success message
-    // redirect(`/dashboard/account/${docRef.id}`);
-    return {
-        type: 'success',
-        message: `Test account created successfully with ID: ${docRef.id}`,
-    }
+    redirect(`/dashboard/account/${docRef.id}`);
 
   } catch (e) {
     console.error('***ADD ACCOUNT FAILED***:', e);
     return {
       type: 'error',
-      message: 'Database Error: Failed to Create Test Account.',
+      message: 'Database Error: Failed to Create Account.',
     };
   }
 }
@@ -82,9 +84,13 @@ export async function updateAccount(prevState: any, formData: FormData) {
             message: 'Missing Fields. Failed to Update Account.',
         };
     }
+    
+    const { id, ...data } = validatedFields.data;
 
     try {
-        await dbUpdateAccount(validatedFields.data.id, validatedFields.data);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbUpdateAccount(firestore, id, data);
     } catch (e) {
         return {
             type: 'error',
@@ -93,8 +99,8 @@ export async function updateAccount(prevState: any, formData: FormData) {
     }
 
     revalidatePath('/dashboard');
-    revalidatePath(`/dashboard/account/${validatedFields.data.id}`);
-    redirect(`/dashboard/account/${validatedFields.data.id}`);
+    revalidatePath(`/dashboard/account/${id}`);
+    redirect(`/dashboard/account/${id}`);
 }
 
 export async function addContact(prevState: any, formData: FormData) {
@@ -114,10 +120,14 @@ export async function addContact(prevState: any, formData: FormData) {
             message: 'Invalid fields. Failed to add contact.',
         };
     }
+    
+    const { accountId, ...contactData } = validatedFields.data;
 
     try {
-        await dbAddContact(validatedFields.data.accountId, validatedFields.data);
-        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbAddContact(firestore, accountId, contactData);
+        revalidatePath(`/dashboard/account/${accountId}`);
         return { type: 'success', message: 'Contact added successfully.' };
     } catch (e) {
         return { type: 'error', message: 'Database Error: Failed to add contact.' };
@@ -143,9 +153,13 @@ export async function updateContact(prevState: any, formData: FormData) {
         };
     }
 
+    const { accountId, contactId, ...contactData } = validatedFields.data;
+    
     try {
-        await dbUpdateContact(validatedFields.data.accountId, validatedFields.data);
-        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbUpdateContact(firestore, accountId, contactId, contactData);
+        revalidatePath(`/dashboard/account/${accountId}`);
         return { type: 'success', message: 'Contact updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update contact.' };
@@ -168,9 +182,13 @@ export async function addProductToAccount(prevState: any, formData: FormData) {
         };
     }
 
+    const { accountId, ...productData } = validatedFields.data;
+
     try {
-        await dbAddProduct(validatedFields.data.accountId, validatedFields.data);
-        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbAddProduct(firestore, accountId, productData);
+        revalidatePath(`/dashboard/account/${accountId}`);
         return { type: 'success', message: 'Product added successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to add product.' };
@@ -192,9 +210,13 @@ export async function updateProductNote(prevState: any, formData: FormData) {
         };
     }
 
+    const { accountId, productId, notes } = validatedFields.data;
+
     try {
-        await dbUpdateNote(validatedFields.data.accountId, validatedFields.data.productId, validatedFields.data.notes);
-        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbUpdateNote(firestore, accountId, productId, notes);
+        revalidatePath(`/dashboard/account/${accountId}`);
         return { type: 'success', message: 'Note updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update note.' };
@@ -217,7 +239,9 @@ export async function createProduct(prevState: any, formData: FormData) {
     }
 
     try {
-        await dbAddProductGlobal(validatedFields.data);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbAddProductGlobal(firestore, validatedFields.data);
         revalidatePath('/dashboard/products');
         revalidatePath('/dashboard/account');
         return { type: 'success', message: 'Product created successfully.' };
@@ -242,8 +266,12 @@ export async function updateProduct(prevState: any, formData: FormData) {
         };
     }
 
+    const { id, ...data } = validatedFields.data;
+
     try {
-        await dbUpdateProduct(validatedFields.data.id, validatedFields.data);
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbUpdateProduct(firestore, id, data);
         revalidatePath('/dashboard/products');
         revalidatePath('/dashboard/account');
         return { type: 'success', message: 'Product updated successfully.' };
@@ -265,7 +293,9 @@ export async function deleteProduct(prevState: any, formData: FormData) {
   }
 
   try {
-    await dbDeleteProduct(validatedFields.data.id);
+    const app = initializeServerApp();
+    const firestore = getFirestore(app);
+    await dbDeleteProduct(firestore, validatedFields.data.id);
     revalidatePath('/dashboard/products');
     revalidatePath('/dashboard/account');
     return { type: 'success', message: 'Product deleted successfully.' };

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,7 +38,7 @@ const initialState = {
 };
 
 function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
-  const { pending } = useActionState(addAccount, initialState)[2];
+  const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -57,7 +57,7 @@ export function AddAccountForm({ account }: AddAccountFormProps) {
   const schema = isEditMode ? editAccountSchema : addAccountSchema;
   type SchemaType = z.infer<typeof schema>;
 
-  const [state, formAction] = useActionState(action, initialState);
+  const [state, formAction] = useFormState(action, initialState);
   const { toast } = useToast();
   const router = useRouter();
 
