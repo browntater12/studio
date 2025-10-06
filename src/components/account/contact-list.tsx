@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/dialog';
 import { ContactForm } from '../forms/contact-form';
 import { Badge } from '../ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 function AddContactDialog({ accountId }: { accountId: string }) {
   const [open, setOpen] = React.useState(false);
@@ -86,10 +85,6 @@ export function ContactList({
                 key={contact.id}
                 className="flex items-start gap-4 p-4 border rounded-lg relative group"
               >
-                <Avatar className="h-12 w-12">
-                   <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint="person portrait" />
-                   <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-                </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{contact.name}</p>
