@@ -46,17 +46,17 @@ export async function getAccountById(
 
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
-  // Fetch related AccountProduct notes
-  const app = initializeServerApp();
-  const firestore = getAdminFirestore(app);
-  const accountProductsQuery = query(
-    collection(firestore, 'account-products'),
-    where('accountId', '==', id)
-  );
-  const accountProductsSnap = await getDocs(accountProductsQuery);
-  accountData.accountProducts = accountProductsSnap.docs.map(
-    (doc) => ({ id: doc.id, ...doc.data() } as AccountProduct)
-  );
+  // This was causing serialization issues. Data is now fetched separately on the client.
+  // const app = initializeServerApp();
+  // const firestore = getAdminFirestore(app);
+  // const accountProductsQuery = query(
+  //   collection(firestore, 'account-products'),
+  //   where('accountId', '==', id)
+  // );
+  // const accountProductsSnap = await getDocs(accountProductsQuery);
+  // accountData.accountProducts = accountProductsSnap.docs.map(
+  //   (doc) => ({ id: doc.id, ...doc.data() } as AccountProduct)
+  // );
 
 
   return accountData;

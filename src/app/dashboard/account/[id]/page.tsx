@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { type Account, type Contact, type AccountProduct, type Product } from '@/lib/types';
+import { type Account, type Contact, type Product } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
