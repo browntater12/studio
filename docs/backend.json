@@ -123,6 +123,20 @@
           "type": "string",
           "description": "Note about the product for the specific account."
         },
+        "priceType": {
+            "type": "string",
+            "enum": ["spot", "bid"]
+        },
+        "bidFrequency": {
+            "type": "string",
+            "enum": ["monthly", "quarterly", "yearly"]
+        },
+        "lastBidPrice": {
+            "type": "number"
+        },
+        "winningBidPrice": {
+            "type": "number"
+        },
         "priceDetails": {
           "type": "object",
           "properties": {
