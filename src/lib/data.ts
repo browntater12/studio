@@ -86,20 +86,6 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     : undefined;
 }
 
-export async function addAccount(
-  data: Omit<Account, 'id' | 'contacts' | 'accountProducts'>
-): Promise<Account> {
-  const db = getDb();
-  const accountsCol = collection(db, 'accounts');
-  const docRef = await addDoc(accountsCol, data);
-  return {
-    ...data,
-    id: docRef.id,
-    contacts: [],
-    accountProducts: [],
-  };
-}
-
 export async function updateAccount(
   id: string,
   data: Partial<Omit<Account, 'id' | 'contacts' | 'accountProducts'>>

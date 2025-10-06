@@ -3,6 +3,8 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { collection, addDoc } from 'firebase/firestore';
+import { getSdks } from '@/firebase';
 
 import {
   addAccountSchema,
@@ -16,7 +18,6 @@ import {
   deleteProductSchema,
 } from '@/lib/schema';
 import {
-  addAccount as dbAddAccount,
   updateAccount as dbUpdateAccount,
   addContactToAccount as dbAddContact,
   updateContact as dbUpdateContact,
@@ -47,9 +48,11 @@ export async function addAccount(prevState: any, formData: FormData) {
     };
   }
 
-  let newAccount;
+  let docRef;
   try {
-    newAccount = await dbAddAccount(validatedFields.data);
+    const { firestore } = getSdks();
+    const accountsCol = collection(firestore, 'accounts');
+    docRef = await addDoc(accountsCol, validatedFields.data);
   } catch (e) {
     return {
       type: 'error',
@@ -58,7 +61,7 @@ export async function addAccount(prevState: any, formData: FormData) {
   }
 
   revalidatePath('/dashboard');
-  redirect(`/dashboard/account/${newAccount.id}`);
+  redirect(`/dashboard/account/${docRef.id}`);
 }
 
 export async function updateAccount(prevState: any, formData: FormData) {
