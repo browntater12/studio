@@ -68,6 +68,14 @@ export async function addProductToAccount(prevState: any, formData: FormData) {
         accountId: formData.get('accountId'),
         productId: formData.get('productId'),
         notes: formData.get('notes'),
+        priceType: formData.get('priceType'),
+        bidFrequency: formData.get('bidFrequency'),
+        lastBidPrice: formData.get('lastBidPrice'),
+        winningBidPrice: formData.get('winningBidPrice'),
+        priceDetails: {
+            type: formData.get('priceDetails.type'),
+            price: formData.get('priceDetails.price'),
+        }
     });
 
     if (!validatedFields.success) {

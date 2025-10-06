@@ -79,9 +79,10 @@ export async function updateAccount(
 export async function addProductToAccount(
   db: AdminFirestore,
   accountId: string,
-  productData: { productId: string; notes: string }
+  productData: Omit<AccountProduct, 'productId'> & { productId: string }
 ): Promise<void> {
-  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productData.productId);
+  const { productId, ...restOfProductData } = productData;
+  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productId);
   const docSnap = await productRef.get();
 
   if (docSnap.exists) {
@@ -90,7 +91,7 @@ export async function addProductToAccount(
     );
   }
 
-  await productRef.set({ notes: productData.notes });
+  await productRef.set(restOfProductData);
 }
 
 export async function updateAccountProductNote(
