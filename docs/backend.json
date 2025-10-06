@@ -80,7 +80,7 @@
             "description": "URL for the contact's avatar."
         }
       },
-      "required": ["name", "phone", "email", "location", "isMainContact", "avatarUrl"]
+      "required": ["name", "phone", "email", "location", "isMainContact"]
     },
     "Product": {
       "title": "Product",
@@ -120,7 +120,7 @@
           "description": "Note about the product for the specific account."
         }
       },
-      "required": ["productId", "notes"]
+      "required": ["notes"]
     }
   },
   "auth": {

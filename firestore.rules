@@ -1,117 +1,109 @@
 /**
- * @file Firebase Security Rules for Sales Territory Manager App
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a user-ownership model for accounts and contacts, where each user has exclusive access to their own data.
- * Products are globally accessible for reads, but protected for writes.
+ * This ruleset enforces a strict user-ownership model for user profiles. Accounts are publicly accessible, but modifications are not allowed.
+ * Contacts and AccountProductNotes are owned by the account they are under. Products are public read-only.
  *
  * Data Structure:
- * The data is organized hierarchically:
- *   - /users/{userId}/accounts/{accountId}: Accounts owned by a specific user.
- *   - /users/{userId}/accounts/{accountId}/contacts/{contactId}: Contacts belonging to an account.
- *   - /products/{productId}: Globally available product catalog.
- *   - /products/{productId}/accountProductNotes/{noteId}: Account-specific notes for products.
+ * - /users/{userId}: User profile information.
+ * - /accounts/{accountId}: Sales accounts.
+ * - /accounts/{accountId}/contacts/{contactId}: Contacts for an account.
+ * - /accounts/{accountId}/products/{productId}: Product notes for an account.
+ * - /products/{productId}: Product catalog.
  *
  * Key Security Decisions:
- * - User accounts and contacts are strictly isolated. Users can only access data under their own user ID.
- * - Products are globally readable, but writes are restricted.
- * - The rules are designed to be authorization-independent, avoiding `get()` calls for performance.
- * - Denormalization is used to enforce relationships and simplify security rules.
+ * - Users can only read/write their own profile data.
+ * - Accounts are publicly readable to allow listing all sales accounts.
+ * - Account modifications (create, update, delete) are denied.
+ * - Contacts are accessible only to authenticated users.
+ * - AccountProductNotes are accessible only to authenticated users.
+ * - Products are publicly readable but not writable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user accounts. Only the owner can read, create, update, or delete accounts.
-     * @path /users/{userId}/accounts/{accountId}
-     * @allow (create) User A creates an account under their own user ID.
-     *     - auth.uid: "userA"
-     *     - request.resource.data.id: "userA"
-     * @allow (get) User A reads their own account data.
-     *     - auth.uid: "userA"
-     * @deny (create) User A attempts to create an account under User B's ID.
-     *     - auth.uid: "userA"
-     *     - request.resource.data.id: "userB"
-     * @deny (update) User A attempts to update an account they don't own.
-     *     - auth.uid: "userB"
-     * @principle Enforces document ownership for all operations.
+     * @description Controls access to user profiles.
+     * @path /users/{userId}
+     * @allow (create) - If the user's auth UID matches the userId.
+     * @allow (get, update, delete) - If the user's auth UID matches the userId.
+     * @deny (create, update, delete) - If the user's auth UID does not match the userId.
+     * @deny (list) - Listing all users is not permitted.
+     * @principle Enforces document ownership for user profiles.
      */
-    match /users/{userId}/accounts/{accountId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource.data.id == userId;
+      allow delete: if isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Controls access to contacts within an account. Only the owner of the account can manage contacts.
-     * @path /users/{userId}/accounts/{accountId}/contacts/{contactId}
-     * @allow (create) User A creates a contact within their own account.
-     *     - auth.uid: "userA"
-     *     - accountId: "account123" (owned by userA)
-     * @allow (get) User A reads a contact within their own account.
-     *     - auth.uid: "userA"
-     *     - accountId: "account123" (owned by userA)
-     * @deny (create) User A attempts to create a contact in User B's account.
-     *     - auth.uid: "userA"
-     *     - accountId: "account456" (owned by userB)
-     * @deny (update) User A attempts to update a contact in an account they don't own.
-     *     - auth.uid: "userB"
-     * @principle Enforces document ownership for all contact operations.
+     * @description Controls access to accounts.
+     * @path /accounts/{accountId}
+     * @allow (get, list) - Publicly readable to list accounts.
+     * @deny (create, update, delete) - Account modifications are not permitted.
+     * @principle Public read-only access for account listings.
      */
-    match /users/{userId}/accounts/{accountId}/contacts/{contactId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.accountId == accountId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.accountId == accountId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+    match /accounts/{accountId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Controls access to the global product catalog.  All authenticated users can read products.
+     * @description Controls access to contacts within an account.
+     * @path /accounts/{accountId}/contacts/{contactId}
+     * @allow (create) - Only authenticated users can create contacts.
+     * @allow (get, list, update, delete) - Only authenticated users can access contacts.
+     * @principle Restricts contact access to authenticated users.
+     */
+    match /accounts/{accountId}/contacts/{contactId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to product notes within an account.
+     * @path /accounts/{accountId}/products/{productId}
+     * @allow (create) - Only authenticated users can create product notes.
+     * @allow (get, list, update, delete) - Only authenticated users can access product notes.
+     * @principle Restricts product note access to authenticated users.
+     */
+    match /accounts/{accountId}/products/{productId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to products.
      * @path /products/{productId}
-     * @allow (get) Any authenticated user can read product information.
-     *     - auth.uid: "anyUser"
-     * @deny (create) No one can create products
-     *     - auth.uid: "anyUser"
-     * @principle Allows public read access but restricts write access to products.
+     * @allow (get, list) - Publicly readable for product listings.
+     * @deny (create, update, delete) - Product modifications are not permitted.
+     * @principle Public read-only access for products.
      */
     match /products/{productId} {
-      allow get, list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
-
-    /**
-     * @description Controls access to account-specific product notes. Allows reads by authenticated users.
-     * @path /products/{productId}/accountProductNotes/{noteId}
-     * @allow (get) Any authenticated user can read an account product note.
-     *     - auth.uid: "anyUser"
-     * @deny (create) No one can create notes.
-     *     - auth.uid: "anyUser"
-     * @principle Allows public read access but restricts write access to account product notes.
-     */
-    match /products/{productId}/accountProductNotes/{noteId} {
-      allow get, list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-  }
-
-  // Helper Functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-    function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
   }
 }
