@@ -7,8 +7,9 @@ import {
   getDocs,
   getDoc,
   addDoc,
-} from 'firebase/firestore';
-import type { Firestore } from 'firebase/firestore';
+  updateDoc,
+  deleteDoc,
+} from 'firebase-admin/firestore';
 import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
@@ -17,7 +18,8 @@ import type { Account, Product, Contact, AccountProduct } from './types';
 
 
 // Data access functions
-export async function getAccounts(db: Firestore | AdminFirestore): Promise<Account[]> {
+export async function getAccounts(): Promise<Account[]> {
+  const db = getAdminFirestore(initializeServerApp());
   const accountsCol = collection(db, 'accounts-db');
   const accountSnapshot = await getDocs(accountsCol);
   const accounts: Account[] = [];
@@ -27,16 +29,17 @@ export async function getAccounts(db: Firestore | AdminFirestore): Promise<Accou
   return accounts;
 }
 
-export async function getAccountProductNotes(db: AdminFirestore, accountId: string): Promise<AccountProduct[]> {
+export async function getAccountProductNotes(accountId: string): Promise<AccountProduct[]> {
+    const db = getAdminFirestore(initializeServerApp());
     const q = query(collection(db, 'account-products'), where('accountId', '==', accountId));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AccountProduct));
 }
 
 export async function getAccountById(
-  db: Firestore | AdminFirestore,
   id: string
 ): Promise<Account | undefined> {
+  const db = getAdminFirestore(initializeServerApp());
   const accountRef = doc(db, 'accounts-db', id);
   const accountSnap = await getDoc(accountRef);
 
@@ -46,23 +49,11 @@ export async function getAccountById(
 
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
-  // This was causing serialization issues. Data is now fetched separately on the client.
-  // const app = initializeServerApp();
-  // const firestore = getAdminFirestore(app);
-  // const accountProductsQuery = query(
-  //   collection(firestore, 'account-products'),
-  //   where('accountId', '==', id)
-  // );
-  // const accountProductsSnap = await getDocs(accountProductsQuery);
-  // accountData.accountProducts = accountProductsSnap.docs.map(
-  //   (doc) => ({ id: doc.id, ...doc.data() } as AccountProduct)
-  // );
-
-
   return accountData;
 }
 
-export async function getProducts(db: Firestore | AdminFirestore): Promise<Product[]> {
+export async function getProducts(): Promise<Product[]> {
+  const db = getAdminFirestore(initializeServerApp());
   const productsCol = collection(db, 'products');
   const productSnapshot = await getDocs(productsCol);
   return productSnapshot.docs.map(
@@ -71,9 +62,9 @@ export async function getProducts(db: Firestore | AdminFirestore): Promise<Produ
 }
 
 export async function getProductById(
-  db: Firestore,
   id: string
 ): Promise<Product | undefined> {
+  const db = getAdminFirestore(initializeServerApp());
   const productRef = doc(db, 'products', id);
   const productSnap = await getDoc(productRef);
   return productSnap.exists()
@@ -82,36 +73,36 @@ export async function getProductById(
 }
 
 export async function updateAccount(
-  db: AdminFirestore,
   id: string,
   data: Partial<Omit<Account, 'id' | 'contacts' | 'accountProducts'>>
 ): Promise<void> {
+  const db = getAdminFirestore(initializeServerApp());
   const accountRef = db.collection('accounts-db').doc(id);
-  await accountRef.update(data);
+  await updateDoc(accountRef, data);
 }
 
 export async function updateAccountProductNote(
-  db: AdminFirestore,
   noteId: string,
   notes: string
 ): Promise<void> {
+  const db = getAdminFirestore(initializeServerApp());
   const noteRef = db.collection('account-products').doc(noteId);
-  await noteRef.update({ notes });
+  await updateDoc(noteRef, { notes });
 }
 
 export async function addProductToAccount(
-  db: AdminFirestore,
   productData: Omit<AccountProduct, 'id'>
 ): Promise<void> {
+  const db = getAdminFirestore(initializeServerApp());
   const accountProductsCollection = db.collection('account-products');
-  await accountProductsCollection.add(productData);
+  await addDoc(accountProductsCollection, productData);
 }
 
 export async function updateProduct(
-  db: AdminFirestore,
   id: string,
   data: Partial<Omit<Product, 'id'>>
 ): Promise<void> {
+  const db = getAdminFirestore(initializeServerApp());
   const productRef = db.collection('products').doc(id);
   if (data.productNumber) {
     const q = db.collection('products').where('productNumber', '==', data.productNumber);
@@ -120,14 +111,15 @@ export async function updateProduct(
         throw new Error('A product with this product number already exists.');
     }
   }
-  await productRef.update(data);
+  await updateDoc(productRef, data);
 }
 
-export async function deleteProduct(db: AdminFirestore, id: string): Promise<void> {
+export async function deleteProduct(id: string): Promise<void> {
+  const db = getAdminFirestore(initializeServerApp());
   const productRef = db.collection('products').doc(id);
 
   // In a real app, this might be a Cloud Function for safety.
   // For now, we will just delete the product doc.
   // Note: References in account-products will be orphaned.
-  await productRef.delete();
+  await deleteDoc(productRef);
 }

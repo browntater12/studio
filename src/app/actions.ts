@@ -3,115 +3,24 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeServerApp } from '@/firebase/server';
 
 import {
-  editAccountSchema,
   editProductNoteSchema,
   editProductSchema,
   deleteProductSchema,
-  addProductToAccountSchema,
 } from '@/lib/schema';
 import {
-  updateAccount as dbUpdateAccount,
   updateAccountProductNote as dbUpdateNote,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
   getAccountById as dbGetAccountById,
   getProducts as dbGetProducts,
-  addProductToAccount as dbAddProductToAccount,
   getAccountProductNotes as dbGetAccountProductNotes,
 } from '@/lib/data';
 import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
 import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
 import { type AccountProduct } from '@/lib/types';
 
-
-export async function updateAccount(prevState: any, formData: FormData) {
-    const validatedFields = editAccountSchema.safeParse({
-        id: formData.get('id'),
-        name: formData.get('name'),
-        accountNumber: formData.get('accountNumber'),
-        industry: formData.get('industry'),
-        status: formData.get('status'),
-        details: formData.get('details'),
-        address: formData.get('address'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Update Account.',
-        };
-    }
-    
-    const { id, ...data } = validatedFields.data;
-
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbUpdateAccount(firestore, id, data);
-    } catch (e) {
-        return {
-            type: 'error',
-            message: 'Database Error: Failed to Update Account.',
-        };
-    }
-
-    revalidatePath('/dashboard');
-    revalidatePath(`/dashboard/account/${id}`);
-    redirect(`/dashboard/account/${id}`);
-}
-
-export async function addProductToAccount(prevState: any, formData: FormData) {
-    const rawData = {
-        accountId: formData.get('accountId'),
-        productId: formData.get('productId'),
-        notes: formData.get('notes'),
-        priceType: formData.get('priceType'),
-        bidFrequency: formData.get('bidFrequency'),
-        lastBidPrice: formData.get('lastBidPrice') ? parseFloat(formData.get('lastBidPrice') as string) : undefined,
-        winningBidPrice: formData.get('winningBidPrice') ? parseFloat(formData.get('winningBidPrice') as string) : undefined,
-        priceDetails_type: formData.get('priceDetails.type'),
-        priceDetails_price: formData.get('priceDetails.price') ? parseFloat(formData.get('priceDetails.price') as string) : undefined,
-    };
-
-    const validatedFields = addProductToAccountSchema.safeParse({
-        accountId: rawData.accountId,
-        productId: rawData.productId,
-        notes: rawData.notes,
-        priceType: rawData.priceType,
-        bidFrequency: rawData.priceType === 'bid' ? rawData.bidFrequency : undefined,
-        lastBidPrice: rawData.priceType === 'bid' ? rawData.lastBidPrice : undefined,
-        winningBidPrice: rawData.priceType === 'bid' ? rawData.winningBidPrice : undefined,
-        priceDetails: rawData.priceType !== 'bid' && (rawData.priceDetails_type || rawData.priceDetails_price) ? {
-            type: rawData.priceDetails_type,
-            price: rawData.priceDetails_price,
-        } : undefined,
-    });
-    
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to add product.',
-        };
-    }
-
-    const { ...data } = validatedFields.data;
-    
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbAddProductToAccount(firestore, data);
-        revalidatePath(`/dashboard/account/${data.accountId}`);
-        return { type: 'success', message: 'Product added successfully.' };
-    } catch(e: any) {
-        return { type: 'error', message: e.message || 'Database error: Failed to add product.' };
-    }
-}
 
 export async function updateProductNote(prevState: any, formData: FormData) {
     const validatedFields = editProductNoteSchema.safeParse({
@@ -130,9 +39,7 @@ export async function updateProductNote(prevState: any, formData: FormData) {
     const { noteId, notes } = validatedFields.data;
 
     try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbUpdateNote(firestore, noteId, notes);
+        await dbUpdateNote(noteId, notes);
         revalidatePath(`/dashboard/account`); // This might be too broad, need to figure out which account
         return { type: 'success', message: 'Note updated successfully.' };
     } catch (e: any) {
@@ -159,9 +66,7 @@ export async function updateProduct(prevState: any, formData: FormData) {
     const { id, ...data } = validatedFields.data;
 
     try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbUpdateProduct(firestore, id, data);
+        await dbUpdateProduct(id, data);
         revalidatePath('/dashboard/products');
         revalidatePath('/dashboard/account');
         return { type: 'success', message: 'Product updated successfully.' };
@@ -183,9 +88,7 @@ export async function deleteProduct(prevState: any, formData: FormData) {
   }
 
   try {
-    const app = initializeServerApp();
-    const firestore = getFirestore(app);
-    await dbDeleteProduct(firestore, validatedFields.data.id);
+    await dbDeleteProduct(validatedFields.data.id);
     revalidatePath('/dashboard/products');
     revalidatePath('/dashboard/account');
     return { type: 'success', message: 'Product deleted successfully.' };
@@ -196,18 +99,17 @@ export async function deleteProduct(prevState: any, formData: FormData) {
 
 export async function generateSalesInsights(accountId: string) {
   try {
-    const app = initializeServerApp();
-    const firestore = getFirestore(app);
-
-    const account = await dbGetAccountById(firestore, accountId);
+    const account = await dbGetAccountById(accountId);
     if (!account) {
       return { error: 'Account not found.' };
     }
 
-    const allProducts = await dbGetProducts(firestore);
+    const allProducts = await dbGetProducts();
+
+    const productNotes = await dbGetAccountProductNotes(accountId);
 
     const productNotesText =
-      account.accountProducts
+      productNotes
         ?.map(ap => {
           const product = allProducts.find(p => p.id === ap.productId);
           return `- ${product?.name || 'Unknown Product'}: ${ap.notes}`;
@@ -243,10 +145,7 @@ export async function generateSalesInsights(accountId: string) {
 
 export async function getAccountProductNotes(accountId: string): Promise<{error?: string, notes?: AccountProduct[]}> {
   try {
-    const app = initializeServerApp();
-    const firestore = getFirestore(app);
-    const notes = await dbGetAccountProductNotes(firestore, accountId);
-    // The data fetched from firestore is not serializable, so we need to re-map it to plain objects.
+    const notes = await dbGetAccountProductNotes(accountId);
     const serializableNotes = notes.map(n => ({...n}));
     return { notes: serializableNotes };
   } catch (e: any) {
