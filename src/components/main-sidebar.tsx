@@ -88,20 +88,6 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
         </SidebarMenu>
-        <SidebarSeparator />
-         <SidebarMenu>
-            <SidebarMenuItem>
-                <Link href="/dashboard/products" passHref>
-                    <SidebarMenuButton
-                    isActive={pathname === '/dashboard/products'}
-                    className="w-full justify-start"
-                    >
-                    <Package />
-                    <span>Products</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter>

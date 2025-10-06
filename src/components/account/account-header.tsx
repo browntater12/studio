@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import { type Account } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { SalesInsights } from './sales-insights';
+import { Button } from '@/components/ui/button';
+import { Package } from 'lucide-react';
 
 export function AccountHeader({ account }: { account: Account }) {
   return (
@@ -15,7 +17,12 @@ export function AccountHeader({ account }: { account: Account }) {
         </div>
       </div>
       <div className="flex gap-2">
-        <SalesInsights accountId={account.id} />
+        <Button asChild>
+          <Link href="/dashboard/products">
+            <Package className="mr-2 h-4 w-4" />
+            Products
+          </Link>
+        </Button>
       </div>
     </div>
   );
