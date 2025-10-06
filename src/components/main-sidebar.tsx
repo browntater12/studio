@@ -20,6 +20,7 @@ import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarMenuSkeleton } from './ui/sidebar';
+import { DbStatus } from './db-status';
 
 
 interface MainSidebarProps {
@@ -99,6 +100,7 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
+        <DbStatus />
         <ThemeToggle />
       </SidebarFooter>
     </Sidebar>
