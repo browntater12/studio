@@ -61,14 +61,14 @@ function AddProductDialog({ accountId, allProducts }: { accountId: string, allPr
 
 const editInitialState = { type: '', message: '', errors: undefined };
 
-function EditNoteForm({ accountId, productId, currentNotes, onSuccess }: { accountId: string, productId: string, currentNotes: string, onSuccess: () => void }) {
+function EditNoteForm({ noteId, currentNotes, onSuccess }: { noteId: string, currentNotes: string, onSuccess: () => void }) {
     const [state, formAction] = useActionState(updateProductNote, editInitialState);
     const { pending } = useFormStatus();
     const { toast } = useToast();
 
     const form = useForm<z.infer<typeof editProductNoteSchema>>({
         resolver: zodResolver(editProductNoteSchema),
-        defaultValues: { accountId, productId, notes: currentNotes },
+        defaultValues: { noteId, notes: currentNotes },
     });
 
     React.useEffect(() => {
@@ -83,8 +83,7 @@ function EditNoteForm({ accountId, productId, currentNotes, onSuccess }: { accou
     return (
         <Form {...form}>
             <form action={formAction} className="space-y-4">
-                 <input type="hidden" name="accountId" value={accountId} />
-                 <input type="hidden" name="productId" value={productId} />
+                 <input type="hidden" name="noteId" value={noteId} />
                  <FormField
                     control={form.control}
                     name="notes"
@@ -107,7 +106,7 @@ function EditNoteForm({ accountId, productId, currentNotes, onSuccess }: { accou
     );
 }
 
-function EditNoteDialog({ accountId, productId, currentNotes, children }: { accountId: string, productId: string, currentNotes: string, children: React.ReactNode }) {
+function EditNoteDialog({ note, children }: { note: AccountProduct, children: React.ReactNode }) {
     const [open, setOpen] = React.useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -116,7 +115,7 @@ function EditNoteDialog({ accountId, productId, currentNotes, children }: { acco
                 <DialogHeader>
                     <DialogTitle>Edit Product Note</DialogTitle>
                 </DialogHeader>
-                <EditNoteForm accountId={accountId} productId={productId} currentNotes={currentNotes} onSuccess={() => setOpen(false)} />
+                <EditNoteForm noteId={note.id!} currentNotes={note.notes} onSuccess={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
     );
@@ -155,13 +154,13 @@ export function ProductList({
                 const product = getProductDetails(ap.productId);
                 if (!product) return null;
                 return (
-                    <div key={ap.productId} className="p-4 border rounded-lg relative group">
+                    <div key={ap.id} className="p-4 border rounded-lg relative group">
                         <div className="font-semibold">{product.name} <span className="text-sm font-normal text-muted-foreground">({product.productNumber})</span></div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {product.volumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
                         </div>
-                        <EditNoteDialog accountId={accountId} productId={ap.productId} currentNotes={ap.notes}>
+                        <EditNoteDialog note={ap}>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
                                 <Edit className="h-4 w-4" />
                             </Button>

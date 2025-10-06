@@ -6,6 +6,7 @@ import {
   where,
   getDocs,
   getDoc,
+  addDoc,
 } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
 import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
@@ -37,13 +38,16 @@ export async function getAccountById(
 
   const accountData = { id: accountSnap.id, ...accountSnap.data() } as Account;
 
-  // Fetch subcollections
-  const productsCol = collection(db, 'accounts-db', id, 'products');
-  const productsSnap = await getDocs(productsCol);
-  // The document ID is the productId for this subcollection
-  accountData.accountProducts = productsSnap.docs.map(
-    (doc) => ({ productId: doc.id, ...doc.data() } as AccountProduct)
+  // Fetch related AccountProduct notes
+  const accountProductsQuery = query(
+    collection(db, 'account-products'),
+    where('accountId', '==', id)
   );
+  const accountProductsSnap = await getDocs(accountProductsQuery);
+  accountData.accountProducts = accountProductsSnap.docs.map(
+    (doc) => ({ id: doc.id, ...doc.data() } as AccountProduct)
+  );
+
 
   return accountData;
 }
@@ -78,12 +82,19 @@ export async function updateAccount(
 
 export async function updateAccountProductNote(
   db: AdminFirestore,
-  accountId: string,
-  productId: string,
+  noteId: string,
   notes: string
 ): Promise<void> {
-  const productRef = db.collection('accounts-db').doc(accountId).collection('products').doc(productId);
-  await productRef.update({ notes });
+  const noteRef = db.collection('account-products').doc(noteId);
+  await noteRef.update({ notes });
+}
+
+export async function addProductToAccount(
+  db: AdminFirestore,
+  productData: Omit<AccountProduct, 'id'>
+): Promise<void> {
+  const accountProductsCollection = db.collection('account-products');
+  await accountProductsCollection.add(productData);
 }
 
 export async function updateProduct(
@@ -107,6 +118,6 @@ export async function deleteProduct(db: AdminFirestore, id: string): Promise<voi
 
   // In a real app, this might be a Cloud Function for safety.
   // For now, we will just delete the product doc.
-  // Note: References in account subcollections will be orphaned.
+  // Note: References in account-products will be orphaned.
   await productRef.delete();
 }

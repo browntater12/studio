@@ -63,8 +63,7 @@ export const addProductToAccountSchema = z.object({
 
 
 export const editProductNoteSchema = z.object({
-  accountId: z.string(),
-  productId: z.string(),
+  noteId: z.string(),
   notes: z.string().min(3, { message: "Notes must be at least 3 characters." }),
 });
 

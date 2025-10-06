@@ -11,6 +11,7 @@ import {
   editProductNoteSchema,
   editProductSchema,
   deleteProductSchema,
+  addProductToAccountSchema,
 } from '@/lib/schema';
 import {
   updateAccount as dbUpdateAccount,
@@ -19,6 +20,7 @@ import {
   deleteProduct as dbDeleteProduct,
   getAccountById as dbGetAccountById,
   getProducts as dbGetProducts,
+  addProductToAccount as dbAddProductToAccount,
 } from '@/lib/data';
 import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
 import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
@@ -61,10 +63,57 @@ export async function updateAccount(prevState: any, formData: FormData) {
     redirect(`/dashboard/account/${id}`);
 }
 
-export async function updateProductNote(prevState: any, formData: FormData) {
-    const validatedFields = editProductNoteSchema.safeParse({
+export async function addProductToAccount(prevState: any, formData: FormData) {
+    const rawData = {
         accountId: formData.get('accountId'),
         productId: formData.get('productId'),
+        notes: formData.get('notes'),
+        priceType: formData.get('priceType'),
+        bidFrequency: formData.get('bidFrequency'),
+        lastBidPrice: formData.get('lastBidPrice') ? parseFloat(formData.get('lastBidPrice') as string) : undefined,
+        winningBidPrice: formData.get('winningBidPrice') ? parseFloat(formData.get('winningBidPrice') as string) : undefined,
+        priceDetails_type: formData.get('priceDetails.type'),
+        priceDetails_price: formData.get('priceDetails.price') ? parseFloat(formData.get('priceDetails.price') as string) : undefined,
+    };
+
+    const validatedFields = addProductToAccountSchema.safeParse({
+        accountId: rawData.accountId,
+        productId: rawData.productId,
+        notes: rawData.notes,
+        priceType: rawData.priceType,
+        bidFrequency: rawData.priceType === 'bid' ? rawData.bidFrequency : undefined,
+        lastBidPrice: rawData.priceType === 'bid' ? rawData.lastBidPrice : undefined,
+        winningBidPrice: rawData.priceType === 'bid' ? rawData.winningBidPrice : undefined,
+        priceDetails: rawData.priceType !== 'bid' ? {
+            type: rawData.priceDetails_type,
+            price: rawData.priceDetails_price,
+        } : undefined,
+    });
+    
+    if (!validatedFields.success) {
+        return {
+            type: 'error',
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Invalid fields. Failed to add product.',
+        };
+    }
+
+    const { ...data } = validatedFields.data;
+    
+    try {
+        const app = initializeServerApp();
+        const firestore = getFirestore(app);
+        await dbAddProductToAccount(firestore, data);
+        revalidatePath(`/dashboard/account/${data.accountId}`);
+        return { type: 'success', message: 'Product added successfully.' };
+    } catch(e: any) {
+        return { type: 'error', message: e.message || 'Database error: Failed to add product.' };
+    }
+}
+
+export async function updateProductNote(prevState: any, formData: FormData) {
+    const validatedFields = editProductNoteSchema.safeParse({
+        noteId: formData.get('noteId'),
         notes: formData.get('notes'),
     });
 
@@ -76,13 +125,13 @@ export async function updateProductNote(prevState: any, formData: FormData) {
         };
     }
 
-    const { accountId, productId, notes } = validatedFields.data;
+    const { noteId, notes } = validatedFields.data;
 
     try {
         const app = initializeServerApp();
         const firestore = getFirestore(app);
-        await dbUpdateNote(firestore, accountId, productId, notes);
-        revalidatePath(`/dashboard/account/${accountId}`);
+        await dbUpdateNote(firestore, noteId, notes);
+        revalidatePath(`/dashboard/account`); // This might be too broad, need to figure out which account
         return { type: 'success', message: 'Note updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update note.' };
