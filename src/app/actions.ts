@@ -64,19 +64,21 @@ export async function updateAccount(prevState: any, formData: FormData) {
 }
 
 export async function addProductToAccount(prevState: any, formData: FormData) {
-    const validatedFields = addProductToAccountSchema.safeParse({
+    const rawData = {
         accountId: formData.get('accountId'),
         productId: formData.get('productId'),
         notes: formData.get('notes'),
         priceType: formData.get('priceType'),
         bidFrequency: formData.get('bidFrequency'),
-        lastBidPrice: formData.get('lastBidPrice'),
-        winningBidPrice: formData.get('winningBidPrice'),
-        priceDetails: {
+        lastBidPrice: formData.get('lastBidPrice') ? parseFloat(formData.get('lastBidPrice') as string) : undefined,
+        winningBidPrice: formData.get('winningBidPrice') ? parseFloat(formData.get('winningBidPrice') as string) : undefined,
+        priceDetails: (formData.get('priceType') !== 'bid') ? {
             type: formData.get('priceDetails.type'),
-            price: formData.get('priceDetails.price'),
-        }
-    });
+            price: formData.get('priceDetails.price') ? parseFloat(formData.get('priceDetails.price') as string) : undefined,
+        } : undefined,
+    };
+    
+    const validatedFields = addProductToAccountSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
         return {

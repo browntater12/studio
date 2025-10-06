@@ -31,18 +31,35 @@ export const editContactSchema = addContactSchema.extend({
 });
 
 export const addProductToAccountSchema = z.object({
-  accountId: z.string({ required_error: "Please select a product." }),
-  productId: z.string({ required_error: "Please select a product." }).min(1, { message: "Please select a product." }),
+  accountId: z.string(),
+  productId: z.string().min(1, { message: "Please select a product." }),
   notes: z.string().optional(),
   priceType: z.enum(['spot', 'bid']).optional(),
   bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
-  lastBidPrice: z.coerce.number().optional(),
-  winningBidPrice: z.coerce.number().optional(),
+  lastBidPrice: z.number().optional(),
+  winningBidPrice: z.number().optional(),
   priceDetails: z.object({
     type: z.enum(['quote', 'last_paid']),
-    price: z.coerce.number().optional(),
+    price: z.number().optional(),
   }).optional()
+}).refine(data => {
+    if (data.priceType === 'bid') {
+        return data.bidFrequency !== undefined;
+    }
+    return true;
+}, {
+    message: "Bid frequency is required when bid price is selected.",
+    path: ['bidFrequency'],
+}).refine(data => {
+    if (data.priceType !== 'bid' && data.priceDetails) {
+        return data.priceDetails.price !== undefined;
+    }
+    return true;
+}, {
+    message: "Price is required for spot pricing.",
+    path: ['priceDetails', 'price'],
 });
+
 
 export const editProductNoteSchema = z.object({
   accountId: z.string(),
