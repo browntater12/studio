@@ -246,8 +246,9 @@ export async function getAccountProductNotes(accountId: string): Promise<{error?
     const app = initializeServerApp();
     const firestore = getFirestore(app);
     const notes = await dbGetAccountProductNotes(firestore, accountId);
-    // The data fetched from firestore is not serializable, so we need to re-map it.
-    return { notes: notes.map(n => ({...n})) };
+    // The data fetched from firestore is not serializable, so we need to re-map it to plain objects.
+    const serializableNotes = notes.map(n => ({...n}));
+    return { notes: serializableNotes };
   } catch (e: any) {
     console.error('Error fetching account product notes:', e);
     return { error: e.message || 'An unexpected error occurred.' };
