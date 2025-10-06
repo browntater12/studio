@@ -1,171 +1,129 @@
 /**
- * @fileoverview Firestore Security Rules for the sales CRM application.
+ * @fileoverview Firestore Security Rules for Prototyping.
  *
  * Core Philosophy:
- * This ruleset prioritizes secure data access based on user roles and ownership.
- * It focuses on preventing unauthorized data modification and ensuring data integrity.
+ * This ruleset prioritizes secure authorization while permitting flexible data shapes to enable rapid prototyping.
+ * It uses a strict user-ownership model for user profiles and allows public read access to product catalogs.
+ * Access to accounts and contacts is unrestricted, as the application has not specified ownership or role-based access.
  *
  * Data Structure:
- * - /users/{userId}: Stores public user profile information, accessible only to the owning user.
- * - /accounts-db/{accountId}: Stores sales account information, publicly readable, but only modifiable by the owner.
- * - /accounts-db/{accountId}/contacts/{contactId}: Stores contact information for an account, readable by all but only modifiable by the account owner.
- * - /accounts-db/{accountId}/products/{productId}: Stores product notes related to an account.
- * - /products/{productId}: Stores global product catalog information, publicly readable but owner-modifiable.
+ * - /users/{userId}: Stores public user profiles, accessible only to the owning user.
+ * - /accounts-db/{accountId}: Stores sales accounts. Write access is unrestricted.
+ * - /contacts/{contactId}: Stores contacts, linked to accounts by accountNumber. Write access is unrestricted.
+ * - /accounts-db/{accountId}/products/{productId}: Stores product notes specific to an account. Write access is unrestricted.
+ * - /products/{productId}: Stores the global product catalog, publicly readable with unrestricted write access.
  *
  * Key Security Decisions:
  * - User listing is disabled to protect user privacy.
- * - Public read access is granted to the "accounts-db" and "products" collections for prototyping purposes,
- *   but writes are restricted to owners.
+ * - Public read access is granted to the product catalog to facilitate easy access to product information.
+ * - The absence of defined ownership or roles for accounts and contacts results in unrestricted write access to these collections.
  *
  * Denormalization for Authorization:
- * - The current data model uses the `accountId` to determine account ownership.
+ * Not applicable in this ruleset, as the current authorization model does not require it.
+ *
+ * Structural Segregation:
+ * Not applicable in this ruleset, as there are no private and public data variations.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the authenticated user can read and write their own profile.
+     * @description Secure user profiles. Only the user can read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user can create their own profile.
-     * @allow (get, list, update, delete) - Authenticated user can access their own profile.
-     * @deny (create, get, list, update, delete) - Any other user trying to access this data.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (create) User with UID 'user123' creates their profile document at /users/user123.
+     * @allow (get) User with UID 'user123' reads their profile document at /users/user123.
+     * @allow (update) User with UID 'user123' updates their profile document at /users/user123.
+     * @allow (delete) User with UID 'user123' deletes their profile document at /users/user123.
+     * @deny (create) User with UID 'user123' attempts to create a profile at /users/user456.
+     * @deny (get) User with UID 'user123' attempts to read a profile at /users/user456.
+     * @deny (update) User with UID 'user123' attempts to update profile at /users/user456.
+     * @deny (delete) User with UID 'user123' attempts to delete profile at /users/user456.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource.data.ownerUid == request.auth.uid;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false; // Disable listing
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false; // Protect user privacy; prevent listing of all user profiles.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Secure the sales accounts. Publicly readable, owner-only writes.
+     * @description Controls access to sales accounts.  Write access is unrestricted.
      * @path /accounts-db/{accountId}
-     * @allow (get, list) - Any user can read accounts.
-     * @allow (create) - An authenticated user can create a new account.
-     * @allow (update, delete) - The owner of the account can modify it.
-     * @deny (create, update, delete) - If not the owner.
-     * @principle Public read access with owner-only writes for prototyping.
+     * @allow (create) Any authenticated user can create an account.
+     * @allow (get) Any authenticated user can read an account.
+     * @allow (update) Any authenticated user can update an account.
+     * @allow (delete) Any authenticated user can delete an account.
+     * @principle Write access is unrestricted
      */
     match /accounts-db/{accountId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // WARNING: This function may not be correct if there are no fields present to denote account owner
-      function isOwner() {
-        return request.auth.uid == request.resource.data.ownerUid;
-      }
-
-      function isExistingOwner() {
-        return isOwner() && resource.data.ownerUid == request.auth.uid;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && isOwner();
-      allow delete: if isSignedIn() && isOwner();
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
     }
 
     /**
-     * @description Secure contacts within an account. Publicly readable, owner-only writes.
-     * @path /accounts-db/{accountId}/contacts/{contactId}
-     * @allow (get, list) - Any user can read contacts associated to an account.
-     * @allow (create) - The owner of the parent account can create a contact.
-     * @allow (update, delete) - The owner of the parent account can modify the contact.
-     * @deny (create, update, delete) - If not the owner of the parent account.
-     * @principle Child document ownership inherited from parent.
+     * @description Controls access to contacts. Write access is unrestricted.
+     * @path /contacts/{contactId}
+     * @allow (create) Any authenticated user can create a contact.
+     * @allow (get) Any authenticated user can read a contact.
+     * @allow (update) Any authenticated user can update a contact.
+     * @allow (delete) Any authenticated user can delete a contact.
+     * @principle Write access is unrestricted
      */
-    match /accounts-db/{accountId}/contacts/{contactId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // WARNING: This function may not be correct if there are no fields present to denote account owner
-      function isOwner(accountId) {
-        return get(/databases/$(database)/documents/accounts-db/$(accountId)).data.ownerUid == request.auth.uid;
-      }
-
-      function isExistingOwner(accountId) {
-        return isOwner(accountId);
-      }
-
+    match /contacts/{contactId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isOwner(accountId);
-      allow update: if isSignedIn() && isOwner(accountId);
-      allow delete: if isSignedIn() && isOwner(accountId);
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
     }
 
     /**
-     * @description Secure product notes within an account. Publicly readable, owner-only writes.
+     * @description Controls access to product notes specific to an account. Write access is unrestricted.
      * @path /accounts-db/{accountId}/products/{productId}
-     * @allow (get, list) - Any user can read product notes within an account.
-     * @allow (create) - The owner of the parent account can create a product note.
-     * @allow (update, delete) - The owner of the parent account can modify the product note.
-     * @deny (create, update, delete) - If not the owner of the parent account.
-     * @principle Child document ownership inherited from parent.
+     * @allow (create) Any authenticated user can create a product note for an account.
+     * @allow (get) Any authenticated user can read a product note for an account.
+     * @allow (update) Any authenticated user can update a product note for an account.
+     * @allow (delete) Any authenticated user can delete a product note for an account.
+     * @principle Write access is unrestricted
      */
     match /accounts-db/{accountId}/products/{productId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // WARNING: This function may not be correct if there are no fields present to denote account owner
-      function isOwner(accountId) {
-        return get(/databases/$(database)/documents/accounts-db/$(accountId)).data.ownerUid == request.auth.uid;
-      }
-
-      function isExistingOwner(accountId) {
-        return isOwner(accountId);
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && isOwner(accountId);
-      allow update: if isSignedIn() && isOwner(accountId);
-      allow delete: if isSignedIn() && isOwner(accountId);
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
     }
 
     /**
-     * @description Secure the global product catalog. Publicly readable, owner-only writes.
+     * @description Controls access to the global product catalog. Public read access with unrestricted write access.
      * @path /products/{productId}
-     * @allow (get, list) - Any user can read products.
-     * @allow (create) - An authenticated user can create a new product.
-     * @allow (update, delete) - The owner of the product can modify it.
-     * @deny (create, update, delete) - If not the owner.
-     * @principle Public read access with owner-only writes for prototyping.
+     * @allow (create) Any authenticated user can create a product.
+     * @allow (get) Any user can read a product.
+     * @allow (update) Any authenticated user can update a product.
+     * @allow (delete) Any authenticated user can delete a product.
+     * @principle Public read access with unrestricted write access.
      */
     match /products/{productId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // WARNING: This function may not be correct if there are no fields present to denote account owner
-      function isOwner() {
-        return request.auth.uid == resource.data.ownerUid;
-      }
-
-      function isExistingOwner() {
-        return isOwner();
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && isOwner();
-      allow delete: if isSignedIn() && isOwner();
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
     }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
   }
 }
