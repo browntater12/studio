@@ -28,9 +28,6 @@ import {
   getAccountById,
 } from '@/lib/data';
 
-import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
-import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
-
 
 export async function addAccount(prevState: any, formData: FormData) {
   const validatedFields = addAccountSchema.safeParse({
@@ -61,7 +58,6 @@ export async function addAccount(prevState: any, formData: FormData) {
   }
 
   revalidatePath('/dashboard');
-  revalidatePath(`/dashboard/account/${newAccount.id}`);
   redirect(`/dashboard/account/${newAccount.id}`);
 }
 
@@ -199,39 +195,6 @@ export async function updateProductNote(prevState: any, formData: FormData) {
         return { type: 'success', message: 'Note updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update note.' };
-    }
-}
-
-export async function generateSalesInsights(accountId: string) {
-    const account = await getAccountById(accountId);
-
-    if (!account) {
-        return { error: "Account not found" };
-    }
-
-    const allNotes = account.accountProducts.map(p => `- ${p.notes}`).join('\n');
-    const fullNotes = `Account Details: ${account.details}\n\nProduct Notes:\n${allNotes}`;
-
-    try {
-        const [summary, actions] = await Promise.all([
-            summarizeAccountNotes({
-                accountName: account.name,
-                notes: fullNotes,
-            }),
-            generatePotentialActions({
-                accountName: account.name,
-                accountDetails: account.details,
-                productNotes: allNotes,
-            })
-        ]);
-        
-        return { 
-            summary: summary.summary, 
-            potentialActions: actions.potentialActions 
-        };
-    } catch (e) {
-        console.error("AI generation failed:", e);
-        return { error: "Failed to generate insights. Please try again." };
     }
 }
 

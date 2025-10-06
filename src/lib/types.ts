@@ -1,3 +1,5 @@
+import { DocumentReference, Timestamp } from 'firebase/firestore';
+
 export type Contact = {
   id: string;
   name: string;
@@ -5,7 +7,7 @@ export type Contact = {
   email: string;
   location: string;
   isMainContact: boolean;
-  avatarUrl: string;
+  avatarUrl?: string; // Made optional
 };
 
 export type AccountProduct = {
@@ -20,9 +22,10 @@ export type Account = {
   industry?: string;
   status: 'lead' | 'customer';
   details: string;
-  contacts: Contact[];
-  accountProducts: AccountProduct[];
   address?: string;
+  // These are now fetched from subcollections
+  contacts?: Contact[];
+  accountProducts?: AccountProduct[];
 };
 
 export type Product = {

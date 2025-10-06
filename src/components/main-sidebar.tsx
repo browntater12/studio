@@ -2,11 +2,10 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
-import { PlusCircle, Building, Search, Moon, Sun, Package } from 'lucide-react';
+import { useParams, usePathname } from 'next/navigation';
+import { PlusCircle, Building, Search, Package } from 'lucide-react';
 
 import { type Account, type Product } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import {
   Sidebar,
   SidebarHeader,
@@ -15,20 +14,21 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
+import { SidebarMenuSkeleton } from './ui/sidebar';
 
 
 interface MainSidebarProps {
   accounts: Account[];
   products: Product[];
+  isLoading: boolean;
 }
 
-export function MainSidebar({ accounts }: MainSidebarProps) {
+export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountId = params.id as string;
@@ -68,7 +68,15 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
               </Link>
           </Button>
 
-          {filteredAccounts.map(account => (
+          {isLoading && (
+            <div className="p-2">
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+            </div>
+          )}
+
+          {!isLoading && filteredAccounts.map(account => (
             <SidebarMenuItem key={account.id}>
               <Link href={`/dashboard/account/${account.id}`} passHref>
                 <SidebarMenuButton
@@ -84,7 +92,7 @@ export function MainSidebar({ accounts }: MainSidebarProps) {
               </Link>
             </SidebarMenuItem>
           ))}
-          {filteredAccounts.length === 0 && (
+          {!isLoading && filteredAccounts.length === 0 && (
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
         </SidebarMenu>
