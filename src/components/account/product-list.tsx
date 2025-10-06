@@ -152,14 +152,15 @@ export function ProductList({
           <div className="space-y-4">
             {accountProducts.map(ap => {
                 const product = getProductDetails(ap.productId);
-                if (!product) return null;
                 return (
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
-                        <div className="font-semibold">{product.name} <span className="text-sm font-normal text-muted-foreground">({product.productNumber})</span></div>
+                        <div className="font-semibold">{product?.name || 'Unknown Product'} <span className="text-sm font-normal text-muted-foreground">({product?.productNumber || 'N/A'})</span></div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {product.volumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
-                        </div>
+                        {product?.volumes && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {product.volumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
+                            </div>
+                        )}
                         <EditNoteDialog note={ap}>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
                                 <Edit className="h-4 w-4" />

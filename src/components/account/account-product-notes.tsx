@@ -20,19 +20,40 @@ export function AccountProductNotes({
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    let isMounted = true;
     async function fetchNotes() {
-      setLoading(true);
-      const result = await getAccountProductNotes(accountId);
-      if (result.error) {
-        setError(result.error);
-      } else if (result.notes) {
-        setNotes(result.notes);
+      if (!accountId) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getAccountProductNotes(accountId);
+        if (!isMounted) return;
+
+        if (result.error) {
+          setError(result.error);
+        } else if (result.notes) {
+          setNotes(result.notes);
+        } else {
+          setNotes([]);
+        }
+      } catch (e: any) {
+        if (isMounted) {
+            setError(e.message || 'An unexpected error occurred while fetching notes.');
+        }
+      } finally {
+        if (isMounted) {
+            setLoading(false);
+        }
+      }
     }
 
-    if (accountId) {
-      fetchNotes();
+    fetchNotes();
+
+    return () => {
+        isMounted = false;
     }
   }, [accountId]);
 
