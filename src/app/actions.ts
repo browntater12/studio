@@ -253,6 +253,7 @@ export async function createProduct(prevState: any, formData: FormData) {
     try {
         await dbAddProductGlobal(validatedFields.data);
         revalidatePath('/dashboard/products');
+        revalidatePath('/dashboard/account');
         return { type: 'success', message: 'Product created successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to create product.' };
@@ -278,6 +279,7 @@ export async function updateProduct(prevState: any, formData: FormData) {
     try {
         await dbUpdateProduct(validatedFields.data.id, validatedFields.data);
         revalidatePath('/dashboard/products');
+        revalidatePath('/dashboard/account');
         return { type: 'success', message: 'Product updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update product.' };
@@ -299,7 +301,7 @@ export async function deleteProduct(prevState: any, formData: FormData) {
   try {
     await dbDeleteProduct(validatedFields.data.id);
     revalidatePath('/dashboard/products');
-    revalidatePath('/dashboard'); // To refresh account pages that might have the product
+    revalidatePath('/dashboard/account');
     return { type: 'success', message: 'Product deleted successfully.' };
   } catch (e: any) {
     return { type: 'error', message: e.message || 'Database Error: Failed to delete product.' };
