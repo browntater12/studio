@@ -8,9 +8,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 
 
-import { createProduct, updateProduct, deleteProduct } from '@/app/actions';
+import { updateProduct, deleteProduct } from '@/app/actions';
 import { createProductSchema, editProductSchema } from '@/lib/schema';
 import { type Product, type ProductVolume } from '@/lib/types';
 
@@ -48,11 +50,12 @@ const VOLUMES: { id: ProductVolume; label: string }[] = [
   { id: 'bulk', label: 'Bulk' },
 ];
 
-function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
+function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSubmitting: boolean }) {
   const { pending } = useFormStatus();
+  const isDisabled = isSubmitting || pending;
   return (
-    <Button type="submit" disabled={pending} className="flex-1">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+    <Button type="submit" disabled={isDisabled} className="flex-1">
+      {(isDisabled) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {isEditMode ? 'Save Changes' : 'Create Product'}
     </Button>
   );
@@ -112,12 +115,15 @@ type CreateProductFormProps = {
 
 export function CreateProductForm({ product, onSuccess }: CreateProductFormProps) {
   const isEditMode = !!product;
-  const action = isEditMode ? updateProduct : createProduct;
+  const action = isEditMode ? updateProduct : undefined;
   const schema = isEditMode ? editProductSchema : createProductSchema;
   type SchemaType = z.infer<typeof schema>;
 
-  const [state, formAction] = useActionState(action, initialState);
+  const [editState, formAction] = useActionState(action || (() => Promise.resolve(initialState)), initialState);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
@@ -133,12 +139,12 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
   const watchedVolumes = useWatch({ control: form.control, name: 'volumes' }) || [];
 
   React.useEffect(() => {
-    if (state.type === 'success') {
-      toast({ title: 'Success!', description: state.message });
+    if (editState.type === 'success') {
+      toast({ title: 'Success!', description: editState.message });
       onSuccess();
-    } else if (state.type === 'error') {
-      toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      const errors = state.errors as z.ZodError<SchemaType>['formErrors']['fieldErrors'] | undefined;
+    } else if (editState.type === 'error') {
+      toast({ title: 'Error', description: editState.message, variant: 'destructive' });
+      const errors = editState.errors as z.ZodError<SchemaType>['formErrors']['fieldErrors'] | undefined;
       if (errors) {
         Object.keys(errors).forEach((key) => {
             const fieldKey = key as keyof SchemaType;
@@ -148,11 +154,52 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
         });
       }
     }
-  }, [state, onSuccess, toast, form]);
+  }, [editState, onSuccess, toast, form]);
+  
+  const onSubmit = async (values: SchemaType) => {
+    if (isEditMode) return; // handled by server action
+
+    setIsSubmitting(true);
+    try {
+      if (!firestore) {
+        throw new Error("Firestore is not available");
+      }
+      
+      const productsCollection = collection(firestore, 'products');
+
+      // Check for uniqueness
+      const q = query(productsCollection, where("productNumber", "==", values.productNumber));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        throw new Error("A product with this product number already exists.");
+      }
+      
+      await addDoc(productsCollection, values);
+      
+      toast({
+        title: "Product Created",
+        description: "The new product has been added to the catalog.",
+      });
+      onSuccess();
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create product.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-4">
+      <form 
+        action={isEditMode ? formAction : undefined}
+        onSubmit={!isEditMode ? form.handleSubmit(onSubmit) : undefined}
+        className="space-y-4"
+      >
         {isEditMode && <input type="hidden" name="id" value={product.id} />}
         {watchedVolumes.map((volume) => (
             <input key={volume} type="hidden" name="volumes" value={volume} />
@@ -232,7 +279,7 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
           )}
         />
         <div className="flex gap-2">
-            <SubmitButton isEditMode={isEditMode} />
+            <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
             {isEditMode && product && <DeleteProductButton productId={product.id} onSuccess={onSuccess} />}
         </div>
       </form>

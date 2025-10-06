@@ -103,17 +103,6 @@ export async function updateAccountProductNote(
   await productRef.update({ notes });
 }
 
-export async function addProduct(db: AdminFirestore, data: Omit<Product, 'id'>): Promise<void> {
-  const q = db.collection('products').where('productNumber', '==', data.productNumber);
-  const existing = await q.get();
-
-  if (!existing.empty) {
-      throw new Error('A product with this product number already exists.');
-  }
-
-  await db.collection('products').add(data);
-}
-
 export async function updateProduct(
   db: AdminFirestore,
   id: string,

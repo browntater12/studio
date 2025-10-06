@@ -10,7 +10,6 @@ import {
   editAccountSchema,
   addProductToAccountSchema,
   editProductNoteSchema,
-  createProductSchema,
   editProductSchema,
   deleteProductSchema,
 } from '@/lib/schema';
@@ -18,7 +17,6 @@ import {
   updateAccount as dbUpdateAccount,
   addProductToAccount as dbAddProduct,
   updateAccountProductNote as dbUpdateNote,
-  addProduct as dbAddProductGlobal,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
   getAccountById as dbGetAccountById,
@@ -118,33 +116,6 @@ export async function updateProductNote(prevState: any, formData: FormData) {
         return { type: 'success', message: 'Note updated successfully.' };
     } catch (e: any) {
         return { type: 'error', message: e.message || 'Database Error: Failed to update note.' };
-    }
-}
-
-export async function createProduct(prevState: any, formData: FormData) {
-    const validatedFields = createProductSchema.safeParse({
-        name: formData.get('name'),
-        productNumber: formData.get('productNumber'),
-        volumes: formData.getAll('volumes'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to create product.',
-        };
-    }
-
-    try {
-        const app = initializeServerApp();
-        const firestore = getFirestore(app);
-        await dbAddProductGlobal(firestore, validatedFields.data);
-        revalidatePath('/dashboard/products');
-        revalidatePath('/dashboard/account');
-        return { type: 'success', message: 'Product created successfully.' };
-    } catch (e: any) {
-        return { type: 'error', message: e.message || 'Database Error: Failed to create product.' };
     }
 }
 
