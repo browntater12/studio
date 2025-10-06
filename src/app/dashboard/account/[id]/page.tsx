@@ -3,12 +3,12 @@
 import { useParams } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { type Account, type Contact, type Product } from '@/lib/types';
+import { type Account, type Contact, type Product, type AccountProduct } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AccountProductNotes } from '@/components/account/account-product-notes';
+import { ProductList } from '@/components/account/product-list';
 
 export default function AccountPage() {
   const params = useParams();
@@ -34,7 +34,14 @@ export default function AccountPage() {
   }, [firestore, isUserLoading]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
-  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading;
+  const productNotesQuery = useMemoFirebase(() => {
+    if (isUserLoading || !firestore || !id) return null;
+    return query(collection(firestore, 'account-products'), where('accountId', '==', id));
+  }, [firestore, id, isUserLoading]);
+  const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
+
+
+  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading;
   
   if (isLoading) {
     return (
@@ -69,7 +76,11 @@ export default function AccountPage() {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
           <ContactList account={account} contacts={contacts || []} />
-          <AccountProductNotes accountId={id} allProducts={allProducts || []} />
+          <ProductList
+            accountId={id}
+            accountProducts={accountProducts || []}
+            allProducts={allProducts || []}
+          />
         </div>
         <div className="lg:col-span-1">
           <AccountInfo account={account} />

@@ -142,18 +142,3 @@ export async function generateSalesInsights(accountId: string) {
     return { error: e.message || 'An unexpected error occurred.' };
   }
 }
-
-export async function getAccountProductNotes(accountId: string): Promise<{error?: string, notes?: AccountProduct[]}> {
-  try {
-    const notes = await dbGetAccountProductNotes(accountId);
-    const serializableNotes = notes.map(n => ({
-        ...n,
-        // Ensure any non-serializable fields are handled here if necessary
-        // For now, spreading should be sufficient if the data types are simple
-    }));
-    return { notes: serializableNotes };
-  } catch (e: any) {
-    console.error('Error fetching account product notes:', e);
-    return { error: e.message || 'An unexpected error occurred.' };
-  }
-}
