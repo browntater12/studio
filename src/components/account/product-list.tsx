@@ -111,10 +111,10 @@ export function ProductList({
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            <span>Products & Notes</span>
+            <span>Products</span>
           </CardTitle>
           <CardDescription>
-            Products this account is using and related notes.
+            Products this account is using.
           </CardDescription>
         </div>
         <AddProductDialog accountId={accountId} allProducts={allProducts} />
