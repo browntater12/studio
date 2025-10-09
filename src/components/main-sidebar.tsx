@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { PlusCircle, Building, Search, Package } from 'lucide-react';
 
-import { type Account, type Product } from '@/lib/types';
+import { type Account } from '@/lib/types';
 import {
   Sidebar,
   SidebarHeader,
@@ -15,7 +15,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
