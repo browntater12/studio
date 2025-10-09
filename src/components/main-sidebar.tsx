@@ -30,9 +30,7 @@ interface MainSidebarProps {
 }
 
 export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
-  const params = useParams();
   const pathname = usePathname();
-  const accountId = params.id as string;
   const [search, setSearch] = React.useState('');
 
   const filteredAccounts = accounts.filter(acc => 
