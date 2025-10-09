@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CalendarIcon, Check, ChevronsUpDown, Loader2, Mic, MicOff, PhoneCall } from 'lucide-react';
@@ -84,8 +84,6 @@ export function AddCallNoteDialog({ accountId, contacts }: { accountId: string; 
     },
   });
 
-  const watchedContactIds = useWatch({ control: form.control, name: 'contactIds' });
-
   const startRecording = async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -139,7 +137,7 @@ export function AddCallNoteDialog({ accountId, contacts }: { accountId: string; 
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Firestore is not initialized.',
+            description: 'Firestore is not initialized. Please try again.',
         });
         setIsSubmitting(false);
         return;
@@ -153,7 +151,7 @@ export function AddCallNoteDialog({ accountId, contacts }: { accountId: string; 
             form.reset({ accountId, callDate: new Date(), notes: '', contactIds: [] });
             setOpen(false);
         })
-        .catch(async (serverError) => {
+        .catch((serverError) => {
             const permissionError = new FirestorePermissionError({
                 path: callNotesCollection.path,
                 operation: 'create',
