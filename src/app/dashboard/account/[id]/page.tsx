@@ -12,7 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ProductList } from '@/components/account/product-list';
 import { CallNotesList } from '@/components/account/call-notes-list';
 
-function AccountDetails({ accountId }: { accountId: string }) {
+function AccountDetails() {
+  const params = useParams();
+  const accountId = params.id as string;
   const firestore = useFirestore();
   const { isUserLoading } = useUser();
 
@@ -98,8 +100,6 @@ function AccountDetails({ accountId }: { accountId: string }) {
 
 
 export default function AccountPage() {
-  const params = useParams();
-  const id = params.id as string;
   const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
@@ -129,5 +129,5 @@ export default function AccountPage() {
     );
   }
   
-  return <AccountDetails accountId={id} />;
+  return <AccountDetails />;
 }
