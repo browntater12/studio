@@ -6,7 +6,7 @@ import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { PlusCircle, Package, Edit, Loader2 } from 'lucide-react';
+import { PlusCircle, Package, Edit, Loader2, DollarSign } from 'lucide-react';
 import { type AccountProduct, type Product } from '@/lib/types';
 import { updateProductNote } from '@/app/actions';
 import { editProductNoteSchema } from '@/lib/schema';
@@ -121,6 +121,19 @@ function EditNoteDialog({ note, children }: { note: AccountProduct, children: Re
     );
 }
 
+const PriceDisplay = ({ label, price }: { label: string, price: number | undefined }) => {
+    if (price === undefined) return null;
+    return (
+      <div className="flex items-center gap-2 text-sm mt-2">
+        <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <span className="font-semibold">{`$${price.toFixed(2)}`}</span>
+          <span className="text-muted-foreground ml-1">({label})</span>
+        </div>
+      </div>
+    );
+  };
+
 export function ProductList({
   accountId,
   accountProducts,
@@ -152,10 +165,23 @@ export function ProductList({
           <div className="space-y-4">
             {accountProducts.map(ap => {
                 const product = getProductDetails(ap.productId);
+                const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
+                const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
+                const lastQuotedPrice = ap.priceDetails?.type === 'quote' && ap.priceDetails?.price !== undefined;
+
                 return (
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
                         <div className="font-semibold">{product?.name || 'Unknown Product'} <span className="text-sm font-normal text-muted-foreground">({product?.productNumber || 'N/A'})</span></div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
+                        
+                        {hasWinningBid ? (
+                            <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} />
+                        ) : hasSpotPrice ? (
+                            <PriceDisplay label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} price={ap.priceDetails!.price} />
+                        ) : lastQuotedPrice ? (
+                            <PriceDisplay label="Last Quoted" price={ap.priceDetails!.price} />
+                        ) : null}
+
                         {product?.volumes && (
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {product.volumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
