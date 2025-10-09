@@ -9,11 +9,11 @@
  * - /contacts/{contactId}: Contacts associated with accounts, accessible only to authenticated users.
  * - /account-products/{accountProductId}: Notes about products for specific accounts, accessible only to authenticated users.
  * - /products/{productId}: Publicly accessible product catalog.
- * - /call-notes/{callNoteId}: Call notes linked to accounts, accessible only to authenticated users.
+ * - /call-notes/{callNoteId}: Call notes linked to accounts, with public read and authenticated write access.
  *
  * Key Security Decisions:
  * - User listing is disabled.
- * - Products are publicly readable but not writable except with admin privileges (not yet implemented).
+ * - Products and Call Notes are publicly readable but not writable except with admin privileges (not yet implemented).
  * - All other data is accessible only to authenticated users.
  *
  * Denormalization for Authorization:
@@ -53,7 +53,7 @@ service cloud.firestore {
      * @path /accounts-db/{accountId}
      * @allow (create) - Authenticated user can create a new account.
      * @allow (get) - Authenticated user can read an account.
-     * @allow (update) - Authenticated user can update an account.
+     * @allow (update) - Authenticated.
      * @allow (delete) - Authenticated user can delete an account.
      * @deny (create) - Unauthenticated user cannot create a new account.
      * @principle Requires authentication for all operations.
@@ -133,19 +133,17 @@ service cloud.firestore {
     /**
      * @description Controls access to call notes.
      * @path /call-notes/{callNoteId}
-     * @allow (create) - Authenticated user can create a new call note.
-     * @allow (get) - Authenticated user can read a call note.
-     * @allow (update) - Authenticated user can update a call note.
-     * @allow (delete) - Authenticated user can delete a call note.
-     * @deny (create) - Unauthenticated user cannot create a new call note.
-     * @principle Requires authentication for all operations.
+     * @allow (get) - Any user can read call note information.
+     * @allow (list) - Any user can list call notes.
+     * @deny (create) - Only authenticated user can create call notes.
+     * @principle Allows public read access but requires authentication for writes.
      */
     match /call-notes/{callNoteId} {
       function isSignedIn() {
         return request.auth != null;
       }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
