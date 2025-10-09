@@ -4,10 +4,10 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { type Contact } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 
 import { addContactSchema, editContactSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,79 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+
+function DeleteContactButton({ contactId, onSuccess }: { contactId: string; onSuccess: () => void; }) {
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Firestore is not available.' });
+            setIsDeleting(false);
+            return;
+        }
+
+        try {
+            const contactRef = doc(firestore, 'contacts', contactId);
+            await deleteDoc(contactRef);
+            toast({ title: 'Success!', description: 'Contact deleted successfully.' });
+            onSuccess();
+        } catch (error: any) {
+            console.error("Error deleting contact:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error.message || 'Failed to delete contact.',
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+    
+    return (
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" type="button">
+                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                    Delete
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete this contact.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Continue
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+}
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean; isSubmitting: boolean }) {
   return (
-    <Button type="submit" disabled={isSubmitting} className="w-full">
+    <Button type="submit" disabled={isSubmitting} className="flex-1">
       {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
       {isEditMode ? 'Save Changes' : 'Add Contact'}
     </Button>
@@ -79,7 +148,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
             const mainContactsQuery = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true));
             const mainContactsSnap = await getDocs(mainContactsQuery);
             mainContactsSnap.forEach(doc => {
-                if (!isEditMode || (isEditMode && doc.id !== contact.id)) {
+                if (!isEditMode || (isEditMode && contact.id !== doc.id)) {
                     batch.update(doc.ref, { isMainContact: false });
                 }
             });
@@ -177,7 +246,10 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
             </FormItem>
           )}
         />
-        <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
+        <div className="flex gap-2">
+            <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
+            {isEditMode && contact && <DeleteContactButton contactId={contact.id} onSuccess={onSuccess} />}
+        </div>
       </form>
     </Form>
   );
