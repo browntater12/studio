@@ -15,36 +15,36 @@ export default function AccountPage() {
   const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
 
   const accountRef = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !id) return null;
+    if (!firestore || !id) return null;
     return doc(firestore, 'accounts-db', id);
-  }, [firestore, id, isUserLoading]);
+  }, [firestore, id]);
   const { data: account, isLoading: accountLoading } = useDoc<Account>(accountRef);
 
   const contactsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !account?.accountNumber) return null;
+    if (!firestore || !account?.accountNumber) return null;
     return query(collection(firestore, 'contacts'), where('accountNumber', '==', account.accountNumber));
-  }, [firestore, isUserLoading, account?.accountNumber]);
+  }, [firestore, account?.accountNumber]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsQuery);
 
   const productsRef = useMemoFirebase(() => {
-    if (isUserLoading || !firestore) return null;
+    if (!firestore) return null;
     return collection(firestore, 'products');
-  }, [firestore, isUserLoading]);
+  }, [firestore]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
   const productNotesQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !id) return null;
+    if (!firestore || !id) return null;
     return query(collection(firestore, 'account-products'), where('accountId', '==', id));
-  }, [firestore, id, isUserLoading]);
+  }, [firestore, id]);
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
   const callNotesQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !id) return null;
+    if (!firestore || !id) return null;
     return query(collection(firestore, 'call-notes'), where('accountId', '==', id), orderBy('callDate', 'desc'));
-  }, [firestore, id, isUserLoading]);
+  }, [firestore, id]);
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
 
 
