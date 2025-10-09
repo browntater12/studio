@@ -164,6 +164,10 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     control: form.control,
     name: 'priceDetails.type',
   });
+  const watchedProductId = useWatch({
+    control: form.control,
+    name: 'productId',
+  });
 
   return (
     <Form {...form}>
@@ -173,6 +177,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
         }} className="space-y-4">
         <input type="hidden" name="id" value={accountProduct.id} />
         <input type="hidden" name="accountId" value={accountProduct.accountId} />
+        <input type="hidden" name="productId" value={watchedProductId} />
 
         <FormField
           control={form.control}
