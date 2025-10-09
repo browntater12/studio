@@ -155,6 +155,34 @@
         }
       },
       "required": ["accountId", "productId", "notes"]
+    },
+    "CallNote": {
+      "title": "Call Note",
+      "description": "Represents a note taken for a specific sales call.",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "description": "The ID of the account this call note is for."
+        },
+        "callDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the call."
+        },
+        "notes": {
+          "type": "string",
+          "description": "The detailed notes from the call."
+        },
+        "contactIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of contact IDs who were part of the call."
+        }
+      },
+      "required": ["accountId", "callDate", "notes"]
     }
   },
   "auth": {
@@ -190,6 +218,12 @@
         "$ref": "#/entities/Product"
       },
       "description": "Global collection for all available products."
+    },
+    "/call-notes/{callNoteId}": {
+      "schema": {
+        "$ref": "#/entities/CallNote"
+      },
+      "description": "Collection for all call notes, linked to an account."
     }
   }
 }
