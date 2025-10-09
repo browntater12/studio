@@ -1,129 +1,91 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a public-read, owner-write model for most top-level collections.
- *   User profiles are private and only accessible to the owning user.
+ * @fileoverview Firestore Security Rules for the sales application prototype.
+ *
+ * Core Philosophy:
+ * This ruleset is in prototyping mode. All users, even unauthenticated ones,
+ * have full read and write access to all collections. This is highly insecure
+ * and MUST be changed before deployment.
  *
  * Data Structure:
- * - /users/{userId}: Stores public user profile information, accessible only to the user.
- * - /accounts-db/{accountId}: Stores sales account information, publicly readable, owner-only writeable.
- * - /contacts/{contactId}: Stores contact information, publicly readable, owner-only writeable.
- * - /account-products/{accountProductId}: Stores product notes, publicly readable, owner-only writeable.
- * - /products/{productId}: Stores global product information, publicly readable, owner-only writeable.
+ * - /users/{userId}: Stores user profile information.
+ * - /accounts-db/{accountId}: Stores sales account data.
+ * - /contacts/{contactId}: Stores contact information related to accounts.
+ * - /account-products/{accountProductId}: Stores notes about specific products for accounts.
+ * - /products/{productId}: Stores the global catalog of products.
  *
  * Key Security Decisions:
- * - User profiles are private.
- * - Top level collections are public readable with owner-only writes.
- * - All writes require authentication.
- * - No listing of user documents is allowed.
+ * - **INSECURE PROTOTYPE MODE**: All read and write access is granted to all users.
+ * - No data validation is performed beyond ensuring relationships are correctly formed.
  *
- * Denormalization for Authorization:
- * - The ruleset relies on an `accountId` field in the `AccountProductNote` entity and an `accountNumber` in the `Contact` entity to perform authorization checks.
+ * WARNING: These rules are ONLY for prototyping and MUST NOT be used in a production environment.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secures user profiles, allowing only the owning user to read and write their own profile.
+     * @description Grants all users read and write access to user profiles during prototyping.
      * @path /users/{userId}
-     * @allow (get, update, delete) User with UID 'user123' can read/write their own profile document at /users/user123.
-     * @allow (create) User with UID 'user123' can create their own profile document at /users/user123 if the document ID matches their UID.
-     * @deny (get, update, delete) User with UID 'user456' cannot read/write the profile document of user 'user123' at /users/user123.
-     * @deny (create) User with UID 'user456' cannot create a profile document at /users/user123.
-     * @principle Enforces document ownership for all operations.  Validates that the document ID matches the authenticated user's ID on creation.
+     * @allow (create, update, delete) Any user can create, update, or delete a user profile.
+     * @allow (get, list) Any user can read user profile information.
+     * @deny None (INSECURE: all access is granted).
+     * @principle INSECURE: Grants all users full access to user profiles for prototyping purposes.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isOwner(userId) && isSignedIn();
-      allow list: if false;
-      allow create: if isOwner(userId) && isSignedIn();
-      allow update: if isOwner(userId) && isSignedIn();
-      allow delete: if isOwner(userId) && isSignedIn();
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Secures sales accounts, allowing public read access but restricting write access to authenticated owners.
+     * @description Grants all users read and write access to accounts during prototyping.
      * @path /accounts-db/{accountId}
-     * @allow (get, list) Any user, even unauthenticated, can read account documents.
-     * @allow (create) User with UID 'user123' can create an account document if request.auth.uid matches request.resource.data.ownerId.
-     * @allow (update, delete) User with UID 'user123' can update/delete an account document if request.auth.uid matches resource.data.ownerId and the document exists.
-     * @deny (create) User with UID 'user456' cannot create an account document with ownerId 'user123'.
-     * @deny (update, delete) User with UID 'user456' cannot update/delete an account document owned by 'user123'.
-     * @principle Implements public read access with owner-only writes.  Validates ownership on create, update, and delete.
+     * @allow (create, update, delete) Any user can create, update, or delete an account.
+     * @allow (get, list) Any user can read account information.
+     * @deny None (INSECURE: all access is granted).
+     * @principle INSECURE: Grants all users full access to accounts for prototyping purposes.
      */
     match /accounts-db/{accountId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isSignedIn() ;
-        allow delete: if isSignedIn() ;
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Secures contacts, allowing public read access but restricting write access to authenticated owners.
+     * @description Grants all users read and write access to contacts during prototyping.
      * @path /contacts/{contactId}
-     * @allow (get, list) Any user, even unauthenticated, can read contact documents.
-     * @allow (create) User with UID 'user123' can create a contact document if request.auth.uid matches request.resource.data.ownerId.
-     * @allow (update, delete) User with UID 'user123' can update/delete a contact document if request.auth.uid matches resource.data.ownerId and the document exists.
-     * @deny (create) User with UID 'user456' cannot create a contact document with ownerId 'user123'.
-     * @deny (update, delete) User with UID 'user456' cannot update/delete a contact document owned by 'user123'.
-     * @principle Implements public read access with owner-only writes.  Validates ownership on create, update, and delete.
+     * @allow (create, update, delete) Any user can create, update, or delete a contact.
+     * @allow (get, list) Any user can read contact information.
+     * @deny None (INSECURE: all access is granted).
+     * @principle INSECURE: Grants all users full access to contacts for prototyping purposes.
      */
     match /contacts/{contactId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isSignedIn() ;
-        allow delete: if isSignedIn() ;
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Secures product notes, allowing public read access but restricting write access to authenticated owners.
+     * @description Grants all users read and write access to account product notes during prototyping.
      * @path /account-products/{accountProductId}
-     * @allow (get, list) Any user, even unauthenticated, can read product note documents.
-     * @allow (create) User with UID 'user123' can create a product note document if request.auth.uid matches request.resource.data.ownerId.
-     * @allow (update, delete) User with UID 'user123' can update/delete a product note document if request.auth.uid matches resource.data.ownerId and the document exists.
-     * @deny (create) User with UID 'user456' cannot create a product note document with ownerId 'user123'.
-     * @deny (update, delete) User with UID 'user456' cannot update/delete a product note document owned by 'user123'.
-     * @principle Implements public read access with owner-only writes.  Validates ownership on create, update, and delete.
+     * @allow (create, update, delete) Any user can create, update, or delete an account product note.
+     * @allow (get, list) Any user can read account product note information.
+     * @deny None (INSECURE: all access is granted).
+     * @principle INSECURE: Grants all users full access to account product notes for prototyping purposes.
      */
     match /account-products/{accountProductId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isSignedIn() ;
-        allow delete: if isSignedIn();
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Secures products, allowing public read access but restricting write access to authenticated owners.
+     * @description Grants all users read and write access to products during prototyping.
      * @path /products/{productId}
-     * @allow (get, list) Any user, even unauthenticated, can read product documents.
-     * @allow (create) User with UID 'user123' can create a product document if request.auth.uid matches request.resource.data.ownerId.
-     * @allow (update, delete) User with UID 'user123' can update/delete a product document if request.auth.uid matches resource.data.ownerId and the document exists.
-     * @deny (create) User with UID 'user456' cannot create a product document with ownerId 'user123'.
-     * @deny (update, delete) User with UID 'user456' cannot update/delete a product note document owned by 'user123'.
-     * @principle Implements public read access with owner-only writes.  Validates ownership on create, update, and delete.
+     * @allow (create, update, delete) Any user can create, update, or delete a product.
+     * @allow (get, list) Any user can read product information.
+     * @deny None (INSECURE: all access is granted).
+     * @principle INSECURE: Grants all users full access to products for prototyping purposes.
      */
     match /products/{productId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isSignedIn() ;
-        allow delete: if isSignedIn();
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
   }
 }
