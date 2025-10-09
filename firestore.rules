@@ -1,152 +1,114 @@
 /**
- * @file Overview
- * This ruleset enforces a user-ownership model for user profiles, public read access for products,
- * and authenticated access for other collections related to sales data.
+ * @fileOverview Firestore Security Rules for Prototyping.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes rapid prototyping by focusing on authorization and skipping data validation.
+ * It assumes an evolving data model and enforces access control based on simple ownership or public read access.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /accounts-db/{accountId}: Sales accounts, accessible only to authenticated users.
- * - /contacts/{contactId}: Contacts associated with accounts, accessible only to authenticated users.
- * - /account-products/{accountProductId}: Notes about products for specific accounts, accessible only to authenticated users.
- * - /products/{productId}: Publicly accessible product catalog.
- * - /call-notes/{callNoteId}: Call notes linked to accounts, with public read and authenticated write access.
+ * The Firestore database consists of several top-level collections: `users`, `accounts-db`, `contacts`, `account-products`, `products`, and `call-notes`.
+ * Each collection stores documents representing entities like user profiles, accounts, contacts, product notes, products, and call notes.
  *
  * Key Security Decisions:
- * - User listing is disabled.
- * - Products and Call Notes are publicly readable but not writable except with admin privileges (not yet implemented).
- * - All other data is accessible only to authenticated users.
+ * - User profiles are strictly owned by the respective user.
+ * - Read access to products is public. Write access is restricted (TODO).
+ * - All other collections (`accounts-db`, `contacts`, `account-products`, `call-notes`) allow unauthenticated access for writes, and public reads.
  *
  * Denormalization for Authorization:
- *   - The rules do not require denormalization.
+ *  None required for this ruleset.
  *
  * Structural Segregation:
- *   - Drafts vs. published content is not a concern in this data model.
+ * Not applicable in this ruleset. All data is stored in top-level collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile information.
+     * @description Enforces user-ownership for profile data.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create their profile at /users/user123.
-     * @allow (get) - User with UID 'user123' can read their profile at /users/user123.
-     * @allow (update) - User with UID 'user123' can update their profile at /users/user123.
-     * @allow (delete) - User with UID 'user123' can delete their profile at /users/user123.
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (get) - User with UID 'user456' cannot read the profile at /users/user123.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - Authenticated user with matching {userId}.
+     * @allow (get, list, update, delete) - Authenticated user with matching {userId}.
+     * @deny (create) - Authenticated user with non-matching {userId}.
+     * @deny (get, list, update, delete) - Authenticated user with non-matching {userId}.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to sales accounts.
+     * @description Allows unauthenticated writes and public reads for accounts.
      * @path /accounts-db/{accountId}
-     * @allow (create) - Authenticated user can create a new account.
-     * @allow (get) - Authenticated user can read an account.
-     * @allow (update) - Authenticated.
-     * @allow (delete) - Authenticated user can delete an account.
-     * @deny (create) - Unauthenticated user cannot create a new account.
-     * @principle Requires authentication for all operations.
+     * @allow (create, update, delete) - Any unauthenticated user.
+     * @allow (get, list) - Any user.
+     * @deny (none) -
+     * @principle Allows anyone to create, modify or delete accounts. All accounts can be read by anyone.
      */
     match /accounts-db/{accountId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+        allow get, list: if true;
+        allow create, update, delete: if true;
     }
 
-    /**
-     * @description Controls access to contacts.
+        /**
+     * @description Allows unauthenticated writes and public reads for contacts.
      * @path /contacts/{contactId}
-     * @allow (create) - Authenticated user can create a new contact.
-     * @allow (get) - Authenticated user can read a contact.
-     * @allow (update) - Authenticated user can update a contact.
-     * @allow (delete) - Authenticated user can delete a contact.
-     * @deny (create) - Unauthenticated user cannot create a new contact.
-     * @principle Requires authentication for all operations.
+     * @allow (create, update, delete) - Any unauthenticated user.
+     * @allow (get, list) - Any user.
+     * @deny (none) -
+     * @principle Allows anyone to create, modify or delete contacts. All contacts can be read by anyone.
      */
     match /contacts/{contactId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+        allow get, list: if true;
+        allow create, update, delete: if true;
     }
 
     /**
-     * @description Controls access to account product notes.
+     * @description Allows unauthenticated writes and public reads for account products.
      * @path /account-products/{accountProductId}
-     * @allow (create) - Authenticated user can create a new account product note.
-     * @allow (get) - Authenticated user can read an account product note.
-     * @allow (update) - Authenticated user can update an account product note.
-     * @allow (delete) - Authenticated user can delete an account product note.
-     * @deny (create) - Unauthenticated user cannot create a new account product note.
-     * @principle Requires authentication for all operations.
+     * @allow (create, update, delete) - Any unauthenticated user.
+     * @allow (get, list) - Any user.
+     * @deny (none) -
+     * @principle Allows anyone to create, modify or delete account products. All account products can be read by anyone.
      */
     match /account-products/{accountProductId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+        allow get, list: if true;
+        allow create, update, delete: if true;
     }
 
     /**
-     * @description Controls access to products.
+     * @description Allows public reads for products.  Writes are restricted (TODO).
      * @path /products/{productId}
-     * @allow (get) - Any user can read product information.
-     * @allow (list) - Any user can list products.
-     * @deny (create) - Only authenticated user can create product
-     * @principle Allows public read access but requires authentication for writes.
+     * @allow (get, list) - Any user.
+     * @deny (create, update, delete) - All users.
+     * @principle Allows anyone to read products, but restricts creation, updates, and deletes.
      */
     match /products/{productId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+        allow get, list: if true;
+        allow create, update, delete: if false; // TODO: Add admin role check.
     }
 
-    /**
-     * @description Controls access to call notes.
+       /**
+     * @description Allows unauthenticated writes and public reads for call notes.
      * @path /call-notes/{callNoteId}
-     * @allow (get) - Any user can read call note information.
-     * @allow (list) - Any user can list call notes.
-     * @deny (create) - Only authenticated user can create call notes.
-     * @principle Allows public read access but requires authentication for writes.
+     * @allow (create, update, delete) - Any unauthenticated user.
+     * @allow (get, list) - Any user.
+     * @deny (none) -
+     * @principle Allows anyone to create, modify or delete call notes. All call notes can be read by anyone.
      */
     match /call-notes/{callNoteId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+        allow get, list: if true;
+        allow create, update, delete: if true;
     }
   }
 }
