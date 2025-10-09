@@ -42,7 +42,7 @@ export default function AccountPage() {
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
   const callNotesQuery = useMemoFirebase(() => {
-    if (!firestore || !id || typeof id !== 'string' || id.trim() === '') {
+    if (!firestore || typeof id !== 'string' || id.trim() === '') {
       return null;
     }
     return query(collection(firestore, 'call-notes'), where('accountId', '==', id), orderBy('callDate', 'desc'));
