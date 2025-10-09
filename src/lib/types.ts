@@ -24,6 +24,7 @@ export type AccountProduct = {
     type: 'quote' | 'last_paid';
     price?: number;
   };
+  createdAt?: Timestamp;
 };
 
 export type Account = {

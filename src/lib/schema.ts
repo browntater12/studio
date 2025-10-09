@@ -49,6 +49,7 @@ export const addProductToAccountSchema = z.object({
         type: z.enum(['quote', 'last_paid']),
         price: z.number().optional(),
     }).optional(),
+    createdAt: z.date().optional(),
 }).refine(data => {
     if (data.priceType === 'bid' && !data.bidFrequency) {
         return false;

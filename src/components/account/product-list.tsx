@@ -10,6 +10,7 @@ import { PlusCircle, Package, Edit, Loader2, DollarSign } from 'lucide-react';
 import { type AccountProduct, type Product } from '@/lib/types';
 import { updateProductNote } from '@/app/actions';
 import { editProductNoteSchema } from '@/lib/schema';
+import { format } from 'date-fns';
 
 import {
   Card,
@@ -121,14 +122,19 @@ function EditNoteDialog({ note, children }: { note: AccountProduct, children: Re
     );
 }
 
-const PriceDisplay = ({ label, price }: { label: string, price: number | undefined }) => {
+const PriceDisplay = ({ label, price, date, isQuote }: { label: string, price: number | undefined, date?: Date, isQuote?: boolean }) => {
     if (price === undefined) return null;
+
+    const formattedDate = isQuote && date ? format(date, 'MM/dd/yyyy') : null;
+
     return (
       <div className="flex items-center gap-2 text-sm mt-2">
         <DollarSign className="h-4 w-4 text-muted-foreground" />
         <div>
           <span className="font-semibold">{`$${price}`}</span>
-          <span className="text-muted-foreground ml-1">({label})</span>
+          <span className="text-muted-foreground ml-1">
+            ({label}{formattedDate && `, ${formattedDate}`})
+          </span>
         </div>
       </div>
     );
@@ -168,6 +174,8 @@ export function ProductList({
                 const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
                 const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
                 const lastQuotedPrice = ap.priceDetails?.type === 'quote' && ap.priceDetails?.price !== undefined;
+                
+                const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
                 return (
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
@@ -181,9 +189,14 @@ export function ProductList({
                         {hasWinningBid ? (
                             <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} />
                         ) : hasSpotPrice ? (
-                            <PriceDisplay label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} price={ap.priceDetails!.price} />
+                            <PriceDisplay 
+                                label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} 
+                                price={ap.priceDetails!.price}
+                                date={createdAtDate}
+                                isQuote={ap.priceDetails!.type === 'quote'}
+                            />
                         ) : lastQuotedPrice ? (
-                            <PriceDisplay label="Last Quoted" price={ap.priceDetails!.price} />
+                            <PriceDisplay label="Last Quoted" price={ap.priceDetails!.price} date={createdAtDate} isQuote={true} />
                         ) : null}
 
                         {product?.volumes && (

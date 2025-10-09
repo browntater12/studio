@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 
 import { addProductToAccountSchema } from '@/lib/schema';
@@ -89,7 +89,9 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         }
 
         // Create a clean data object to avoid sending `undefined` to Firestore
-        const productData: { [key: string]: any } = {};
+        const productData: { [key: string]: any } = {
+          createdAt: serverTimestamp(),
+        };
         Object.entries(values).forEach(([key, value]) => {
             if (value !== undefined) {
                 if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
