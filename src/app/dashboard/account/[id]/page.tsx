@@ -42,7 +42,8 @@ export default function AccountPage() {
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
   const callNotesQuery = useMemoFirebase(() => {
-    if (!firestore || !id) return null;
+    // Ensure `id` is a valid string before creating the query.
+    if (!firestore || !id || typeof id !== 'string' || id.trim() === '') return null;
     return query(collection(firestore, 'call-notes'), where('accountId', '==', id), orderBy('callDate', 'desc'));
   }, [firestore, id]);
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
