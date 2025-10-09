@@ -34,7 +34,7 @@ function AccountPageContent({ account }: { account: Account }) {
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
   const callNotesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !id) return null;
     return query(collection(firestore, 'call-notes'), where('accountId', '==', id), orderBy('callDate', 'desc'));
   }, [firestore, id]);
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);

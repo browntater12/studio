@@ -13,6 +13,7 @@ import {
   deleteProductSchema,
 } from '@/lib/schema';
 import {
+  addCallNote as dbAddCallNote,
   updateAccountProductNote as dbUpdateNote,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
@@ -42,9 +43,7 @@ export async function addCallNote(prevState: any, formData: FormData) {
     }
 
     try {
-        const { firestore } = getSdks();
-        const callNotesCol = collection(firestore, 'call-notes');
-        await addDoc(callNotesCol, validatedFields.data);
+        await dbAddCallNote(validatedFields.data);
         revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
         return { type: 'success', message: 'Call note added successfully.' };
     } catch (e: any) {
