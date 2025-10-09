@@ -1,126 +1,130 @@
+/**
+ * @fileoverview Firestore Security Rules for Sales App.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes user data protection and enforces strict ownership for user profiles.
+ * Public read access is granted where appropriate, such as for product catalogs.
+ *
+ * Data Structure:
+ * - User profiles are stored under `/users/{userId}`.
+ * - Sales accounts are stored under `/accounts-db/{accountId}`.
+ * - Contacts are stored under `/contacts/{contactId}`.
+ * - Account product notes are stored under `/account-products/{accountProductId}`.
+ * - Products are stored under `/products/{productId}`.
+ * - Call notes are stored under `/call-notes/{callNoteId}`.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to protect privacy.
+ * - Accounts, contacts, account-product notes, products, and call notes are publicly readable, but write access is restricted.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Defines a function to check if a user is signed in.
-     * @returns True if the user is signed in, false otherwise.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Defines a function to check if the request is made by the owner of the resource.
-     * @param {string} userId - The user ID to check against.
-     * @returns True if the request is made by the owner, false otherwise.
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Defines a function to check if the request is made by an existing owner of the resource.
-     * @param {string} userId - The user ID to check against.
-     * @returns True if the request is made by an existing owner, false otherwise.
-     */
-    function isExistingOwner(userId) {
-        return isSignedIn() && isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Rules for user profile information.
+     * @description Secures user profiles, ensuring only the owner can read or write.
      * @path /users/{userId}
-     * @allow (get, list): Any user can read user profile data.
-     * @allow (create): A user can create their own profile if the userId matches their auth.uid.
-     * @allow (update): A user can update their own profile if the userId matches their auth.uid and the document exists.
-     * @allow (delete): A user can delete their own profile if the userId matches their auth.uid and the document exists.
-     * @deny (create): A user cannot create another user's profile.
-     * @deny (update): A user cannot update another user's profile.
-     * @deny (delete): A user cannot delete another user's profile.
-     * @principle Enforces document ownership for writes.
+     * @allow (create, update, delete) if request.auth.uid == userId
+     * @allow (get, list) if request.auth.uid == userId
+     * @deny (create, update, delete) if request.auth.uid != userId
+     * @deny (get, list) if request.auth.uid != userId
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow get: if true;
-      allow list: if true;
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Rules for sales accounts.
+     * @description Allows public read access to accounts, but restricts writes.
      * @path /accounts-db/{accountId}
-     * @allow (get, list): Any user can read account data.
-     * @deny (create, update, delete): No user can create, update, or delete account data.
-     * @principle Restricts write access to accounts.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if false // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if request.auth == null
+     * @principle Allows public reads with restricted writes.
      */
     match /accounts-db/{accountId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null;
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Rules for contacts.
+     * @description Allows public read access to contacts, but restricts writes.
      * @path /contacts/{contactId}
-     * @allow (get, list): Any user can read contact data.
-     * @deny (create, update, delete): No user can create, update, or delete contact data.
-     * @principle Restricts write access to contacts.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if false // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if request.auth == null
+     * @principle Allows public reads with restricted writes.
      */
     match /contacts/{contactId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null;
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Rules for account product notes.
+     * @description Allows public read access to account product notes, but restricts writes.
      * @path /account-products/{accountProductId}
-     * @allow (get, list): Any user can read account product note data.
-     * @deny (create, update, delete): No user can create, update, or delete account product note data.
-     * @principle Restricts write access to account product notes.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if false // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if request.auth == null
+     * @principle Allows public reads with restricted writes.
      */
     match /account-products/{accountProductId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null;
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Rules for products.
+     * @description Allows public read access to products, but restricts writes.
      * @path /products/{productId}
-     * @allow (get, list): Any user can read product data.
-     * @deny (create, update, delete): No user can create, update, or delete product data.
-     * @principle Restricts write access to products.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if false // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if request.auth == null
+     * @principle Allows public reads with restricted writes.
      */
     match /products/{productId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null;
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Rules for call notes.
+     * @description Allows public read access to call notes, but restricts writes.
      * @path /call-notes/{callNoteId}
-     * @allow (get, list): Any user can read call note data.
-     * @deny (create, update, delete): No user can create, update, or delete call note data.
-     * @principle Restricts write access to call notes.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if false // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if request.auth == null
+     * @principle Allows public reads with restricted writes.
      */
     match /call-notes/{callNoteId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null;
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
   }
 }
