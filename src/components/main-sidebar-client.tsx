@@ -18,10 +18,5 @@ export function MainSidebarClient() {
 
   const combinedIsLoading = accountsLoading || isUserLoading;
 
-  return (
-    <MainSidebar 
-      accounts={accounts || []}
-      isLoading={combinedIsLoading} 
-    />
-  );
+  return <MainSidebar accounts={accounts || []} isLoading={combinedIsLoading} />;
 }
