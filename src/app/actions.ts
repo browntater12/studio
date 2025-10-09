@@ -116,13 +116,14 @@ export async function deleteContact(prevState: any, formData: FormData) {
 }
 
 export async function updateAccountProduct(prevState: any, formData: FormData) {
+    const bidFrequencyValue = formData.get('bidFrequency');
     const rawData = {
         id: formData.get('id'),
         accountId: formData.get('accountId'),
         productId: formData.get('productId'),
         notes: formData.get('notes'),
         priceType: formData.get('priceType'),
-        bidFrequency: formData.get('bidFrequency') === 'null' ? undefined : formData.get('bidFrequency'),
+        bidFrequency: bidFrequencyValue === 'null' || bidFrequencyValue === '' ? undefined : bidFrequencyValue,
         lastBidPrice: formData.get('lastBidPrice') ? parseFloat(formData.get('lastBidPrice') as string) : undefined,
         winningBidPrice: formData.get('winningBidPrice') ? parseFloat(formData.get('winningBidPrice') as string) : undefined,
         priceDetails: {
