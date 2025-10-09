@@ -1,17 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { type Contact } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 
-import { contactSchema, deleteContactSchema } from '@/lib/schema';
-import { deleteContact } from '@/app/actions';
+import { contactSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -36,22 +34,38 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 function DeleteContact({ contactId, onSuccess }: { contactId: string; onSuccess: () => void; }) {
-    const initialState = { message: '', type: '' };
-    const [state, dispatch] = useFormState(deleteContact, initialState);
     const { toast } = useToast();
     const [open, setOpen] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const firestore = useFirestore();
 
-    React.useEffect(() => {
-        if (state.type === 'success') {
-            toast({ title: 'Success!', description: state.message });
+    const handleDelete = async () => {
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Database service not available.' });
+            return;
+        }
+        setIsDeleting(true);
+        const contactRef = doc(firestore, 'contacts', contactId);
+        
+        try {
+            await deleteDoc(contactRef);
+            toast({ title: 'Success!', description: 'Contact deleted successfully.' });
             onSuccess();
             setOpen(false);
-        } else if (state.type === 'error') {
-            toast({ variant: 'destructive', title: 'Error', description: state.message });
+        } catch (error) {
+            console.error("Error deleting contact:", error);
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: contactRef.path,
+                operation: 'delete',
+            }));
+        } finally {
+            setIsDeleting(false);
         }
-    }, [state, onSuccess, toast]);
+    };
 
     return (
         <AlertDialog open={open} onOpenChange={setOpen}>
@@ -62,31 +76,21 @@ function DeleteContact({ contactId, onSuccess }: { contactId: string; onSuccess:
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-                <form action={dispatch}>
-                    <input type="hidden" name="id" value={contactId} />
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this contact.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                        <DeleteButton />
-                    </AlertDialogFooter>
-                </form>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete this contact.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Continue
+                    </AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-    );
-}
-
-function DeleteButton() {
-    const { pending } = useFormStatus();
-    return (
-        <AlertDialogAction type="submit" disabled={pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Continue
-        </AlertDialogAction>
     );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { type Account } from '@/lib/types';
@@ -10,6 +10,7 @@ import { FileSearch, Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
+  const router = useRouter();
 
   const accountsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -21,9 +22,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isLoading && accounts && accounts.length > 0) {
-      redirect(`/dashboard/account/${accounts[0].id}`);
+      router.replace(`/dashboard/account/${accounts[0].id}`);
     }
-  }, [accounts, isLoading]);
+  }, [accounts, isLoading, router]);
 
   if (isLoading) {
     return (

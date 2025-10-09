@@ -28,10 +28,6 @@ export const deleteProductSchema = z.object({
   id: z.string(),
 });
 
-export const deleteContactSchema = z.object({
-    id: z.string(),
-});
-
 export const contactSchema = z.object({
     accountNumber: z.string(),
     name: z.string().min(1, 'Name is required.'),

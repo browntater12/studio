@@ -123,9 +123,3 @@ export async function deleteProduct(id: string): Promise<void> {
   // Note: References in account-products will be orphaned.
   await productRef.delete();
 }
-
-export async function deleteContact(id: string): Promise<void> {
-    const db = getAdminFirestore(initializeServerApp());
-    const contactRef = db.collection('contacts').doc(id);
-    await contactRef.delete();
-}
