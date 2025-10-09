@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Wand2, Loader2, ServerCrash } from 'lucide-react';
+import { FilePlus, Loader2, ServerCrash } from 'lucide-react';
 import { generateSalesInsights } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,13 +54,13 @@ export function SalesInsights({ accountId }: { accountId: string }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button onClick={handleGenerateInsights}>
-          <Wand2 className="mr-2 h-4 w-4" />
-          Generate Insights
+          <FilePlus className="mr-2 h-4 w-4" />
+          Add Call Notes
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>AI Sales Insights</DialogTitle>
+          <DialogTitle>AI Assisted Call Notes</DialogTitle>
           <DialogDescription>
             An AI-generated summary and potential actions based on account data.
           </DialogDescription>

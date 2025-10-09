@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { type Account } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { SalesInsights } from './sales-insights';
 
 export function AccountHeader({ account }: { account: Account }) {
