@@ -37,10 +37,14 @@ export const contactSchema = z.object({
     isMainContact: z.boolean().default(false),
 });
 
+export const deleteContactSchema = z.object({
+  id: z.string(),
+});
+
 export const addProductToAccountSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, 'Please select a product.'),
-    notes: z.string().min(1, 'Notes are required.'),
+    notes: z.string(),
     priceType: z.enum(['spot', 'bid']).optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
     lastBidPrice: z.number().optional(),
