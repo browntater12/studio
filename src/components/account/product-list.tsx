@@ -171,7 +171,11 @@ export function ProductList({
 
                 return (
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
-                        <div className="font-semibold">{product?.name || 'Unknown Product'} <span className="text-sm font-normal text-muted-foreground">({product?.productNumber || 'N/A'})</span></div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
+                            <span className="text-sm font-normal text-muted-foreground">({product?.productNumber || 'N/A'})</span>
+                            {ap.priceType && <Badge variant="outline" className="capitalize">{ap.priceType}</Badge>}
+                        </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
                         
                         {hasWinningBid ? (
