@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -62,7 +61,7 @@ function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSub
 }
 
 function DeleteProductButton({ productId, onSuccess }: { productId: string, onSuccess: () => void }) {
-    const [state, formAction] = useActionState(deleteProduct, initialState);
+    const [state, formAction] = useFormState(deleteProduct, initialState);
     const { pending } = useFormStatus();
     const { toast } = useToast();
     const router = useRouter();
@@ -119,7 +118,7 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
   const schema = isEditMode ? editProductSchema : createProductSchema;
   type SchemaType = z.infer<typeof schema>;
 
-  const [editState, formAction] = useActionState(action || (() => Promise.resolve(initialState)), initialState);
+  const [editState, formAction] = useFormState(action || (() => Promise.resolve(initialState)), initialState);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const { toast } = useToast();
