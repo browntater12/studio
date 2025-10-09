@@ -1,188 +1,126 @@
-/**
- * @file Firestore Security Rules
- * @description This ruleset enforces a combination of ownership-based and public-read access control patterns.
- *
- * Data Structure:
- * - /users/{userId}: Public user profile information, accessible to everyone.
- * - /accounts-db/{accountId}: Sales account information.
- * - /contacts/{contactId}: Contact information linked to accounts.
- * - /account-products/{accountProductId}: Product notes linked to accounts and products.
- * - /products/{productId}: Public product catalog, accessible to everyone.
- * - /call-notes/{callNoteId}: Call notes linked to accounts.
- *
- * Key Security Decisions:
- * - Public Read Access for Products: The /products collection is readable by all users, including unauthenticated ones.
- * - Owner-Only Write Access: Certain collections, like /users/{userId}, are strictly limited to the owner.
- * - Top-Level Collections: The rules make use of top-level collections such as /accounts-db, /contacts, /account-products, /products and /call-notes.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows read and write access to a user's profile only to the authenticated user.
+     * @description Defines a function to check if a user is signed in.
+     * @returns True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Defines a function to check if the request is made by the owner of the resource.
+     * @param {string} userId - The user ID to check against.
+     * @returns True if the request is made by the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Defines a function to check if the request is made by an existing owner of the resource.
+     * @param {string} userId - The user ID to check against.
+     * @returns True if the request is made by an existing owner, false otherwise.
+     */
+    function isExistingOwner(userId) {
+        return isSignedIn() && isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profile information.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create their profile at /users/user_abc.
-     * @deny (create) - Authenticated user with UID 'user_abc' cannot create a profile at /users/user_xyz.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update their profile at /users/user_abc.
-     * @deny (update) - Authenticated user with UID 'user_abc' cannot update the profile at /users/user_xyz.
-     * @allow (get) - Any user can read another user's public profile.
-     * @allow (list) - Any user can list user profiles.
-     * @principle Enforces user-ownership for write operations; allows public reads.
+     * @allow (get, list): Any user can read user profile data.
+     * @allow (create): A user can create their own profile if the userId matches their auth.uid.
+     * @allow (update): A user can update their own profile if the userId matches their auth.uid and the document exists.
+     * @allow (delete): A user can delete their own profile if the userId matches their auth.uid and the document exists.
+     * @deny (create): A user cannot create another user's profile.
+     * @deny (update): A user cannot update another user's profile.
+     * @deny (delete): A user cannot delete another user's profile.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      // Helper function to check if the request is made by the owner
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      
-      // Helper function to check if the document exists and the request is made by the owner
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      // Allow anyone to read user profiles.
-      allow get, list: if true;
-
-      // Only allow the user to create their own profile, matching the userId in the path.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-
-      // Only allow the owner to update their own profile. Enforce immutability of the user ID.
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-
-      // Only allow the owner to delete their own profile.
+      allow get: if true;
+      allow list: if true;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Allows create, read, update, and delete operations on accounts.
+     * @description Rules for sales accounts.
      * @path /accounts-db/{accountId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create an account.
-     * @deny (create) - Unauthenticated user cannot create an account.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update an existing account.
-     * @deny (update) - Unauthenticated user cannot update an account.
-     * @allow (get) - Any user can read any account document.
-     * @allow (list) - Any user can list account documents.
-     * @principle Requires authentication for writes.
+     * @allow (get, list): Any user can read account data.
+     * @deny (create, update, delete): No user can create, update, or delete account data.
+     * @principle Restricts write access to accounts.
      */
     match /accounts-db/{accountId} {
-      // Require authentication for all operations.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && resource != null;
-
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Allows create, read, update, and delete operations on contacts.
+     * @description Rules for contacts.
      * @path /contacts/{contactId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create a contact.
-     * @deny (create) - Unauthenticated user cannot create a contact.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update a contact.
-     * @deny (update) - Unauthenticated user cannot update a contact.
-     * @allow (get) - Any user can read any contact document.
-     * @allow (list) - Any user can list contact documents.
-     * @principle Requires authentication for writes.
+     * @allow (get, list): Any user can read contact data.
+     * @deny (create, update, delete): No user can create, update, or delete contact data.
+     * @principle Restricts write access to contacts.
      */
     match /contacts/{contactId} {
-      // Require authentication for all operations.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && resource != null;
-
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Allows create, read, update, and delete operations on account product notes.
+     * @description Rules for account product notes.
      * @path /account-products/{accountProductId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create an account product note.
-     * @deny (create) - Unauthenticated user cannot create an account product note.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update an account product note.
-     * @deny (update) - Unauthenticated user cannot update an account product note.
-     * @allow (get) - Any user can read any account product note.
-     * @allow (list) - Any user can list account product notes.
-     * @principle Requires authentication for writes.
+     * @allow (get, list): Any user can read account product note data.
+     * @deny (create, update, delete): No user can create, update, or delete account product note data.
+     * @principle Restricts write access to account product notes.
      */
     match /account-products/{accountProductId} {
-      // Require authentication for all operations.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && resource != null;
-
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Allows read access to all products, but requires authentication for create, update, and delete operations.
+     * @description Rules for products.
      * @path /products/{productId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create a product.
-     * @deny (create) - Unauthenticated user cannot create a product.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update a product.
-     * @deny (update) - Unauthenticated user cannot update a product.
-     * @allow (get) - Any user can read any product document.
-     * @allow (list) - Any user can list product documents.
-     * @principle Requires authentication for writes; allows public reads.
+     * @allow (get, list): Any user can read product data.
+     * @deny (create, update, delete): No user can create, update, or delete product data.
+     * @principle Restricts write access to products.
      */
     match /products/{productId} {
-      // Require authentication for create, update, and delete operations.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Allow anyone to read product information.
-      allow get, list: if true;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && resource != null;
-
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Allows create, read, update, and delete operations on call notes.
+     * @description Rules for call notes.
      * @path /call-notes/{callNoteId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create a call note.
-     * @deny (create) - Unauthenticated user cannot create a call note.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update a call note.
-     * @deny (update) - Unauthenticated user cannot update a call note.
-     * @allow (get) - Any user can read any call note document.
-     * @allow (list) - Any user can list call note documents.
-     * @principle Requires authentication for writes.
+     * @allow (get, list): Any user can read call note data.
+     * @deny (create, update, delete): No user can create, update, or delete call note data.
+     * @principle Restricts write access to call notes.
      */
     match /call-notes/{callNoteId} {
-      // Require authentication for all operations.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && resource != null;
-
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
