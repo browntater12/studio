@@ -1,11 +1,117 @@
+/**
+ * @fileOverview Firestore Security Rules for Prototyping.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes strict authorization based on document ownership. Data shape validation is relaxed to enable rapid prototyping.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information; only accessible to the owning user.
+ * - /accounts-db/{accountId}: Stores account information; accessible to authenticated users.
+ * - /contacts/{contactId}: Stores contact information; accessible to authenticated users.
+ * - /account-products/{accountProductId}: Stores notes linking accounts to products; accessible to authenticated users.
+ * - /products/{productId}: Stores product catalog information; publicly readable but write-protected.
+ *
+ * Key Security Decisions:
+ * - User profiles are strictly private; users can only read/write their own profile.
+ * - Listing of users is forbidden.
+ * - Public read access is granted to the /products collection, but write access is denied.
+ * - All other collections are open to authenticated users for reads and writes during prototyping, but this should be restricted in production.
+ *
+ * Denormalization for Authorization:
+ *  Not explicitly used, assuming implicit ownership through account relationships.
+ *
+ * Structural Segregation:
+ *  Not explicitly used.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // WARNING: This is an insecure rule. It is for debugging purposes only.
-    // It allows anyone to read and write to your entire database.
-    // Make sure to secure your rules before deploying to production.
-    match /{document=**} {
-      allow read, write: if true;
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user can create their own profile.
+     * @allow (get, update, delete) - Authenticated user can only access their own profile.
+     * @deny (create) - If the user ID in the path doesn't match the authenticated user's ID.
+     * @deny (get, update, delete) - If the user is not authenticated or tries to access another user's profile.
+     * @deny (list) - Listing users is not permitted.
+     * @principle Enforces strict user-ownership for profile data.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && resource != null;
+      allow delete: if isSignedIn() && isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Controls access to sales account documents.
+     * @path /accounts-db/{accountId}
+     * @allow (get, list, create, update, delete) - Authenticated users can access accounts.
+     * @deny (create, update, delete) - Unauthenticated requests.
+     * @principle Allows authenticated access to accounts for prototyping.
+     */
+    match /accounts-db/{accountId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Controls access to contact documents.
+     * @path /contacts/{contactId}
+     * @allow (get, list, create, update, delete) - Authenticated users can access contacts.
+     * @deny (create, update, delete) - Unauthenticated requests.
+     * @principle Allows authenticated access to contacts for prototyping.
+     */
+    match /contacts/{contactId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Controls access to account product note documents.
+     * @path /account-products/{accountProductId}
+     * @allow (get, list, create, update, delete) - Authenticated users can access account product notes.
+     * @deny (create, update, delete) - Unauthenticated requests.
+     * @principle Allows authenticated access to account product notes for prototyping.
+     */
+    match /account-products/{accountProductId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Controls access to product documents.
+     * @path /products/{productId}
+     * @allow (get, list) - All users can read product information.
+     * @deny (create, update, delete) - No one can create, update, or delete product information.
+     * @principle Provides public read access to products while preventing unauthorized modifications.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
   }
 }
