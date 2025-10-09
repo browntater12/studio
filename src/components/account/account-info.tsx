@@ -10,7 +10,7 @@ export function AccountInfo({ account }: { account: Account }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
-            <span>Account Details</span>
+            <span>Account</span>
         </CardTitle>
         <Button asChild variant="ghost" size="icon">
           <Link href={`/dashboard/account/${account.id}/edit`}>
