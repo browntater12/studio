@@ -14,7 +14,7 @@ import type { Firestore as AdminFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 
-import type { Account, Product, Contact, AccountProduct, CallNote } from './types';
+import type { Account, Product, Contact, AccountProduct } from './types';
 
 
 // Data access functions
@@ -96,12 +96,6 @@ export async function addProductToAccount(
   const db = getAdminFirestore(initializeServerApp());
   const accountProductsCollection = db.collection('account-products');
   await accountProductsCollection.add(productData);
-}
-
-export async function addCallNote(callNoteData: Omit<CallNote, 'id'>): Promise<void> {
-  const db = getAdminFirestore(initializeServerApp());
-  const callNotesCollection = db.collection('call-notes');
-  await callNotesCollection.add(callNoteData);
 }
 
 export async function updateProduct(

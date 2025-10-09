@@ -46,11 +46,3 @@ export type Product = {
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
-
-export type CallNote = {
-  id: string;
-  accountId: string;
-  callDate: Timestamp;
-  notes: string;
-  contactIds?: string[];
-};

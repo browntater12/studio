@@ -3,14 +3,13 @@
 import * as React from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
-import { doc, collection, query, where, orderBy } from 'firebase/firestore';
-import { type Account, type Contact, type Product, type AccountProduct, type CallNote } from '@/lib/types';
+import { doc, collection, query, where } from 'firebase/firestore';
+import { type Account, type Contact, type Product, type AccountProduct } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductList } from '@/components/account/product-list';
-import { CallNotesList } from '@/components/account/call-notes-list';
 
 function AccountDetails() {
   const params = useParams();
@@ -42,13 +41,7 @@ function AccountDetails() {
   }, [firestore, accountId]);
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
-  const callNotesQuery = useMemoFirebase(() => {
-    if (!firestore || !accountId) return null;
-    return query(collection(firestore, 'call-notes'), where('accountId', '==', accountId), orderBy('callDate', 'desc'));
-  }, [firestore, accountId]);
-  const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
-
-  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || callNotesLoading;
+  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading;
 
   if (isLoading && !account) {
     return (
@@ -79,11 +72,10 @@ function AccountDetails() {
 
   return (
     <div className="space-y-8">
-      {account ? <AccountHeader account={account} contacts={contacts || []} /> : <Skeleton className="h-14 w-full" />}
+      {account ? <AccountHeader account={account} /> : <Skeleton className="h-14 w-full" />}
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
           {contactsLoading || !account ? <Skeleton className="h-64 w-full" /> : <ContactList account={account} contacts={contacts || []} />}
-          {callNotesLoading || !account ? <Skeleton className="h-64 w-full" /> : <CallNotesList callNotes={callNotes || []} contacts={contacts || []} />}
           {productsLoading || productNotesLoading || !account ? <Skeleton className="h-64 w-full" /> : <ProductList
             accountId={accountId}
             accountProducts={accountProducts || []}

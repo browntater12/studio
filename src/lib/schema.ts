@@ -80,14 +80,3 @@ export const editProductSchema = createProductSchema.extend({
 export const deleteProductSchema = z.object({
     id: z.string(),
 });
-
-export const addCallNoteSchema = z.object({
-    accountId: z.string(),
-    callDate: z.date({
-      required_error: "A date for the call is required.",
-    }),
-    notes: z.string().min(1, {
-      message: "Call notes cannot be empty.",
-    }),
-    contactIds: z.array(z.string()).optional(),
-  });
