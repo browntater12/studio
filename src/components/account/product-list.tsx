@@ -127,7 +127,7 @@ const PriceDisplay = ({ label, price }: { label: string, price: number | undefin
       <div className="flex items-center gap-2 text-sm mt-2">
         <DollarSign className="h-4 w-4 text-muted-foreground" />
         <div>
-          <span className="font-semibold">{`$${price.toFixed(2)}`}</span>
+          <span className="font-semibold">{`$${price}`}</span>
           <span className="text-muted-foreground ml-1">({label})</span>
         </div>
       </div>
