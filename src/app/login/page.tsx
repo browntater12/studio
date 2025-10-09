@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Loader2, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { useAuth, useUser } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -30,10 +31,10 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -44,10 +45,16 @@ export default function LoginPage() {
   });
 
   React.useEffect(() => {
-    if (!isUserLoading && user && !user.isAnonymous) {
-      router.replace('/dashboard');
-    }
-  }, [user, isUserLoading, router]);
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && !user.isAnonymous) {
+        router.replace('/dashboard');
+      } else {
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
 
 
   const onSubmit = (values: z.infer<typeof loginSchema>) => {
@@ -61,26 +68,27 @@ export default function LoginPage() {
     }
     setIsSubmitting(true);
     // We don't await this, the onAuthStateChanged listener will handle the redirect
-    initiateEmailSignIn(auth, values.email, values.password);
-
-    // We can't know for sure if the sign-in will succeed here,
-    // as the auth state is handled async. We'll optimistically assume it might work.
-    // A more robust solution would listen for signInWithEmailAndPassword errors.
-    setTimeout(() => {
-        // A simple timeout to give Firebase time to process auth
-        // In a real app you might show a loading state until the user object changes
-         if (!auth.currentUser || auth.currentUser.isAnonymous) {
+    initiateEmailSignIn(auth, values.email, values.password)
+        .catch((error) => {
+            // This will catch immediate client-side errors, but not all auth failures
+            let description = "Please check your email and password.";
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                description = "Invalid login credentials. Please try again.";
+            } else if (error.code === 'auth/too-many-requests') {
+                description = "Too many failed login attempts. Please try again later.";
+            }
              toast({
                  variant: "destructive",
                  title: "Login Failed",
-                 description: "Please check your email and password.",
+                 description: description,
              });
-         }
-        setIsSubmitting(false);
-    }, 2000);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
   };
 
-  if (isUserLoading || (user && !user.isAnonymous)) {
+  if (isLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />

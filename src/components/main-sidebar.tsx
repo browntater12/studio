@@ -3,9 +3,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { PlusCircle, Building, Search, Package, LogIn } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { usePathname, useRouter } from 'next/navigation';
+import { PlusCircle, Building, Search, Package, LogIn, LogOut } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from '@/firebase';
 import { collection, orderBy, query } from 'firebase/firestore';
 
 import { type Account } from '@/lib/types';
@@ -25,9 +25,19 @@ import { ThemeToggle } from './theme-toggle';
 import { SidebarMenuSkeleton } from './ui/sidebar';
 import { DbStatus } from './db-status';
 import { User } from 'firebase/auth';
+import { signOut } from '@/firebase/non-blocking-login';
 
 
 function UserDisplay({ user }: { user: User | null }) {
+    const auth = useAuth();
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        if (!auth) return;
+        await signOut(auth);
+        router.push('/login');
+    }
+
     if (!user) return null;
 
     if (user.isAnonymous) {
@@ -42,13 +52,19 @@ function UserDisplay({ user }: { user: User | null }) {
     }
 
     return (
-        <div className="flex items-center gap-2 p-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                {user.email?.charAt(0).toUpperCase()}
+        <div className="flex items-center justify-between gap-2 p-2">
+            <div className="flex items-center gap-2 overflow-hidden">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                    {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-sm overflow-hidden">
+                    <p className="font-medium truncate">{user.email}</p>
+                </div>
             </div>
-            <div className="text-sm overflow-hidden">
-                <p className="font-medium truncate">{user.email}</p>
-            </div>
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="shrink-0">
+                <LogOut className="h-4 w-4"/>
+                <span className="sr-only">Sign Out</span>
+            </Button>
         </div>
     )
 
