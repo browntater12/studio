@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const addAccountSchema = z.object({
@@ -37,7 +38,8 @@ export const contactSchema = z.object({
     isMainContact: z.boolean().default(false),
 });
 
-export const addProductToAccountSchema = z.object({
+// Base schema for account-product relationship without refinement
+const accountProductBaseSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, 'Please select a product.'),
     notes: z.string().optional(),
@@ -50,6 +52,23 @@ export const addProductToAccountSchema = z.object({
         price: z.number().optional(),
     }).optional(),
     createdAt: z.date().optional(),
+});
+
+
+// Refined schema for adding a product
+export const addProductToAccountSchema = accountProductBaseSchema.refine(data => {
+    if (data.priceType === 'bid' && !data.bidFrequency) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Bid frequency is required when price type is Bid.',
+    path: ['bidFrequency'],
+});
+
+// Extend the base schema first, then apply the same refinement
+export const editAccountProductSchema = accountProductBaseSchema.extend({
+    id: z.string(),
 }).refine(data => {
     if (data.priceType === 'bid' && !data.bidFrequency) {
         return false;
@@ -60,9 +79,6 @@ export const addProductToAccountSchema = z.object({
     path: ['bidFrequency'],
 });
 
-export const editAccountProductSchema = addProductToAccountSchema.extend({
-    id: z.string(),
-});
 
 export const deleteAccountProductSchema = z.object({
     id: z.string(),
