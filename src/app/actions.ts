@@ -6,49 +6,15 @@ import { redirect } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
 
 import {
-  addCallNoteSchema,
   editProductNoteSchema,
   editProductSchema,
   deleteProductSchema,
 } from '@/lib/schema';
 import {
-  addCallNote as dbAddCallNote,
   updateAccountProductNote as dbUpdateNote,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
-  getAccountById as dbGetAccountById,
-  getProducts as dbGetProducts,
-  getAccountProductNotes as dbGetAccountProductNotes,
 } from '@/lib/data';
-import { summarizeAccountNotes } from '@/ai/flows/summarize-account-notes';
-import { generatePotentialActions } from '@/ai/flows/generate-potential-actions';
-import { type AccountProduct } from '@/lib/types';
-
-export async function addCallNote(prevState: any, formData: FormData) {
-    const callDateValue = formData.get('callDate');
-    const validatedFields = addCallNoteSchema.safeParse({
-        accountId: formData.get('accountId'),
-        callDate: callDateValue ? new Date(callDateValue as string) : undefined,
-        notes: formData.get('notes'),
-        contactIds: formData.getAll('contactIds'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            type: 'error',
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Invalid fields. Failed to add call note.',
-        };
-    }
-
-    try {
-        await dbAddCallNote(validatedFields.data);
-        revalidatePath(`/dashboard/account/${validatedFields.data.accountId}`);
-        return { type: 'success', message: 'Call note added successfully.' };
-    } catch (e: any) {
-        return { type: 'error', message: e.message || 'Database Error: Failed to add call note.' };
-    }
-}
 
 export async function updateProductNote(prevState: any, formData: FormData) {
     const validatedFields = editProductNoteSchema.safeParse({
@@ -122,51 +88,5 @@ export async function deleteProduct(prevState: any, formData: FormData) {
     return { type: 'success', message: 'Product deleted successfully.' };
   } catch (e: any) {
     return { type: 'error', message: e.message || 'Database Error: Failed to delete product.' };
-  }
-}
-
-export async function generateSalesInsights(accountId: string) {
-  try {
-    const account = await dbGetAccountById(accountId);
-    if (!account) {
-      return { error: 'Account not found.' };
-    }
-
-    const allProducts = await dbGetProducts();
-
-    const productNotes = await dbGetAccountProductNotes(accountId);
-
-    const productNotesText =
-      productNotes
-        ?.map(ap => {
-          const product = allProducts.find(p => p.id === ap.productId);
-          return `- ${product?.name || 'Unknown Product'}: ${ap.notes}`;
-        })
-        .join('\n') || 'No product notes.';
-
-    const allNotes = [
-      `Account Details: ${account.details || 'N/A'}`,
-      `Product Notes:\n${productNotesText}`,
-    ].join('\n\n');
-
-    const [summaryResult, actionsResult] = await Promise.all([
-      summarizeAccountNotes({
-        accountName: account.name,
-        notes: allNotes,
-      }),
-      generatePotentialActions({
-        accountName: account.name,
-        accountDetails: account.details || 'N/A',
-        productNotes: productNotesText,
-      }),
-    ]);
-
-    return {
-      summary: summaryResult.summary,
-      potentialActions: actionsResult.potentialActions,
-    };
-  } catch (e: any) {
-    console.error('Error generating sales insights:', e);
-    return { error: e.message || 'An unexpected error occurred.' };
   }
 }
