@@ -7,7 +7,7 @@ export const addAccountSchema = z.object({
   accountProducts: z.array(z.string()).optional(),
 });
 
-export const addProductSchema = z.object({
+export const createProductSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
     productNumber: z.string().min(1, 'Product number is required.'),
     volumes: z.array(z.string()).refine(value => value.some(item => item), {
@@ -37,14 +37,10 @@ export const contactSchema = z.object({
     isMainContact: z.boolean().default(false),
 });
 
-export const deleteContactSchema = z.object({
-  id: z.string(),
-});
-
 export const addProductToAccountSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, 'Please select a product.'),
-    notes: z.string(),
+    notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
     lastBidPrice: z.number().optional(),

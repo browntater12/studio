@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { useFormState } from 'react-dom';
-import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -64,7 +63,6 @@ const editInitialState = { type: '', message: '', errors: undefined };
 
 function EditNoteForm({ noteId, currentNotes, onSuccess }: { noteId: string, currentNotes: string, onSuccess: () => void }) {
     const [state, formAction] = useFormState(updateProductNote, editInitialState);
-    const { pending } = useFormStatus();
     const { toast } = useToast();
 
     const form = useForm<z.infer<typeof editProductNoteSchema>>({
@@ -81,29 +79,19 @@ function EditNoteForm({ noteId, currentNotes, onSuccess }: { noteId: string, cur
         }
     }, [state, onSuccess, toast]);
 
+    const { ref, ...rest } = form.register('notes');
+
     return (
-        <Form {...form}>
-            <form action={formAction} className="space-y-4">
-                 <input type="hidden" name="noteId" value={noteId} />
-                 <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Product Notes</FormLabel>
-                        <FormControl>
-                            <Textarea {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                 />
-                 <Button type="submit" disabled={pending} className="w-full">
-                    {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
-                 </Button>
-            </form>
-        </Form>
+        <form action={formAction} className="space-y-4">
+            <input type="hidden" name="noteId" value={noteId} />
+            <Textarea
+                defaultValue={currentNotes}
+                name="notes"
+            />
+            <Button type="submit" className="w-full">
+                Save Changes
+            </Button>
+        </form>
     );
 }
 
