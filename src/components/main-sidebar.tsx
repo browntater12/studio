@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -26,7 +27,6 @@ import { DbStatus } from './db-status';
 
 interface MainSidebarProps {
   accounts: Account[];
-  products: Product[];
   isLoading: boolean;
 }
 
