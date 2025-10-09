@@ -47,6 +47,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { dictateNote } from '@/ai/flows/dictate-note';
 import { Badge } from '../ui/badge';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 const toBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -131,24 +133,37 @@ export function AddCallNoteDialog({ accountId, contacts }: { accountId: string; 
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof addCallNoteSchema>) => {
+  const onSubmit = (values: z.infer<typeof addCallNoteSchema>) => {
     setIsSubmitting(true);
-    try {
-      if (!firestore) throw new Error("Firestore not available");
-      await addDoc(collection(firestore, 'call-notes'), values);
-      toast({ title: "Success", description: "Call note saved." });
-      form.reset({ accountId, callDate: new Date(), notes: '', contactIds: [] });
-      setOpen(false);
-    } catch (error: any) {
-      console.error("Error saving call note:", error);
-      toast({
-        variant: "destructive",
-        title: "Save Error",
-        description: error.message || "Failed to save call note.",
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (!firestore) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Firestore is not initialized.',
+        });
+        setIsSubmitting(false);
+        return;
     }
+
+    const callNotesCollection = collection(firestore, 'call-notes');
+    
+    addDoc(callNotesCollection, values)
+        .then(() => {
+            toast({ title: "Success", description: "Call note saved." });
+            form.reset({ accountId, callDate: new Date(), notes: '', contactIds: [] });
+            setOpen(false);
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: callNotesCollection.path,
+                operation: 'create',
+                requestResourceData: values,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
   };
 
   return (
