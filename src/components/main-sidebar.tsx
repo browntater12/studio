@@ -5,6 +5,8 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PlusCircle, Building, Search, Package } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { collection, orderBy, query } from 'firebase/firestore';
 
 import { type Account } from '@/lib/types';
 import {
@@ -24,19 +26,26 @@ import { SidebarMenuSkeleton } from './ui/sidebar';
 import { DbStatus } from './db-status';
 
 
-interface MainSidebarProps {
-  accounts: Account[];
-  isLoading: boolean;
-}
-
-export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
+export function MainSidebar() {
   const pathname = usePathname();
   const [search, setSearch] = React.useState('');
+  const { isUserLoading } = useUser();
+  const firestore = useFirestore();
 
-  const filteredAccounts = accounts.filter(acc => 
+  const accountsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !firestore) return null;
+    return query(collection(firestore, 'accounts-db'), orderBy('name'));
+  }, [firestore, isUserLoading]);
+
+  const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
+
+  const combinedIsLoading = accountsLoading || isUserLoading;
+
+
+  const filteredAccounts = accounts?.filter(acc => 
     acc.name.toLowerCase().includes(search.toLowerCase()) ||
     acc.accountNumber?.toLowerCase().includes(search.toLowerCase())
-  );
+  ) || [];
 
   return (
     <Sidebar>
@@ -80,7 +89,7 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
               </Link>
           </Button>
 
-          {isLoading && (
+          {combinedIsLoading && (
             <div className="p-2">
                 <SidebarMenuSkeleton showIcon />
                 <SidebarMenuSkeleton showIcon />
@@ -88,7 +97,7 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
             </div>
           )}
 
-          {!isLoading && filteredAccounts.map(account => (
+          {!combinedIsLoading && filteredAccounts.map(account => (
             <SidebarMenuItem key={account.id}>
               <Link href={`/dashboard/account/${account.id}`} passHref>
                 <SidebarMenuButton
@@ -104,7 +113,7 @@ export function MainSidebar({ accounts, isLoading }: MainSidebarProps) {
               </Link>
             </SidebarMenuItem>
           ))}
-          {!isLoading && filteredAccounts.length === 0 && (
+          {!combinedIsLoading && filteredAccounts.length === 0 && (
              <p className="p-4 text-sm text-muted-foreground">No accounts found.</p>
           )}
         </SidebarMenu>
