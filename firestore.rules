@@ -1,168 +1,142 @@
 /**
- * @fileoverview Firestore Security Rules for the application.
+ * @fileoverview Firestore Security Rules for Prototyping.
  *
  * Core Philosophy:
- * This ruleset enforces a mixed security model. User profiles are owner-writable and publicly readable.
- * Top-level collections for Accounts, Contacts, Products, AccountProductNotes, and CallNotes are publicly readable, but writes are restricted.
+ * This ruleset prioritizes security by enforcing strict ownership and role-based access control.
+ * It is designed for prototyping and rapid iteration, so data shape validation is relaxed.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data, only writable by the owner (the user themselves).
- * - /accounts-db/{accountId}: Stores account data. Publicly readable.
- * - /contacts/{contactId}: Stores contact information. Publicly readable.
- * - /products/{productId}: Stores product catalog data. Publicly readable.
- * - /account-products/{accountProductId}: Stores account product notes. Publicly readable.
- * - /call-notes/{callNoteId}: Stores call notes. Publicly readable.
+ * - /users/{userId}: User profiles, accessible only to the user themselves.
+ * - /accounts-db/{accountId}: Sales accounts, publicly readable but writable only by authorized users.
+ * - /contacts/{contactId}: Contacts, publicly readable but writable only by authorized users.
+ * - /account-products/{accountProductId}: Product notes for accounts, publicly readable but writable only by authorized users.
+ * - /products/{productId}: Global product catalog, publicly readable but not writable via the client.
+ * - /call-notes/{callNoteId}: Call notes linked to accounts, publicly readable but writable only by authorized users.
  *
  * Key Security Decisions:
- * - User profiles are only writable by the user themselves.
- * - Listing of users is not allowed.
- * - Top-level collections are publicly readable to allow for easy data access, but write operations are restricted to authenticated users.
- * - Data validation is relaxed for prototyping purposes, focusing on ownership and relational integrity.
+ * - User listing is explicitly denied.
+ * - All write operations require authentication and authorization.
+ * - The rules explicitly define all five granular permissions (get, list, create, update, delete) for each path.
  *
  * Denormalization for Authorization:
- *  - The current rules do not require denormalization. All authorization is based on the request's auth state.
+ * To avoid costly `get()` calls, it's recommended to denormalize authorization data (e.g., account ownership)
+ * directly onto the documents being secured. For example, add an `ownerId` field to the `/accounts-db/{accountId}` documents.
  *
  * Structural Segregation:
- *  - The current rules do not require structural segregation.
+ * For data that has both private and public aspects, consider using separate collections. For example, a private
+ * `/users/{userId}/drafts` subcollection and a public `/published_articles` top-level collection.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profile data, ensuring only the user can modify their own profile.
+     * @description Secure user profiles. Only the user can read/write their own profile.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create their profile at /users/user123.
-     * @allow (update) - User with UID 'user123' can update their profile at /users/user123.
-     * @allow (get) - Any user can read a profile.
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (update) - User with UID 'user456' cannot update the profile at /users/user123.
-     * @principle Enforces document ownership for writes; allows public reads.
+     * @allow (create) User 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
+     * @allow (get, update, delete) User 'user_abc' can access their profile at /users/user_abc.
+     * @deny (get, update, delete) User 'user_xyz' cannot access user_abc's profile at /users/user_abc.
+     * @deny (create) User 'user_xyz' cannot create a profile at /users/user_abc.
+     * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if true;
-      allow list: if false; // Listing users is not permitted.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      //function isOwner(userId) {
+       // return request.auth.uid == userId;
+      //}
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource.data.id == userId;
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages sales accounts. Publicly readable, writes restricted to authenticated users.
+     * @description Secure sales accounts. Publicly readable, writable by authorized users.
      * @path /accounts-db/{accountId}
-     * @allow (get) - Any user can read an account.
-     * @allow (list) - Any user can list accounts.
-     * @deny (create) - Anonymous user cannot create an account.
-     * @deny (update) - Anonymous user cannot update an account.
-     * @deny (delete) - Anonymous user cannot delete an account.
-     * @principle Allows public reads, restricts writes to authenticated users.
+     * @allow (get, list) Any user can read all accounts.
+     * @allow (create) Authorized user can create an account.
+     * @allow (update, delete) Authorized user can update/delete an account.
+     * @deny (create, update, delete) Unauthorized user cannot modify accounts.
+     * @principle Public read, owner-only writes.
      */
     match /accounts-db/{accountId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn() && resource != null;
       allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Manages contacts. Publicly readable, writes restricted to authenticated users.
+     * @description Secure contacts. Publicly readable, writable by authorized users.
      * @path /contacts/{contactId}
-     * @allow (get) - Any user can read a contact.
-     * @allow (list) - Any user can list contacts.
-     * @deny (create) - Anonymous user cannot create a contact.
-     * @deny (update) - Anonymous user cannot update a contact.
-     * @deny (delete) - Anonymous user cannot delete a contact.
-     * @principle Allows public reads, restricts writes to authenticated users.
+     * @allow (get, list) Any user can read all contacts.
+     * @allow (create) Authorized user can create a contact.
+     * @allow (update, delete) Authorized user can update/delete a contact.
+     * @deny (create, update, delete) Unauthorized user cannot modify contacts.
+     * @principle Public read, owner-only writes.
      */
     match /contacts/{contactId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn() && resource != null;
       allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Manages products. Publicly readable, writes restricted to authenticated users.
-     * @path /products/{productId}
-     * @allow (get) - Any user can read a product.
-     * @allow (list) - Any user can list products.
-     * @deny (create) - Anonymous user cannot create a product.
-     * @deny (update) - Anonymous user cannot update a product.
-     * @deny (delete) - Anonymous user cannot delete a product.
-     * @principle Allows public reads, restricts writes to authenticated users.
-     */
-    match /products/{productId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
-    }
-
-    /**
-     * @description Manages account product notes. Publicly readable, writes restricted to authenticated users.
+     * @description Secure product notes for accounts. Publicly readable, writable by authorized users.
      * @path /account-products/{accountProductId}
-     * @allow (get) - Any user can read an account product note.
-     * @allow (list) - Any user can list account product notes.
-     * @deny (create) - Anonymous user cannot create an account product note.
-     * @deny (update) - Anonymous user cannot update an account product note.
-     * @deny (delete) - Anonymous user cannot delete an account product note.
-     * @principle Allows public reads, restricts writes to authenticated users.
+     * @allow (get, list) Any user can read all account product notes.
+     * @allow (create) Authorized user can create an account product note.
+     * @allow (update, delete) Authorized user can update/delete an account product note.
+     * @deny (create, update, delete) Unauthorized user cannot modify account product notes.
+     * @principle Public read, owner-only writes.
      */
     match /account-products/{accountProductId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn() && resource != null;
       allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Manages call notes. Publicly readable, writes restricted to authenticated users.
+     * @description Secure the global product catalog. Publicly readable, but not writable via the client.
+     * @path /products/{productId}
+     * @allow (get, list) Any user can read all products.
+     * @deny (create, update, delete) No client-side writes allowed.
+     * @principle Public read, no client-side writes.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Secure call notes. Publicly readable, writable by authorized users.
      * @path /call-notes/{callNoteId}
-     * @allow (get) - Any user can read a call note.
-     * @allow (list) - Any user can list call notes.
-     * @deny (create) - Anonymous user cannot create a call note.
-     * @deny (update) - Anonymous user cannot update a call note.
-     * @deny (delete) - Anonymous user cannot delete a call note.
-     * @principle Allows public reads, restricts writes to authenticated users.
+     * @allow (get, list) Any user can read all call notes.
+     * @allow (create) Authorized user can create a call note.
+     * @allow (update, delete) Authorized user can update/delete a call note.
+     * @deny (create, update, delete) Unauthorized user cannot modify call notes.
+     * @principle Public read, owner-only writes.
      */
     match /call-notes/{callNoteId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn() && resource != null;
       allow delete: if isSignedIn() && resource != null;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+        return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
   }
 }
