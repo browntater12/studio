@@ -1,82 +1,69 @@
 import { z } from 'zod';
 
-const baseAccountSchema = z.object({
-  name: z.string().min(2, { message: 'Account name must be at least 2 characters.' }),
-  accountNumber: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-  industry: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-  status: z.enum(['lead', 'customer'], { required_error: 'Status is required.' }),
-  details: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
-  address: z.string().nullable().optional().transform(val => val === '' || val === null ? undefined : val),
+export const addAccountSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+  details: z.string().optional(),
+  contacts: z.array(z.string()).optional(),
+  accountProducts: z.array(z.string()).optional(),
 });
 
-export const addAccountSchema = baseAccountSchema;
+export const addProductSchema = z.object({
+    name: z.string().min(1, 'Name is required.'),
+    productNumber: z.string().min(1, 'Product number is required.'),
+    volumes: z.array(z.string()).refine(value => value.some(item => item), {
+        message: "You must select at least one volume.",
+    }),
+});
 
-const baseEditAccountSchema = baseAccountSchema.extend({
+export const editProductSchema = z.object({
     id: z.string(),
-});
-
-export const editAccountSchema = baseEditAccountSchema;
-
-export const addContactSchema = z.object({
-  accountNumber: z.string().min(1, { message: "Account number is required." }),
-  name: z.string().min(2, { message: "Contact name must be at least 2 characters." }),
-  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  location: z.string().min(2, { message: "Location is required." }),
-  isMainContact: z.boolean().default(false),
-});
-
-export const editContactSchema = addContactSchema.extend({
-  contactId: z.string(),
-});
-
-export const addProductToAccountSchema = z.object({
-  accountId: z.string().min(1, { message: "Account ID is required."}),
-  productId: z.string().min(1, { message: "Please select a product." }),
-  notes: z.string().optional(),
-  priceType: z.enum(['spot', 'bid']).optional(),
-  bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
-  lastBidPrice: z.number().optional(),
-  winningBidPrice: z.number().optional(),
-  priceDetails: z.object({
-    type: z.enum(['quote', 'last_paid']),
-    price: z.number().optional(),
-  }).optional()
-}).refine(data => {
-    if (data.priceType === 'bid') {
-        return true; // No validation needed here now for bid
-    }
-    return true;
-}, {
-    message: "Bid frequency is required when bid price is selected.",
-    path: ['bidFrequency'],
-}).refine(data => {
-    if (data.priceType !== 'bid' && data.priceDetails) {
-        // When spot price is selected, price can be optional if the user is just taking notes.
-        return true;
-    }
-    return true;
-}, {
-    message: "Price is required for spot pricing.",
-    path: ['priceDetails', 'price'],
-});
-
-
-export const editProductNoteSchema = z.object({
-  noteId: z.string(),
-  notes: z.string().min(3, { message: "Notes must be at least 3 characters." }),
-});
-
-export const createProductSchema = z.object({
-    name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
-    productNumber: z.string().min(3, { message: 'Product number must be at least 3 characters.' }),
-    volumes: z.array(z.enum(['pails', 'drums', 'totes', 'bulk'])).min(1, { message: 'At least one volume must be selected.' }),
-});
-
-export const editProductSchema = createProductSchema.extend({
-  id: z.string(),
+    name: z.string().min(1, 'Name is required.'),
+    productNumber: z.string().min(1, 'Product number is required.'),
+    volumes: z.array(z.string()).refine(value => value.some(item => item), {
+        message: "You must select at least one volume.",
+    }),
 });
 
 export const deleteProductSchema = z.object({
+  id: z.string(),
+});
+
+export const deleteContactSchema = z.object({
     id: z.string(),
+});
+
+export const contactSchema = z.object({
+    accountNumber: z.string(),
+    name: z.string().min(1, 'Name is required.'),
+    email: z.string().email('Invalid email address.').min(1, 'Email is required.'),
+    phone: z.string().min(1, 'Phone is required'),
+    location: z.string().min(1, 'Location is required'),
+    isMainContact: z.boolean().default(false),
+});
+
+export const addProductToAccountSchema = z.object({
+    accountId: z.string(),
+    productId: z.string().min(1, 'Please select a product.'),
+    notes: z.string().min(1, 'Notes are required.'),
+    priceType: z.enum(['spot', 'bid']).optional(),
+    bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
+    lastBidPrice: z.number().optional(),
+    winningBidPrice: z.number().optional(),
+    priceDetails: z.object({
+        type: z.enum(['quote', 'last_paid']),
+        price: z.number().optional(),
+    }).optional(),
+}).refine(data => {
+    if (data.priceType === 'bid' && !data.bidFrequency) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Bid frequency is required when price type is Bid.',
+    path: ['bidFrequency'],
+});
+
+export const editProductNoteSchema = z.object({
+    noteId: z.string(),
+    notes: z.string().min(1, "Cannot be empty."),
 });

@@ -1,15 +1,17 @@
 'use client';
 
 import * as React from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { type Contact } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 
-import { addContactSchema, editContactSchema } from '@/lib/schema';
+import { contactSchema, deleteContactSchema } from '@/lib/schema';
+import { deleteContact } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -35,61 +37,56 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-
-function DeleteContactButton({ contactId, onSuccess }: { contactId: string; onSuccess: () => void; }) {
-    const [isDeleting, setIsDeleting] = React.useState(false);
-    const firestore = useFirestore();
+function DeleteContact({ contactId, onSuccess }: { contactId: string; onSuccess: () => void; }) {
+    const initialState = { message: '', type: '' };
+    const [state, dispatch] = useFormState(deleteContact, initialState);
     const { toast } = useToast();
+    const [open, setOpen] = React.useState(false);
 
-    const handleDelete = async () => {
-        setIsDeleting(true);
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Firestore is not available.' });
-            setIsDeleting(false);
-            return;
-        }
-
-        try {
-            const contactRef = doc(firestore, 'contacts', contactId);
-            await deleteDoc(contactRef);
-            toast({ title: 'Success!', description: 'Contact deleted successfully.' });
+    React.useEffect(() => {
+        if (state.type === 'success') {
+            toast({ title: 'Success!', description: state.message });
             onSuccess();
-        } catch (error: any) {
-            console.error("Error deleting contact:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: error.message || 'Failed to delete contact.',
-            });
-        } finally {
-            setIsDeleting(false);
+            setOpen(false);
+        } else if (state.type === 'error') {
+            toast({ variant: 'destructive', title: 'Error', description: state.message });
         }
-    };
-    
+    }, [state, onSuccess, toast]);
+
     return (
-        <AlertDialog>
+        <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogTrigger asChild>
                 <Button variant="destructive" type="button">
-                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this contact.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Continue
-                    </AlertDialogAction>
-                </AlertDialogFooter>
+                <form action={dispatch}>
+                    <input type="hidden" name="id" value={contactId} />
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this contact.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+                        <DeleteButton />
+                    </AlertDialogFooter>
+                </form>
             </AlertDialogContent>
         </AlertDialog>
+    );
+}
+
+function DeleteButton() {
+    const { pending } = useFormStatus();
+    return (
+        <AlertDialogAction type="submit" disabled={pending}>
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Continue
+        </AlertDialogAction>
     );
 }
 
@@ -110,7 +107,10 @@ type ContactFormProps = {
 
 export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormProps) {
   const isEditMode = !!contact;
-  const schema = isEditMode ? editContactSchema : addContactSchema;
+  const schema = contactSchema.extend({
+      isPrimary: z.boolean().optional(),
+      id: z.string().optional(),
+  });
   type SchemaType = z.infer<typeof schema>;
   
   const firestore = useFirestore();
@@ -120,17 +120,14 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
     defaultValues: isEditMode
-      ? {
-          ...contact,
-          contactId: contact.id,
-        }
+      ? { ...contact, isMainContact: contact.isMainContact || false, accountNumber: contact.accountNumber }
       : {
           accountNumber,
           name: '',
           phone: '',
           email: '',
-          location: '',
           isMainContact: false,
+          location: '',
         },
   });
   
@@ -142,27 +139,35 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
         }
 
         const contactsCol = collection(firestore, 'contacts');
+        const contactData = {
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          location: values.location,
+          isMainContact: values.isMainContact,
+          accountNumber: values.accountNumber,
+          avatarUrl: contact?.avatarUrl,
+        }
 
         if (values.isMainContact) {
             const batch = writeBatch(firestore);
-            const mainContactsQuery = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true));
-            const mainContactsSnap = await getDocs(mainContactsQuery);
-            mainContactsSnap.forEach(doc => {
-                if (!isEditMode || (isEditMode && contact.id !== doc.id)) {
+            const q = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true));
+            const snapshot = await getDocs(q);
+            snapshot.forEach(doc => {
+                if (!isEditMode || (isEditMode && contact?.id !== doc.id)) {
                     batch.update(doc.ref, { isMainContact: false });
                 }
             });
             await batch.commit();
         }
 
-        if (isEditMode) {
-            const { contactId, ...contactData } = values as z.infer<typeof editContactSchema>;
-            const contactRef = doc(firestore, 'contacts', contactId);
+        if (isEditMode && contact) {
+            const contactRef = doc(firestore, 'contacts', contact.id);
             await updateDoc(contactRef, contactData);
             toast({ title: 'Success!', description: 'Contact updated successfully.' });
         } else {
             await addDoc(contactsCol, {
-                ...values,
+                ...contactData,
                 avatarUrl: PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)].imageUrl,
             });
             toast({ title: 'Success!', description: 'Contact added successfully.' });
@@ -223,7 +228,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <FormControl><Input placeholder="New York, NY" {...field} /></FormControl>
+              <FormControl><Input placeholder="City, State" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -237,7 +242,6 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  name={field.name}
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
@@ -248,7 +252,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
         />
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
-            {isEditMode && contact && <DeleteContactButton contactId={contact.id} onSuccess={onSuccess} />}
+            {isEditMode && contact && <DeleteContact contactId={contact.id} onSuccess={onSuccess} />}
         </div>
       </form>
     </Form>

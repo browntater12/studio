@@ -9,11 +9,13 @@ import {
   editProductNoteSchema,
   editProductSchema,
   deleteProductSchema,
+  deleteContactSchema,
 } from '@/lib/schema';
 import {
   updateAccountProductNote as dbUpdateNote,
   updateProduct as dbUpdateProduct,
   deleteProduct as dbDeleteProduct,
+  deleteContact as dbDeleteContact,
 } from '@/lib/data';
 
 export async function updateProductNote(prevState: any, formData: FormData) {
@@ -88,5 +90,26 @@ export async function deleteProduct(prevState: any, formData: FormData) {
     return { type: 'success', message: 'Product deleted successfully.' };
   } catch (e: any) {
     return { type: 'error', message: e.message || 'Database Error: Failed to delete product.' };
+  }
+}
+
+export async function deleteContact(prevState: any, formData: FormData) {
+  const validatedFields = deleteContactSchema.safeParse({
+    id: formData.get('id'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      type: 'error',
+      message: 'Invalid contact ID.',
+    };
+  }
+
+  try {
+    await dbDeleteContact(validatedFields.data.id);
+    revalidatePath('/dashboard/account');
+    return { type: 'success', message: 'Contact deleted successfully.' };
+  } catch (e: any) {
+    return { type: 'error', message: e.message || 'Database Error: Failed to delete contact.' };
   }
 }
