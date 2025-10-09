@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { PlusCircle, Building, Search, Package } from 'lucide-react';
+import { PlusCircle, Building, Search, Package, LogIn } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, orderBy, query } from 'firebase/firestore';
 
@@ -24,12 +24,40 @@ import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarMenuSkeleton } from './ui/sidebar';
 import { DbStatus } from './db-status';
+import { User } from 'firebase/auth';
 
+
+function UserDisplay({ user }: { user: User | null }) {
+    if (!user) return null;
+
+    if (user.isAnonymous) {
+        return (
+            <Button variant="ghost" className="w-full justify-start" asChild>
+                <Link href="/login">
+                    <LogIn />
+                    <span>Sign In</span>
+                </Link>
+            </Button>
+        )
+    }
+
+    return (
+        <div className="flex items-center gap-2 p-2">
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                {user.email?.charAt(0).toUpperCase()}
+            </div>
+            <div className="text-sm overflow-hidden">
+                <p className="font-medium truncate">{user.email}</p>
+            </div>
+        </div>
+    )
+
+}
 
 export function MainSidebar() {
   const pathname = usePathname();
   const [search, setSearch] = React.useState('');
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const accountsQuery = useMemoFirebase(() => {
@@ -120,6 +148,7 @@ export function MainSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <UserDisplay user={user} />
         <DbStatus />
         <ThemeToggle />
       </SidebarFooter>
