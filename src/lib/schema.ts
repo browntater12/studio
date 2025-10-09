@@ -60,7 +60,20 @@ export const addProductToAccountSchema = z.object({
     path: ['bidFrequency'],
 });
 
+export const editAccountProductSchema = addProductToAccountSchema.extend({
+    id: z.string(),
+});
+
+export const deleteAccountProductSchema = z.object({
+    id: z.string(),
+});
+
+
 export const editProductNoteSchema = z.object({
     noteId: z.string(),
     notes: z.string().min(1, "Cannot be empty."),
+});
+
+export const deleteContactSchema = z.object({
+    id: z.string(),
 });

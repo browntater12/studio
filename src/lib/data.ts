@@ -117,9 +117,26 @@ export async function updateProduct(
 export async function deleteProduct(id: string): Promise<void> {
   const db = getAdminFirestore(initializeServerApp());
   const productRef = db.collection('products').doc(id);
-
-  // In a real app, this might be a Cloud Function for safety.
-  // For now, we will just delete the product doc.
-  // Note: References in account-products will be orphaned.
   await productRef.delete();
+}
+
+export async function deleteContact(id: string): Promise<void> {
+    const db = getAdminFirestore(initializeServerApp());
+    const contactRef = db.collection('contacts').doc(id);
+    await contactRef.delete();
+}
+
+export async function updateAccountProduct(
+    id: string,
+    data: Partial<Omit<AccountProduct, 'id'>>
+): Promise<void> {
+    const db = getAdminFirestore(initializeServerApp());
+    const accountProductRef = db.collection('account-products').doc(id);
+    await accountProductRef.update(data);
+}
+
+export async function deleteAccountProduct(id: string): Promise<void> {
+    const db = getAdminFirestore(initializeServerApp());
+    const accountProductRef = db.collection('account-products').doc(id);
+    await accountProductRef.delete();
 }

@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AddProductToAccountForm } from '../forms/add-product-form';
 import { Badge } from '../ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { EditProductDetailsForm } from '../forms/edit-product-details-form';
 
 function AddProductDialog({ accountId, allProducts }: { accountId: string, allProducts: Product[] }) {
   const [open, setOpen] = React.useState(false);
@@ -59,52 +60,16 @@ function AddProductDialog({ accountId, allProducts }: { accountId: string, allPr
   );
 }
 
-const editInitialState = { type: '', message: '', errors: undefined };
-
-function EditNoteForm({ noteId, currentNotes, onSuccess }: { noteId: string, currentNotes: string, onSuccess: () => void }) {
-    const [state, formAction] = useFormState(updateProductNote, editInitialState);
-    const { toast } = useToast();
-
-    const form = useForm<z.infer<typeof editProductNoteSchema>>({
-        resolver: zodResolver(editProductNoteSchema),
-        defaultValues: { noteId, notes: currentNotes },
-    });
-
-    React.useEffect(() => {
-        if (state.type === 'success') {
-            toast({ title: 'Success', description: state.message });
-            onSuccess();
-        } else if (state.type === 'error') {
-            toast({ title: 'Error', description: state.message, variant: 'destructive' });
-        }
-    }, [state, onSuccess, toast]);
-
-    const { ref, ...rest } = form.register('notes');
-
-    return (
-        <form action={formAction} className="space-y-4">
-            <input type="hidden" name="noteId" value={noteId} />
-            <Textarea
-                defaultValue={currentNotes}
-                name="notes"
-            />
-            <Button type="submit" className="w-full">
-                Save Changes
-            </Button>
-        </form>
-    );
-}
-
-function EditNoteDialog({ note, children }: { note: AccountProduct, children: React.ReactNode }) {
+function EditProductDetailsDialog({ accountProduct, allProducts, children }: { accountProduct: AccountProduct, allProducts: Product[], children: React.ReactNode }) {
     const [open, setOpen] = React.useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Product Note</DialogTitle>
+                    <DialogTitle>Edit Product Details</DialogTitle>
                 </DialogHeader>
-                <EditNoteForm noteId={note.id!} currentNotes={note.notes} onSuccess={() => setOpen(false)} />
+                <EditProductDetailsForm accountProduct={accountProduct} allProducts={allProducts} onSuccess={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
     );
@@ -161,7 +126,6 @@ export function ProductList({
                 const product = getProductDetails(ap.productId);
                 const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
                 const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
-                const lastQuotedPrice = ap.priceDetails?.type === 'quote' && ap.priceDetails?.price !== undefined;
                 
                 const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
@@ -176,27 +140,25 @@ export function ProductList({
                         
                         {hasWinningBid ? (
                             <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} />
-                        ) : hasSpotPrice ? (
+                        ) : hasSpotPrice && (
                             <PriceDisplay 
                                 label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} 
                                 price={ap.priceDetails!.price}
                                 date={createdAtDate}
                                 isQuote={ap.priceDetails!.type === 'quote'}
                             />
-                        ) : lastQuotedPrice ? (
-                            <PriceDisplay label="Last Quoted" price={ap.priceDetails!.price} date={createdAtDate} isQuote={true} />
-                        ) : null}
+                        )}
 
                         {product?.volumes && (
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {product.volumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
                             </div>
                         )}
-                        <EditNoteDialog note={ap}>
+                        <EditProductDetailsDialog accountProduct={ap} allProducts={allProducts}>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
                                 <Edit className="h-4 w-4" />
                             </Button>
-                        </EditNoteDialog>
+                        </EditProductDetailsDialog>
                     </div>
                 );
             })}

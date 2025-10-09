@@ -1,0 +1,398 @@
+'use client';
+
+import * as React from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useFormState } from 'react-dom';
+import { Loader2, Check, ChevronsUpDown, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+
+import { editAccountProductSchema, deleteAccountProductSchema } from '@/lib/schema';
+import { type Product, type AccountProduct } from '@/lib/types';
+import { updateAccountProduct, deleteAccountProduct } from '@/app/actions';
+
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from '@/components/ui/select';
+
+const initialState = { type: '', message: '', errors: undefined };
+
+function DeleteAccountProduct({ accountProductId, onSuccess }: { accountProductId: string; onSuccess: () => void; }) {
+    const [state, formAction] = useFormState(deleteAccountProduct, initialState);
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    React.useEffect(() => {
+        if (state.type === 'success') {
+            toast({ title: 'Success!', description: state.message });
+            onSuccess();
+        } else if (state.type === 'error') {
+            toast({ variant: 'destructive', title: 'Error', description: state.message });
+        }
+    }, [state, onSuccess, toast]);
+
+    return (
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" type="button">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <form action={(formData) => {
+                    setIsSubmitting(true);
+                    formAction(formData);
+                }}>
+                    <input type="hidden" name="id" value={accountProductId} />
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will remove this product and its notes from this account. It will not delete the product from the global catalog.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+                        <AlertDialogAction type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </form>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+}
+
+function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
+  return (
+    <Button type="submit" disabled={isSubmitting} className="w-full flex-1">
+      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      Save Changes
+    </Button>
+  );
+}
+
+type EditProductDetailsFormProps = {
+  accountProduct: AccountProduct;
+  allProducts: Product[];
+  onSuccess: () => void;
+};
+
+export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess }: EditProductDetailsFormProps) {
+  const { toast } = useToast();
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const [state, formAction] = useFormState(updateAccountProduct, initialState);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const form = useForm<z.infer<typeof editAccountProductSchema>>({
+    resolver: zodResolver(editAccountProductSchema),
+    defaultValues: {
+      ...accountProduct,
+      id: accountProduct.id!,
+      lastBidPrice: accountProduct.lastBidPrice ?? undefined,
+      winningBidPrice: accountProduct.winningBidPrice ?? undefined,
+      priceDetails: {
+        type: accountProduct.priceDetails?.type || 'quote',
+        price: accountProduct.priceDetails?.price ?? undefined,
+      }
+    },
+  });
+
+  React.useEffect(() => {
+    setIsSubmitting(false);
+    if (state.type === 'success') {
+      toast({ title: 'Success!', description: state.message });
+      onSuccess();
+    } else if (state.type === 'error') {
+      toast({ title: 'Error', description: state.message, variant: 'destructive' });
+       if (state.errors) {
+        Object.keys(state.errors).forEach((key) => {
+            const fieldKey = key as keyof z.infer<typeof editAccountProductSchema>;
+            if (state.errors && state.errors[fieldKey]) {
+                form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+            }
+        });
+      }
+    }
+  }, [state, onSuccess, toast, form]);
+
+  const priceTypeValue = useWatch({
+    control: form.control,
+    name: 'priceType',
+  });
+  const priceDetailsType = useWatch({
+    control: form.control,
+    name: 'priceDetails.type',
+  });
+
+  return (
+    <Form {...form}>
+      <form action={(formData) => {
+          setIsSubmitting(true);
+          formAction(formData);
+        }} className="space-y-4">
+        <input type="hidden" name="id" value={accountProduct.id} />
+        <input type="hidden" name="accountId" value={accountProduct.accountId} />
+
+        <FormField
+          control={form.control}
+          name="productId"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Product</FormLabel>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value
+                        ? allProducts.find(
+                            (product) => product.id === field.value
+                          )?.name
+                        : "Select a product"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search products..." />
+                    <CommandList>
+                      <CommandEmpty>No product found.</CommandEmpty>
+                      <CommandGroup>
+                        {allProducts.map((product) => (
+                          <CommandItem
+                            value={product.name}
+                            key={product.id}
+                            onSelect={() => {
+                              form.setValue("productId", product.id);
+                              setPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                product.id === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            <div>
+                                <div>{product.name}</div>
+                                <div className="text-xs text-muted-foreground">{product.productNumber}</div>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product Notes for this Account</FormLabel>
+              <FormControl>
+                <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-4 rounded-md border p-4">
+             <FormField
+              control={form.control}
+              name="priceType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Pricing Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                      {...field}
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="spot" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Spot Price</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="bid" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Bid Price</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {priceTypeValue === 'bid' && (
+                <>
+                <FormField
+                    control={form.control}
+                    name="bidFrequency"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Bid Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="lastBidPrice"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Last Bid Price</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="winningBidPrice"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Winning Bid Price</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                </>
+            )}
+        </div>
+        
+        {priceTypeValue !== 'bid' && (
+            <div className="space-y-4 rounded-md border p-4">
+                <FormField
+                control={form.control}
+                name="priceDetails.type"
+                render={({ field }) => (
+                    <FormItem className="space-y-3">
+                    <FormLabel>Price Type</FormLabel>
+                    <FormControl>
+                        <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                        {...field}
+                        >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                            <RadioGroupItem value="quote" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Quote</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                            <RadioGroupItem value="last_paid" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Last Price Paid</FormLabel>
+                        </FormItem>
+                        </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="priceDetails.price"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+        )}
+        
+        <div className="flex gap-2">
+          <SubmitButton isSubmitting={isSubmitting} />
+          <DeleteAccountProduct accountProductId={accountProduct.id!} onSuccess={onSuccess} />
+        </div>
+      </form>
+    </Form>
+  );
+}
