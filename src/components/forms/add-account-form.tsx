@@ -44,6 +44,8 @@ const industryOptions = [
     'Mining & Wells',
     'Alcohol',
     'Chemical Services',
+    'Water Treatment',
+    'Municipal',
   ];
 
 export function AddAccountForm({ account }: { account?: Account}) {
