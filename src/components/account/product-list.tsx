@@ -126,6 +126,7 @@ export function ProductList({
                 const product = getProductDetails(ap.productId);
                 const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
                 const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
+                const isQuote = ap.priceType === 'spot' && ap.priceDetails?.type === 'quote';
                 
                 const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
@@ -135,6 +136,7 @@ export function ProductList({
                             <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
                             <span className="text-sm font-normal text-muted-foreground">({product?.productNumber || 'N/A'})</span>
                             {ap.priceType && <Badge variant="outline" className="capitalize">{ap.priceType}</Badge>}
+                            {isQuote && <Badge variant="warning" className="capitalize">Quote</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
                         
