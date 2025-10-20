@@ -34,6 +34,7 @@ export const deleteProductSchema = z.object({
 export const contactSchema = z.object({
     accountNumber: z.string(),
     name: z.string().min(1, 'Name is required.'),
+    position: z.string().optional(),
     email: z.string().email('Invalid email address.').min(1, 'Email is required.'),
     phone: z.string().min(1, 'Phone is required'),
     location: z.string().min(1, 'Location is required'),

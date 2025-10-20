@@ -94,6 +94,7 @@ export function ContactList({
                       </Badge>
                     )}
                   </div>
+                  {contact.position && <p className="text-sm text-muted-foreground">{contact.position}</p>}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                     <a href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-primary">
                       <Mail className="h-3.5 w-3.5" />

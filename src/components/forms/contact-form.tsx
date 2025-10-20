@@ -128,6 +128,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
       : {
           accountNumber,
           name: '',
+          position: '',
           phone: '',
           email: '',
           isMainContact: false,
@@ -145,6 +146,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
         const contactsCol = collection(firestore, 'contacts');
         const contactData = {
           name: values.name,
+          position: values.position,
           email: values.email,
           phone: values.phone,
           location: values.location,
@@ -200,6 +202,17 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="position"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Position</FormLabel>
+              <FormControl><Input placeholder="e.g. Sales Manager" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}

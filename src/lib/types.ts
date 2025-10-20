@@ -4,6 +4,7 @@ export type Contact = {
   id: string;
   accountNumber: string; // Added to link to account
   name: string;
+  position?: string;
   phone: string;
   email: string;
   location: string;

@@ -62,6 +62,10 @@
           "type": "string",
           "description": "Name of the contact."
         },
+        "position": {
+          "type": "string",
+          "description": "Job title or position of the contact."
+        },
         "phone": {
           "type": "string",
           "description": "Phone number of the contact."
