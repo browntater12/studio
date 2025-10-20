@@ -1,17 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 
 
-import { updateProduct, deleteProduct } from '@/app/actions';
 import { createProductSchema, editProductSchema } from '@/lib/schema';
 import { type Product, type ProductVolume } from '@/lib/types';
 
@@ -39,8 +38,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-
-const initialState = { type: '', message: '', errors: undefined };
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const VOLUMES: { id: ProductVolume; label: string }[] = [
   { id: 'pails', label: 'Pails' },
@@ -50,31 +49,45 @@ const VOLUMES: { id: ProductVolume; label: string }[] = [
 ];
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSubmitting: boolean }) {
-  const { pending } = useFormStatus();
-  const isDisabled = isSubmitting || pending;
   return (
-    <Button type="submit" disabled={isDisabled} className="flex-1">
-      {(isDisabled) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+    <Button type="submit" disabled={isSubmitting} className="flex-1">
+      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {isEditMode ? 'Save Changes' : 'Create Product'}
     </Button>
   );
 }
 
 function DeleteProductButton({ productId, onSuccess }: { productId: string, onSuccess: () => void }) {
-    const [state, formAction] = useFormState(deleteProduct, initialState);
-    const { pending } = useFormStatus();
     const { toast } = useToast();
     const router = useRouter();
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const firestore = useFirestore();
 
-    React.useEffect(() => {
-        if (state.type === 'success') {
-            toast({ title: 'Success!', description: state.message });
+    const handleDelete = async () => {
+        if (!firestore) {
+            toast({ title: 'Error', description: 'Database service not available.', variant: 'destructive' });
+            return;
+        }
+        setIsDeleting(true);
+        try {
+            const productRef = doc(firestore, 'products', productId);
+            await deleteDoc(productRef);
+            // This is complex. We would also need to delete all `account-products` that reference this product.
+            // For now, we will just delete the product itself. A more robust solution might use a Cloud Function.
+
+            toast({ title: 'Success!', description: 'Product deleted successfully.' });
             onSuccess();
             router.push('/dashboard/products');
-        } else if (state.type === 'error') {
-            toast({ title: 'Error', description: state.message, variant: 'destructive' });
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `products/${productId}`,
+                operation: 'delete',
+            }));
+        } finally {
+            setIsDeleting(false);
         }
-    }, [state, onSuccess, toast, router]);
+    }
 
     return (
         <AlertDialog>
@@ -85,23 +98,20 @@ function DeleteProductButton({ productId, onSuccess }: { productId: string, onSu
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-                 <form action={formAction}>
-                    <input type="hidden" name="id" value={productId} />
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the product
-                            from the global catalog and remove it from all associated accounts.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4">
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction type="submit" disabled={pending}>
-                             {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Continue
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                 </form>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the product
+                        from the global catalog and remove it from all associated accounts.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="mt-4">
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                         {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Continue
+                    </AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );
@@ -114,11 +124,9 @@ type CreateProductFormProps = {
 
 export function CreateProductForm({ product, onSuccess }: CreateProductFormProps) {
   const isEditMode = !!product;
-  const action = isEditMode ? updateProduct : undefined;
   const schema = isEditMode ? editProductSchema : createProductSchema;
   type SchemaType = z.infer<typeof schema>;
 
-  const [editState, formAction] = useFormState(action || (() => Promise.resolve(initialState)), initialState);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const { toast } = useToast();
@@ -127,66 +135,62 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
     defaultValues: isEditMode
-      ? product
+      ? { ...product, id: product.id }
       : {
           name: '',
           productNumber: '',
           volumes: [],
         },
   });
-
-  const watchedVolumes = useWatch({ control: form.control, name: 'volumes' }) || [];
-
-  React.useEffect(() => {
-    if (editState.type === 'success') {
-      toast({ title: 'Success!', description: editState.message });
-      onSuccess();
-    } else if (editState.type === 'error') {
-      toast({ title: 'Error', description: editState.message, variant: 'destructive' });
-      const errors = editState.errors as z.ZodError<SchemaType>['formErrors']['fieldErrors'] | undefined;
-      if (errors) {
-        Object.keys(errors).forEach((key) => {
-            const fieldKey = key as keyof SchemaType;
-            if (errors[fieldKey]) {
-                form.setError(fieldKey, { type: 'server', message: errors[fieldKey]?.[0] });
-            }
-        });
-      }
-    }
-  }, [editState, onSuccess, toast, form]);
   
   const onSubmit = async (values: SchemaType) => {
-    if (isEditMode) return; // handled by server action
-
     setIsSubmitting(true);
+    if (!firestore) {
+      toast({ title: "Error", description: "Firestore is not available.", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      if (!firestore) {
-        throw new Error("Firestore is not available");
-      }
-      
       const productsCollection = collection(firestore, 'products');
 
-      // Check for uniqueness
+      // Check for uniqueness on both create and edit
       const q = query(productsCollection, where("productNumber", "==", values.productNumber));
       const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        throw new Error("A product with this product number already exists.");
+      
+      let productNumberExists = false;
+      querySnapshot.forEach((doc) => {
+        if (!isEditMode || (isEditMode && doc.id !== product.id)) {
+            productNumberExists = true;
+        }
+      });
+
+      if (productNumberExists) {
+        form.setError('productNumber', {
+            type: 'manual',
+            message: 'A product with this product number already exists.',
+        });
+        throw new Error("Product number already exists.");
       }
       
-      await addDoc(productsCollection, values);
-      
-      toast({
-        title: "Product Created",
-        description: "The new product has been added to the catalog.",
-      });
+      if (isEditMode) {
+          const productRef = doc(firestore, 'products', product.id!);
+          const { id, ...updateData } = values as z.infer<typeof editProductSchema>;
+          await updateDoc(productRef, updateData);
+          toast({ title: "Success!", description: "Product updated successfully." });
+      } else {
+          await addDoc(productsCollection, values);
+          toast({ title: "Product Created", description: "The new product has been added to the catalog." });
+      }
       onSuccess();
     } catch (error: any) {
-      console.error("Error creating product:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create product.",
-      });
+      if (error.message !== "Product number already exists.") {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to save product.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -194,15 +198,8 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
 
   return (
     <Form {...form}>
-      <form 
-        action={isEditMode ? formAction : undefined}
-        onSubmit={!isEditMode ? form.handleSubmit(onSubmit) : undefined}
-        className="space-y-4"
-      >
-        {isEditMode && <input type="hidden" name="id" value={product.id} />}
-        {watchedVolumes.map((volume) => (
-            <input key={volume} type="hidden" name="volumes" value={volume} />
-        ))}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        
         <FormField
           control={form.control}
           name="name"

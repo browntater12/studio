@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { useFormState } from 'react-dom';
 import { Loader2, Check, ChevronsUpDown, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFirestore } from '@/firebase';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +25,7 @@ import {
 
 import { editAccountProductSchema, deleteAccountProductSchema } from '@/lib/schema';
 import { type Product, type AccountProduct } from '@/lib/types';
-import { updateAccountProduct, deleteAccountProduct } from '@/app/actions';
+import { updateAccountProduct } from '@/app/actions';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -53,22 +56,36 @@ import {
     SelectTrigger,
     SelectValue,
   } from '@/components/ui/select';
-
-const initialState = { type: '', message: '', errors: undefined };
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 function DeleteAccountProduct({ accountProductId, onSuccess }: { accountProductId: string; onSuccess: () => void; }) {
-    const [state, formAction] = useFormState(deleteAccountProduct, initialState);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const firestore = useFirestore();
 
-    React.useEffect(() => {
-        if (state.type === 'success') {
-            toast({ title: 'Success!', description: state.message });
-            onSuccess();
-        } else if (state.type === 'error') {
-            toast({ variant: 'destructive', title: 'Error', description: state.message });
+    const handleDelete = async () => {
+        if (!firestore) {
+            toast({ title: 'Error', description: 'Firestore not available', variant: 'destructive' });
+            return;
         }
-    }, [state, onSuccess, toast]);
+        setIsSubmitting(true);
+        try {
+            const docRef = doc(firestore, 'account-products', accountProductId);
+            await deleteDoc(docRef);
+            toast({ title: 'Success!', description: "Product link from account deleted." });
+            onSuccess();
+        } catch (error) {
+            console.error("Error deleting account product:", error);
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `account-products/${accountProductId}`,
+                operation: 'delete',
+            }));
+            toast({ title: 'Error', description: "Failed to delete product link.", variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <AlertDialog>
@@ -79,25 +96,19 @@ function DeleteAccountProduct({ accountProductId, onSuccess }: { accountProductI
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-                <form action={(formData) => {
-                    setIsSubmitting(true);
-                    formAction(formData);
-                }}>
-                    <input type="hidden" name="id" value={accountProductId} />
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will remove this product and its notes from this account. It will not delete the product from the global catalog.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4">
-                        <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                        <AlertDialogAction type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Continue
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </form>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will remove this product and its notes from this account. It will not delete the product from the global catalog.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="mt-4">
+                    <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Continue
+                    </AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );
@@ -121,8 +132,8 @@ type EditProductDetailsFormProps = {
 export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess }: EditProductDetailsFormProps) {
   const { toast } = useToast();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
-  const [state, formAction] = useFormState(updateAccountProduct, initialState);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof editAccountProductSchema>>({
     resolver: zodResolver(editAccountProductSchema),
@@ -138,23 +149,67 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     },
   });
 
-  React.useEffect(() => {
-    setIsSubmitting(false);
-    if (state.type === 'success') {
-      toast({ title: 'Success!', description: state.message });
-      onSuccess();
-    } else if (state.type === 'error') {
-      toast({ title: 'Error', description: state.message, variant: 'destructive' });
-       if (state.errors) {
-        Object.keys(state.errors).forEach((key) => {
-            const fieldKey = key as keyof z.infer<typeof editAccountProductSchema>;
-            if (state.errors && state.errors[fieldKey]) {
-                form.setError(fieldKey, { type: 'server', message: state.errors[fieldKey]?.[0] });
+  const onSubmit = async (values: z.infer<typeof editAccountProductSchema>) => {
+    setIsSubmitting(true);
+
+    if (!firestore) {
+        toast({ title: 'Error', description: 'Firestore is not available.', variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+    }
+
+    try {
+        const { id, ...data } = values;
+
+        // Clean the data object to remove undefined values before sending to Firestore
+        const updateData: { [key: string]: any } = {};
+        Object.entries(data).forEach(([key, value]) => {
+             if (value !== undefined) {
+                if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
+                    const cleanPriceDetails: { [key: string]: any } = {};
+                    Object.entries(value).forEach(([pdKey, pdValue]) => {
+                        if (pdValue !== undefined) {
+                            cleanPriceDetails[pdKey] = pdValue;
+                        }
+                    });
+                    if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
+                      updateData[key] = cleanPriceDetails;
+                    }
+                } else if (value !== '' && value !== null) {
+                    updateData[key] = value;
+                }
             }
         });
-      }
+        
+        // Handle case where bidFrequency might be null or empty
+        if (updateData.priceType !== 'bid') {
+            updateData.bidFrequency = null; // or delete updateData.bidFrequency;
+            updateData.lastBidPrice = null;
+            updateData.winningBidPrice = null;
+        }
+
+
+        const accountProductRef = doc(firestore, 'account-products', id);
+        await updateDoc(accountProductRef, updateData);
+
+        toast({ title: 'Success!', description: 'Product details updated successfully.' });
+        onSuccess();
+    } catch (error: any) {
+        console.error("Error updating product details:", error);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: `account-products/${values.id}`,
+            operation: 'update',
+            requestResourceData: values,
+        }));
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Could not update product details."
+        });
+    } finally {
+        setIsSubmitting(false);
     }
-  }, [state, onSuccess, toast, form]);
+  };
 
   const priceTypeValue = useWatch({
     control: form.control,
@@ -164,21 +219,11 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     control: form.control,
     name: 'priceDetails.type',
   });
-  const watchedProductId = useWatch({
-    control: form.control,
-    name: 'productId',
-  });
 
   return (
     <Form {...form}>
-      <form action={(formData) => {
-          setIsSubmitting(true);
-          formAction(formData);
-        }} className="space-y-4">
-        <input type="hidden" name="id" value={accountProduct.id} />
-        <input type="hidden" name="accountId" value={accountProduct.accountId} />
-        <input type="hidden" name="productId" value={watchedProductId} />
-
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        
         <FormField
           control={form.control}
           name="productId"
