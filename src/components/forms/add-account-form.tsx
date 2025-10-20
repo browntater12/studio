@@ -28,6 +28,23 @@ import { errorEmitter } from "@/firebase/error-emitter"
 import { type Account } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
+const industryOptions = [
+    'Pharmaceuticals',
+    'Mechanical Contractor',
+    'Plating and Coating',
+    'Agriculture',
+    'Animal Butchering',
+    'Oil and Gas',
+    'Soybean Processing',
+    'Ethanol',
+    'Cooling',
+    'Adhesives',
+    'Animal By-Products',
+    'Manufacturing',
+    'Mining & Wells',
+    'Alcohol',
+    'Chemical Services',
+  ];
 
 export function AddAccountForm({ account }: { account?: Account}) {
     const { toast } = useToast()
@@ -138,9 +155,18 @@ export function AddAccountForm({ account }: { account?: Account}) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Industry</FormLabel>
-              <FormControl>
-                <Input placeholder="Water Services" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an industry" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {industryOptions.map(option => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
