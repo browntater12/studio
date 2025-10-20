@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +26,7 @@ import { collection, addDoc, doc, updateDoc } from "firebase/firestore"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { type Account } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 
 export function AddAccountForm({ account }: { account?: Account}) {
@@ -39,16 +41,18 @@ export function AddAccountForm({ account }: { account?: Account}) {
     resolver: zodResolver(addAccountSchema),
     defaultValues: account ? {
         name: account.name,
-        details: account.details,
+        accountNumber: account.accountNumber,
         industry: account.industry,
         status: account.status,
         address: account.address,
+        details: account.details,
     } : {
         name: "",
-        details: "",
+        accountNumber: "",
         industry: "",
         status: "lead",
         address: "",
+        details: "",
     },
   })
  
@@ -101,19 +105,76 @@ export function AddAccountForm({ account }: { account?: Account}) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Account Name</FormLabel>
               <FormControl>
-                <Input placeholder="Acme Inc." {...field} />
+                <Input placeholder="Garratt Callahan Co" {...field} />
               </FormControl>
-              <FormDescription>
-                The name of the account.
-              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="accountNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Account Number</FormLabel>
+              <FormControl>
+                <Input placeholder="1148" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="industry"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Industry</FormLabel>
+              <FormControl>
+                <Input placeholder="Water Services" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="customer">Customer</SelectItem>
+                    </SelectContent>
+                </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="123 Main St, Anytown USA" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -123,20 +184,18 @@ export function AddAccountForm({ account }: { account?: Account}) {
             name="details"
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Details</FormLabel>
+                    <FormLabel>Account Details</FormLabel>
                     <FormControl>
-                        <Textarea placeholder="Company details..." {...field} />
+                        <Textarea placeholder="Garratt Callahan utilizes our Omaha facility..." {...field} />
                     </FormControl>
-                    <FormDescription>
-                        Any details about the account.
-                    </FormDescription>
                     <FormMessage />
                 </FormItem>
             )}
         />
         
-        <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : (account ? 'Save Changes' : 'Submit')}
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {account ? 'Save Changes' : 'Add Account'}
         </Button>
       </form>
     </Form>
