@@ -321,7 +321,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                         <FormItem>
                             <FormLabel>Last Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -334,7 +334,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                         <FormItem>
                             <FormLabel>Winning Bid Price</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -384,7 +384,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                     <FormItem>
                     <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>

@@ -20,57 +20,84 @@ import { useToast } from "@/hooks/use-toast"
 import { addAccountSchema } from "@/lib/schema"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { useFirestore } from "reactfire"
-import { collection, addDoc } from "firebase/firestore"
+import { useFirestore } from "@/firebase"
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { errorEmitter } from "@/firebase/error-emitter"
+import { type Account } from '@/lib/types';
 
 
-export function AddAccountForm() {
+export function AddAccountForm({ account }: { account?: Account}) {
     const { toast } = useToast()
     const router = useRouter()
     const [ isSubmitting, setIsSubmitting ] = useState(false)
 
     const firestore = useFirestore();
-    const accountsCollection = collection(firestore, 'accounts-db');
 
 
   const form = useForm<z.infer<typeof addAccountSchema>>({
     resolver: zodResolver(addAccountSchema),
-    defaultValues: {
+    defaultValues: account ? {
+        name: account.name,
+        details: account.details,
+        industry: account.industry,
+        status: account.status,
+        address: account.address,
+    } : {
         name: "",
         details: "",
-        contacts: [],
-        accountProducts: [],
-
+        industry: "",
+        status: "lead",
+        address: "",
     },
   })
  
   async function onSubmit(values: z.infer<typeof addAccountSchema>) {
+    if (!firestore) {
+        toast({
+            title: 'Error',
+            description: 'Database not available.',
+            variant: 'destructive'
+        });
+        return;
+    }
+    
     setIsSubmitting(true);
-    if (navigator.onLine) {
-        addDoc(accountsCollection, values)
-                    .then((docRef) => {
-                        toast({
-                            title: 'Account Created',
-                            description: 'The new account has been added successfully.',
-                        });
-                        router.push(`/dashboard/account/${docRef.id}`);
-                    })
-                    .catch(async (error) => {
-                        console.error("Original Firebase Error:", error);
-                        const permissionError = new FirestorePermissionError({
-                            path: accountsCollection.path,
-                            operation: 'create',
-                            requestResourceData: values
-                        });
-                        errorEmitter.emit('permission-error', permissionError);
-                    })
-                    .finally(() => {
-                        setIsSubmitting(false);
-                    });
-            }
-      };
+    
+    try {
+        if (account) {
+            const accountRef = doc(firestore, 'accounts-db', account.id);
+            await updateDoc(accountRef, values);
+            toast({
+                title: 'Account Updated',
+                description: 'The account has been updated successfully.',
+            });
+            router.push(`/dashboard/account/${account.id}`);
+        } else {
+            const accountsCollection = collection(firestore, 'accounts-db');
+            const docRef = await addDoc(accountsCollection, values);
+            toast({
+                title: 'Account Created',
+                description: 'The new account has been added successfully.',
+            });
+            router.push(`/dashboard/account/${docRef.id}`);
+        }
+    } catch(error) {
+        const collectionPath = account ? `accounts-db/${account.id}` : 'accounts-db';
+        const operation = account ? 'update' : 'create';
+        
+        console.error(`Original Firebase Error on ${operation}:`, error);
+        
+        const permissionError = new FirestorePermissionError({
+            path: collectionPath,
+            operation: operation,
+            requestResourceData: values
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -109,7 +136,7 @@ export function AddAccountForm() {
         />
         
         <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+            {isSubmitting ? 'Submitting...' : (account ? 'Save Changes' : 'Submit')}
         </Button>
       </form>
     </Form>

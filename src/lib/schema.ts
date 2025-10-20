@@ -4,8 +4,6 @@ import { z } from 'zod';
 export const addAccountSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   details: z.string().optional(),
-  contacts: z.array(z.string()).optional(),
-  accountProducts: z.array(z.string()).optional(),
 });
 
 export const createProductSchema = z.object({
@@ -51,7 +49,7 @@ const accountProductBaseSchema = z.object({
         type: z.enum(['quote', 'last_paid']),
         price: z.number().optional(),
     }).optional(),
-    createdAt: z.date().optional(),
+    createdAt: z.any().optional(),
 });
 
 
