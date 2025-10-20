@@ -35,7 +35,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["lead", "customer"],
+          "enum": ["lead", "customer", "key-account"],
           "description": "Status of the account."
         },
         "details": {

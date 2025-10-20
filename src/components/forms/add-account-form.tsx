@@ -71,7 +71,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
     try {
         if (account) {
             const accountRef = doc(firestore, 'accounts-db', account.id);
-            await updateDoc(accountRef, values);
+            updateDoc(accountRef, values);
             toast({
                 title: 'Account Updated',
                 description: 'The account has been updated successfully.',
@@ -160,6 +160,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
                     <SelectContent>
                         <SelectItem value="lead">Lead</SelectItem>
                         <SelectItem value="customer">Customer</SelectItem>
+                        <SelectItem value="key-account">Key Account</SelectItem>
                     </SelectContent>
                 </Select>
               <FormMessage />

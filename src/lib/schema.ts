@@ -5,7 +5,7 @@ export const addAccountSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   accountNumber: z.string().min(1, 'Account number is required.'),
   industry: z.string().min(1, 'Industry is required.'),
-  status: z.enum(['lead', 'customer']),
+  status: z.enum(['lead', 'customer', 'key-account']),
   address: z.string().optional(),
   details: z.string().optional(),
 });

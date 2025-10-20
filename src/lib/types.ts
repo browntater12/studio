@@ -32,7 +32,7 @@ export type Account = {
   accountNumber?: string;
   name: string;
   industry?: string;
-  status: 'lead' | 'customer';
+  status: 'lead' | 'customer' | 'key-account';
   details: string;
   address?: string;
   // Contacts are no longer a subcollection, so they are not part of the Account type
