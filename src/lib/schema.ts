@@ -3,11 +3,19 @@ import { z } from 'zod';
 
 export const addAccountSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
-  accountNumber: z.string().min(1, 'Account number is required.'),
+  accountNumber: z.string().optional(),
   industry: z.string().min(1, 'Industry is required.'),
   status: z.enum(['lead', 'customer', 'key-account']),
   address: z.string().optional(),
   details: z.string().optional(),
+}).refine(data => {
+    if (data.status !== 'lead') {
+        return data.accountNumber && data.accountNumber.length > 0;
+    }
+    return true;
+}, {
+    message: "Account number is required for Customers and Key Accounts.",
+    path: ['accountNumber'],
 });
 
 export const createProductSchema = z.object({
@@ -25,10 +33,6 @@ export const editProductSchema = z.object({
     volumes: z.array(z.string()).refine(value => value.some(item => item), {
         message: "You must select at least one volume.",
     }),
-});
-
-export const deleteProductSchema = z.object({
-  id: z.string(),
 });
 
 export const contactSchema = z.object({
@@ -80,19 +84,4 @@ export const editAccountProductSchema = accountProductBaseSchema.extend({
 }, {
     message: 'Bid frequency is required when price type is Bid.',
     path: ['bidFrequency'],
-});
-
-
-export const deleteAccountProductSchema = z.object({
-    id: z.string(),
-});
-
-
-export const editProductNoteSchema = z.object({
-    noteId: z.string(),
-    notes: z.string().min(1, "Cannot be empty."),
-});
-
-export const deleteContactSchema = z.object({
-    id: z.string(),
 });

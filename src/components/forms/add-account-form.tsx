@@ -140,12 +140,34 @@ export function AddAccountForm({ account }: { account?: Account}) {
         />
          <FormField
           control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="customer">Customer</SelectItem>
+                        <SelectItem value="key-account">Key Account</SelectItem>
+                    </SelectContent>
+                </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
           name="accountNumber"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Number</FormLabel>
               <FormControl>
-                <Input placeholder="1148" {...field} />
+                <Input placeholder="1148" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -173,28 +195,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
             </FormItem>
           )}
         />
-         <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="key-account">Key Account</SelectItem>
-                    </SelectContent>
-                </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
         <FormField
           control={form.control}
           name="address"
@@ -202,7 +203,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input placeholder="123 Main St, Anytown USA" {...field} />
+                <Input placeholder="123 Main St, Anytown USA" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -215,7 +216,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
                 <FormItem>
                     <FormLabel>Account Details</FormLabel>
                     <FormControl>
-                        <Textarea placeholder="Garratt Callahan utilizes our Omaha facility..." {...field} />
+                        <Textarea placeholder="Garratt Callahan utilizes our Omaha facility..." {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
