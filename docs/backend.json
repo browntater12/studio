@@ -198,9 +198,14 @@
         "note": {
           "type": "string",
           "description": "The content of the call note."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["note", "phone-call", "in-person", "initial-meeting"],
+          "description": "The type of interaction."
         }
       },
-      "required": ["accountId", "callDate", "note"]
+      "required": ["accountId", "callDate", "note", "type"]
     }
   },
   "auth": {

@@ -94,6 +94,9 @@ export const shippingLocationSchema = z.object({
 
 export const callNoteSchema = z.object({
     accountId: z.string(),
+    type: z.enum(['note', 'phone-call', 'in-person', 'initial-meeting'], {
+        required_error: "You need to select a note type.",
+    }),
     callDate: z.date({
         required_error: "A date for the call is required.",
     }),

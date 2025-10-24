@@ -22,6 +22,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -132,6 +139,7 @@ export function CallNoteForm({ accountId, note, onSuccess }: CallNoteFormProps) 
           accountId,
           note: '',
           callDate: new Date(),
+          type: 'note',
         },
   });
   
@@ -146,6 +154,7 @@ export function CallNoteForm({ accountId, note, onSuccess }: CallNoteFormProps) 
           accountId: values.accountId,
           note: values.note,
           callDate: values.callDate,
+          type: values.type,
         };
 
         if (isEditMode && note) {
@@ -176,10 +185,33 @@ export function CallNoteForm({ accountId, note, onSuccess }: CallNoteFormProps) 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an interaction type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="note">Note</SelectItem>
+                  <SelectItem value="phone-call">Phone Call</SelectItem>
+                  <SelectItem value="in-person">In Person</SelectItem>
+                  <SelectItem value="initial-meeting">Initial Meeting</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="callDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Call Date</FormLabel>
+              <FormLabel>Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>

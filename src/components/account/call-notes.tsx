@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { PlusCircle, Edit, MessageSquare, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { type CallNote } from '@/lib/types';
+import { type CallNote, type CallNoteType } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,26 @@ function EditNoteDialog({ note, children }: { note: CallNote, children: React.Re
     );
 }
 
+function getBadgeVariant(type: CallNoteType) {
+    switch (type) {
+        case 'initial-meeting':
+            return 'key-account';
+        case 'phone-call':
+            return 'default';
+        case 'in-person':
+            return 'secondary';
+        case 'note':
+            return 'outline';
+        default:
+            return 'outline';
+    }
+}
+
+function formatNoteType(type: CallNoteType) {
+    return type.replace('-', ' ');
+}
+
+
 export function CallNotes({
   accountId,
   notes,
@@ -87,6 +108,11 @@ export function CallNotes({
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarIcon className="h-4 w-4" />
                     <span>{format(note.callDate.toDate(), 'PPP')}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={getBadgeVariant(note.type)} className="capitalize">
+                      {formatNoteType(note.type)}
+                    </Badge>
                   </div>
                   <p className="mt-2 text-sm whitespace-pre-wrap">{note.note}</p>
                 </div>

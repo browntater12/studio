@@ -57,9 +57,12 @@ export type ShippingLocation = {
   address: string;
 };
 
+export type CallNoteType = 'note' | 'phone-call' | 'in-person' | 'initial-meeting';
+
 export type CallNote = {
   id: string;
   accountId: string;
   callDate: Timestamp;
   note: string;
+  type: CallNoteType;
 };
