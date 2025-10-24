@@ -16,7 +16,7 @@ export type Contact = {
 export type AccountProduct = {
   id?: string;
   accountId: string;
-  productId: string;
+  productId?: string;
   notes: string;
   priceType?: 'spot' | 'bid';
   bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
@@ -27,6 +27,12 @@ export type AccountProduct = {
     price?: number;
   };
   createdAt?: Timestamp;
+
+  // New fields for Product Opportunity
+  isOpportunity?: boolean;
+  opportunityName?: string;
+  estimatedVolumes?: ProductVolume[];
+  competition?: string;
 };
 
 export type Account = {

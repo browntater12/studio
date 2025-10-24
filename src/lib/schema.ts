@@ -48,7 +48,7 @@ export const contactSchema = z.object({
 // Base schema for account-product relationship without refinement
 const accountProductBaseSchema = z.object({
     accountId: z.string(),
-    productId: z.string().min(1, 'Please select a product.'),
+    productId: z.string().min(1, 'Please select a product.').optional(),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
@@ -59,19 +59,36 @@ const accountProductBaseSchema = z.object({
         price: z.number().optional(),
     }).optional(),
     createdAt: z.any().optional(),
+    // Fields for Product Opportunity
+    opportunityName: z.string().optional(),
+    estimatedVolumes: z.array(z.string()).optional(),
+    competition: z.string().optional(),
+    isOpportunity: z.boolean().default(false).optional(),
 });
 
 
 // Refined schema for adding a product
 export const addProductToAccountSchema = accountProductBaseSchema.refine(data => {
+    if (data.isOpportunity) {
+        return data.opportunityName && data.opportunityName.length > 0;
+    }
+    return data.productId && data.productId.length > 0;
+}, {
+    message: 'Product Name is required for an opportunity.',
+    path: ['opportunityName'],
+}).refine(data => {
+    if (data.isOpportunity) {
+        return true; // No other validation needed for opportunities
+    }
     if (data.priceType === 'bid' && !data.bidFrequency) {
         return false;
     }
     return true;
 }, {
-    message: 'Bid frequency is required when price type is Bid.',
+    message: 'Bid frequency is required when price type is Bid for an existing product.',
     path: ['bidFrequency'],
 });
+
 
 // Extend the base schema first, then apply the same refinement
 export const editAccountProductSchema = accountProductBaseSchema.extend({

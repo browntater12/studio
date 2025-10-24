@@ -118,7 +118,7 @@
     "AccountProductNote": {
       "title": "AccountProductNote",
       "type": "object",
-      "description": "Represents a note about a specific product for an individual account.",
+      "description": "Represents a note about a specific product for an individual account, or a product opportunity.",
       "properties": {
         "accountId": {
           "type": "string",
@@ -126,7 +126,7 @@
         },
         "productId": {
           "type": "string",
-          "description": "Reference to Product."
+          "description": "Reference to Product. Not present for opportunities."
         },
         "notes": {
           "type": "string",
@@ -157,9 +157,28 @@
               "type": "number"
             }
           }
+        },
+        "isOpportunity": {
+          "type": "boolean",
+          "description": "True if this is a product opportunity, not an existing product."
+        },
+        "opportunityName": {
+            "type": "string",
+            "description": "Name of the product opportunity."
+        },
+        "estimatedVolumes": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["pails", "drums", "totes", "bulk"]
+            }
+        },
+        "competition": {
+            "type": "string",
+            "description": "Current supplier for the product opportunity."
         }
       },
-      "required": ["accountId", "productId", "notes"]
+      "required": ["accountId"]
     },
     "ShippingLocation": {
       "title": "Location",
