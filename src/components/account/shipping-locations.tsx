@@ -70,9 +70,6 @@ export function ShippingLocations({
             <Truck className="h-5 w-5" />
             <span>Locations</span>
           </CardTitle>
-          <CardDescription>
-            Where products are shipped for this account.
-          </CardDescription>
         </div>
         <AddLocationDialog accountId={accountId} />
       </CardHeader>
