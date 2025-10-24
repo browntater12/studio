@@ -26,9 +26,8 @@ function AddLocationDialog({ accountId }: { accountId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          
+        <Button variant="ghost" size="icon">
+          <PlusCircle className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
