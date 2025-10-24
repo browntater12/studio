@@ -46,6 +46,7 @@ const industryOptions = [
     'Pharmaceuticals',
     'Plating and Coating',
     'Soybean Processing',
+    'Stone and Concrete',
     'Water Treatment',
   ];
 
