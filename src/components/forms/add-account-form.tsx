@@ -29,23 +29,24 @@ import { type Account } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const industryOptions = [
-    'Pharmaceuticals',
-    'Mechanical Contractor',
-    'Plating and Coating',
-    'Agriculture',
-    'Animal Butchering',
-    'Oil and Gas',
-    'Soybean Processing',
-    'Ethanol',
-    'Cooling',
     'Adhesives',
-    'Animal By-Products',
-    'Manufacturing',
-    'Mining & Wells',
+    'Agriculture',
     'Alcohol',
+    'Animal Butchering',
+    'Animal By-Products',
     'Chemical Services',
-    'Water Treatment',
+    'Cooling',
+    'Cooperative',
+    'Ethanol',
+    'Manufacturing',
+    'Mechanical Contractor',
+    'Mining & Wells',
     'Municipal',
+    'Oil and Gas',
+    'Pharmaceuticals',
+    'Plating and Coating',
+    'Soybean Processing',
+    'Water Treatment',
   ];
 
 export function AddAccountForm({ account }: { account?: Account}) {
