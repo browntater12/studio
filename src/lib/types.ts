@@ -1,3 +1,4 @@
+
 import { DocumentReference, Timestamp } from 'firebase/firestore';
 
 export type Contact = {
@@ -48,3 +49,10 @@ export type Product = {
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
+
+export type ShippingLocation = {
+  id: string;
+  accountId: string;
+  name: string;
+  address: string;
+};

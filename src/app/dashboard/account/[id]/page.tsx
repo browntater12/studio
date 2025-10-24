@@ -1,15 +1,17 @@
+
 'use client';
 
 import * as React from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { type Account, type Contact, type Product, type AccountProduct } from '@/lib/types';
+import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductList } from '@/components/account/product-list';
+import { ShippingLocations } from '@/components/account/shipping-locations';
 
 function AccountDetails() {
   const params = useParams();
@@ -41,7 +43,14 @@ function AccountDetails() {
   }, [firestore, accountId]);
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
-  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading;
+  const shippingLocationsQuery = useMemoFirebase(() => {
+    if (!firestore || !accountId) return null;
+    return query(collection(firestore, 'shipping-locations'), where('accountId', '==', accountId));
+  }, [firestore, accountId]);
+  const { data: shippingLocations, isLoading: shippingLocationsLoading } = useCollection<ShippingLocation>(shippingLocationsQuery);
+
+
+  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading;
 
   if (isLoading && !account) {
     return (
@@ -58,8 +67,9 @@ function AccountDetails() {
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-64 w-full" />
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-8">
             <Skeleton className="h-80 w-full" />
+            <Skeleton className="h-48 w-full" />
           </div>
         </div>
       </div>
@@ -82,8 +92,9 @@ function AccountDetails() {
             allProducts={allProducts || []}
           />}
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-8">
           {accountLoading || !account ? <Skeleton className="h-80 w-full" /> : <AccountInfo account={account} />}
+          {shippingLocationsLoading || !account ? <Skeleton className="h-48 w-full" /> : <ShippingLocations accountId={accountId} locations={shippingLocations || []} />}
         </div>
       </div>
     </div>

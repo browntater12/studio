@@ -85,3 +85,9 @@ export const editAccountProductSchema = accountProductBaseSchema.extend({
     message: 'Bid frequency is required when price type is Bid.',
     path: ['bidFrequency'],
 });
+
+export const shippingLocationSchema = z.object({
+    accountId: z.string(),
+    name: z.string().min(1, 'Location name is required.'),
+    address: z.string().min(1, 'Address is required.'),
+});
