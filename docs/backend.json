@@ -162,7 +162,7 @@
       "required": ["accountId", "productId", "notes"]
     },
     "ShippingLocation": {
-      "title": "Shipping Location",
+      "title": "Location",
       "description": "Represents a shipping location for an account.",
       "type": "object",
       "properties": {
@@ -172,11 +172,11 @@
         },
         "name": {
           "type": "string",
-          "description": "The name of the shipping location (e.g., 'Main Warehouse')."
+          "description": "The name of the location (e.g., 'Main Warehouse')."
         },
         "address": {
           "type": "string",
-          "description": "The full address of the shipping location."
+          "description": "The full address of the location."
         }
       },
       "required": ["accountId", "name", "address"]

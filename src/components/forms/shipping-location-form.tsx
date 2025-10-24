@@ -53,7 +53,7 @@ function DeleteLocationButton({ locationId, onSuccess }: { locationId: string; o
         
         try {
             await deleteDoc(locationRef);
-            toast({ title: 'Success!', description: 'Shipping location deleted successfully.' });
+            toast({ title: 'Success!', description: 'Location deleted successfully.' });
             onSuccess();
             setOpen(false);
         } catch (error) {
@@ -79,7 +79,7 @@ function DeleteLocationButton({ locationId, onSuccess }: { locationId: string; o
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this shipping location.
+                        This action cannot be undone. This will permanently delete this location.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

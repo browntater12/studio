@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -21,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { ShippingLocationForm } from '../forms/shipping-location-form';
 
-function AddShippingLocationDialog({ accountId }: { accountId: string }) {
+function AddLocationDialog({ accountId }: { accountId: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -33,7 +32,7 @@ function AddShippingLocationDialog({ accountId }: { accountId: string }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Shipping Location</DialogTitle>
+          <DialogTitle>Add New Location</DialogTitle>
         </DialogHeader>
         <ShippingLocationForm accountId={accountId} onSuccess={() => setOpen(false)} />
       </DialogContent>
@@ -41,14 +40,14 @@ function AddShippingLocationDialog({ accountId }: { accountId: string }) {
   );
 }
 
-function EditShippingLocationDialog({ location, children }: { location: ShippingLocation, children: React.ReactNode }) {
+function EditLocationDialog({ location, children }: { location: ShippingLocation, children: React.ReactNode }) {
     const [open, setOpen] = React.useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Shipping Location</DialogTitle>
+                    <DialogTitle>Edit Location</DialogTitle>
                 </DialogHeader>
                 <ShippingLocationForm location={location} accountId={location.accountId} onSuccess={() => setOpen(false)} />
             </DialogContent>
@@ -69,13 +68,13 @@ export function ShippingLocations({
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
-            <span>Shipping Locations</span>
+            <span>Locations</span>
           </CardTitle>
           <CardDescription>
             Where products are shipped for this account.
           </CardDescription>
         </div>
-        <AddShippingLocationDialog accountId={accountId} />
+        <AddLocationDialog accountId={accountId} />
       </CardHeader>
       <CardContent>
         {locations.length > 0 ? (
@@ -92,17 +91,17 @@ export function ShippingLocations({
                     <span>{location.address}</span>
                   </div>
                 </div>
-                <EditShippingLocationDialog location={location}>
+                <EditLocationDialog location={location}>
                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
                         <Edit className="h-4 w-4" />
                     </Button>
-                </EditShippingLocationDialog>
+                </EditLocationDialog>
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No shipping locations added yet.</p>
+            <p className="text-muted-foreground">No locations added yet.</p>
           </div>
         )}
       </CardContent>
