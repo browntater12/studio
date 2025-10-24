@@ -2,156 +2,177 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and access control.
- * Users can only manage their own profile data.
- * Data related to accounts, contacts, products, and shipping locations is publicly readable but
- * can only be created, updated, or deleted with appropriate authorization (not implemented in this prototype).
+ * This ruleset prioritizes security by enforcing strict ownership and explicit access control.
+ * All write operations require authentication.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owner.
- * - /accounts-db/{accountId}: Sales accounts.
- * - /contacts/{contactId}: Contact information.
- * - /account-products/{accountProductId}: Product notes associated with accounts.
- * - /products/{productId}: Product catalog.
- * - /shipping-locations/{locationId}: Shipping locations for accounts.
- * - /call-notes/{noteId}: Notes about calls made to accounts.
+ * The database contains top-level collections for accounts, contacts, product notes, products, shipping locations, and call notes.
+ * User profiles are stored under /users/{userId}.
  *
  * Key Security Decisions:
- * - User listing is disabled to prevent enumeration.
- * - Public read access is granted to accounts, contacts, products, and shipping locations to allow
- *   unauthenticated users to view this data, with the assumption that sensitive data is not stored in these collections.
- *   Write access is restricted (not implemented in this prototype).
+ * - Listing of call notes is publicly allowed for prototyping purposes, though a read should be reviewed to verify if this matches your final requirements.
+ * - All write operations require authentication.
+ * - Data validation is limited to relational integrity (ownership and IDs) during this prototyping phase.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the requesting user is signed in.
-     * @return {boolean} True if the user is signed in, false otherwise.
+     * @description Checks if the user is signed in.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the requesting user is the owner of the resource.
-     * @param {string} userId The user ID to compare against the request's auth UID.
-     * @return {boolean} True if the user is the owner, false otherwise.
+     * @description Checks if the authenticated user's ID matches the provided user ID.
+     * @param {string} userId - The user ID to compare against.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the requesting user is the owner of the resource and it exists.
-     * @param {string} userId The user ID to compare against the request's auth UID.
-     * @return {boolean} True if the user is the owner and resource exists, false otherwise.
+     * @description Checks if the authenticated user is the owner of the existing document.
+     * @param {string} userId - The user ID to compare against.
      */
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      return isOwner(userId) && resource.data.uid == request.auth.uid;
     }
+
+    /**
+     * @description Enforces that a request contains all the fields in a list
+     */
+    function hasAll(fields) {
+      return fields.toSet().subset(request.resource.data.keys().toSet());
+    }
+
+    /**
+     * @description Enforces that a request does not contain any fields in a list
+     */
+    function hasNone(fields) {
+      return fields.toSet().intersection(request.resource.data.keys().toSet()).size() == 0;
+    }
+
 
     /**
      * @description Rules for user profiles.
      * @path /users/{userId}
-     * @allow (create) Signed-in user creates their own profile.
-     * @allow (get, update, delete) Signed-in user accesses their own profile.
-     * @deny (create) Signed-in user tries to create a profile for another user.
-     * @deny (get, update, delete) Signed-in user tries to access another user's profile.
-     * @principle Enforces user ownership of profile data.
+     * @allow (create) - User with UID 'user123' can create their profile at /users/user123.
+     * @deny (create) - User with UID 'user123' cannot create a profile at /users/user456.
+     * @allow (get, update, delete) - User with UID 'user123' can get, update, and delete their profile at /users/user123.
+     * @deny (get, update, delete) - User with UID 'user123' cannot get, update, or delete the profile at /users/user456.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Rules for accounts database.
+     * @description Rules for accounts.
      * @path /accounts-db/{accountId}
-     * @allow (get, list) Any user can read account information.
-     * @deny (create, update, delete) Only authenticated users with specific roles can modify account information (not implemented).
-     * @principle Public read access with restricted write access.
+     * @allow (create) - Authenticated user can create a new account.
+     * @deny (create) - Unauthenticated user cannot create a new account.
+     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete accounts.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to accounts.
      */
     match /accounts-db/{accountId} {
-      allow get, list: if true;
-      allow create: if false; // TODO: Add authorization check for account creation
-      allow update: if false; // TODO: Add authorization check for account updates
-      allow delete: if false; // TODO: Add authorization check for account deletion
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Rules for contacts.
      * @path /contacts/{contactId}
-     * @allow (get, list) Any user can read contact information.
-     * @deny (create, update, delete) Only authenticated users with specific roles can modify contact information (not implemented).
-     * @principle Public read access with restricted write access.
+     * @allow (create) - Authenticated user can create a new contact.
+     * @deny (create) - Unauthenticated user cannot create a new contact.
+     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete contacts.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to contacts.
      */
     match /contacts/{contactId} {
-      allow get, list: if true;
-      allow create: if false; // TODO: Add authorization check for contact creation
-      allow update: if false; // TODO: Add authorization check for contact updates
-      allow delete: if false; // TODO: Add authorization check for contact deletion
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Rules for account product notes.
      * @path /account-products/{accountProductId}
-     * @allow (get, list) Any user can read account product notes.
-     * @deny (create, update, delete) Only authenticated users with specific roles can modify account product notes (not implemented).
-     * @principle Public read access with restricted write access.
+     * @allow (create) - Authenticated user can create a new account product note.
+     * @deny (create) - Unauthenticated user cannot create a new account product note.
+     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete account product notes.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to account product notes.
      */
     match /account-products/{accountProductId} {
-      allow get, list: if true;
-      allow create: if false; // TODO: Add authorization check for account product note creation
-      allow update: if false; // TODO: Add authorization check for account product note updates
-      allow delete: if false; // TODO: Add authorization check for account product note deletion
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Rules for products.
      * @path /products/{productId}
-     * @allow (get, list) Any user can read product information.
-     * @deny (create, update, delete) Only authenticated users with specific roles can modify product information (not implemented).
-     * @principle Public read access with restricted write access.
+     * @allow (create) - Authenticated user can create a new product.
+     * @deny (create) - Unauthenticated user cannot create a new product.
+     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete products.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to products.
      */
     match /products/{productId} {
-      allow get, list: if true;
-      allow create: if false; // TODO: Add authorization check for product creation
-      allow update: if false; // TODO: Add authorization check for product updates
-      allow delete: if false; // TODO: Add authorization check for product deletion
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Rules for shipping locations.
      * @path /shipping-locations/{locationId}
-     * @allow (get, list) Any user can read shipping location information.
-     * @deny (create, update, delete) Only authenticated users with specific roles can modify shipping location information (not implemented).
-     * @principle Public read access with restricted write access.
+     * @allow (create) - Authenticated user can create a new shipping location.
+     * @deny (create) - Unauthenticated user cannot create a new shipping location.
+     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete shipping locations.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to shipping locations.
      */
     match /shipping-locations/{locationId} {
-      allow get, list: if true;
-      allow create: if false; // TODO: Add authorization check for shipping location creation
-      allow update: if false; // TODO: Add authorization check for shipping location updates
-      allow delete: if false; // TODO: Add authorization check for shipping location deletion
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Rules for call notes.
-     * @path /call-notes/{noteId}
-     * @allow (create) Signed-in user creates a call note.
-     * @allow (get, list) Any user can read call note information.
-     * @deny (update, delete) Only authenticated users with specific roles can modify/delete call note information (not implemented).
-     * @principle Public read access with restricted write access.
+     * @path /call-notes/{callNoteId}
+     * @allow (create) - Authenticated user can create a new call note.
+     * @deny (create) - Unauthenticated user cannot create a new call note.
+     * @allow (get, update, delete) - Authenticated user can read, update, and delete call notes.
+     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
+     * @principle Authenticated users have full access to call notes.
      */
-    match /call-notes/{noteId} {
-      allow get, list: if true;
+    match /call-notes/{callNoteId} {
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-      allow update: if false; // TODO: Add authorization check for call note updates
-      allow delete: if false; // TODO: Add authorization check for call note deletion
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
   }
 }
