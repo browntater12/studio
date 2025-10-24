@@ -180,6 +180,27 @@
         }
       },
       "required": ["accountId", "name", "address"]
+    },
+    "CallNote": {
+      "title": "Call Note",
+      "description": "Represents a note for a call made to an account.",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "description": "The ID of the account this note belongs to."
+        },
+        "callDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the call."
+        },
+        "note": {
+          "type": "string",
+          "description": "The content of the call note."
+        }
+      },
+      "required": ["accountId", "callDate", "note"]
     }
   },
   "auth": {
@@ -221,6 +242,12 @@
         "$ref": "#/entities/ShippingLocation"
       },
       "description": "Stores shipping locations for accounts."
+    },
+    "/call-notes/{callNoteId}": {
+      "schema": {
+        "$ref": "#/entities/CallNote"
+      },
+      "description": "Stores call notes for accounts."
     }
   }
 }

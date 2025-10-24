@@ -56,3 +56,10 @@ export type ShippingLocation = {
   name: string;
   address: string;
 };
+
+export type CallNote = {
+  id: string;
+  accountId: string;
+  callDate: Timestamp;
+  note: string;
+};

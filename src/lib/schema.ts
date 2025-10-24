@@ -91,3 +91,11 @@ export const shippingLocationSchema = z.object({
     name: z.string().min(1, 'Location name is required.'),
     address: z.string().min(1, 'Address is required.'),
 });
+
+export const callNoteSchema = z.object({
+    accountId: z.string(),
+    callDate: z.date({
+        required_error: "A date for the call is required.",
+    }),
+    note: z.string().min(1, "Note content cannot be empty."),
+});

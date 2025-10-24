@@ -1,138 +1,157 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes strict authorization and assumes that all data should be private by default.
- * It enforces user-based ownership for user profiles and generally allows public read access only when explicitly specified and when an ownership field is present to validate writes.
- * Schema validation is minimized for rapid prototyping.
+ * This ruleset prioritizes security by enforcing strict ownership and access control.
+ * Users can only manage their own profile data.
+ * Data related to accounts, contacts, products, and shipping locations is publicly readable but
+ * can only be created, updated, or deleted with appropriate authorization (not implemented in this prototype).
  *
  * Data Structure:
- * - /users/{userId}: Stores public user profile information, accessible only to the owner.
- * - /accounts-db/{accountId}: Stores sales account information, publicly readable, writable only by the owner.
- * - /contacts/{contactId}: Stores contact information, publicly readable, writable only by the owner.
- * - /account-products/{accountProductId}: Stores account-product notes, publicly readable, writable only by the owner.
- * - /products/{productId}: Stores product information, publicly readable.
- * - /shipping-locations/{locationId}: Stores shipping locations for accounts, publicly readable, writable only by the owner.
+ * - /users/{userId}: User profiles, accessible only to the owner.
+ * - /accounts-db/{accountId}: Sales accounts.
+ * - /contacts/{contactId}: Contact information.
+ * - /account-products/{accountProductId}: Product notes associated with accounts.
+ * - /products/{productId}: Product catalog.
+ * - /shipping-locations/{locationId}: Shipping locations for accounts.
+ * - /call-notes/{noteId}: Notes about calls made to accounts.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - Public read access is granted to /accounts-db, /contacts, /account-products, /products, and /shipping-locations.  Writes are restricted based on ownership fields.
- *
- * Denormalization for Authorization:
- * - Public collections rely on denormalized `accountId` fields to control write access.
+ * - User listing is disabled to prevent enumeration.
+ * - Public read access is granted to accounts, contacts, products, and shipping locations to allow
+ *   unauthenticated users to view this data, with the assumption that sensitive data is not stored in these collections.
+ *   Write access is restricted (not implemented in this prototype).
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile information.
-     * @path /users/{userId}
-     * @allow (create) User with matching {userId} can create their profile.
-     * @allow (get, list, update, delete) User with matching {userId} can read, update, or delete their profile.
-     * @deny (create) User cannot create a profile for another user.
-     * @deny (get, list, update, delete) User cannot read, update, or delete another user's profile.
-     * @principle Enforces document ownership for all operations.
+     * @description Checks if the requesting user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
      */
-    match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to accounts.
-     * @path /accounts-db/{accountId}
-     * @allow (get, list) Anyone can read accounts.
-     * @allow (create) Only the user whose ID matches the accountId can create an account.
-     * @allow (update, delete) Only the user whose ID matches the accountId can update or delete the account.
-     * @deny (create) Users cannot create accounts with mismatched accountId.
-     * @deny (update, delete) Users cannot update or delete accounts they don't own.
-     * @principle Allows public read access with owner-only writes, validated through the accountId field.
-     */
-    match /accounts-db/{accountId} {
-      allow get, list: if true;
-      allow create: if request.resource.data.id == accountId;
-      allow update: if isExistingOwner(accountId);
-      allow delete: if isExistingOwner(accountId);
-    }
-
-    /**
-     * @description Controls access to contacts.
-     * @path /contacts/{contactId}
-     * @allow (get, list) Anyone can read contacts.
-     * @allow (create) Only the user whose ID matches the contactId can create a contact.
-     * @allow (update, delete) Only the user whose ID matches the contactId can update or delete the contact.
-     * @deny (create) Users cannot create contacts with mismatched contactId.
-     * @deny (update, delete) Users cannot update or delete contacts they don't own.
-     * @principle Allows public read access with owner-only writes, validated through the contactId field.
-     */
-    match /contacts/{contactId} {
-      allow get, list: if true;
-      allow create: if request.resource.data.id == contactId;
-      allow update: if isExistingOwner(contactId);
-      allow delete: if isExistingOwner(contactId);
-    }
-
-    /**
-     * @description Controls access to account product notes.
-     * @path /account-products/{accountProductId}
-     * @allow (get, list) Anyone can read account product notes.
-     * @allow (create) Only the user whose ID matches the accountProductId can create an account product note.
-     * @allow (update, delete) Only the user whose ID matches the accountProductId can update or delete the account product note.
-     * @deny (create) Users cannot create account product notes with mismatched accountProductId.
-     * @deny (update, delete) Users cannot update or delete account product notes they don't own.
-     * @principle Allows public read access with owner-only writes, validated through the accountProductId field.
-     */
-    match /account-products/{accountProductId} {
-      allow get, list: if true;
-      allow create: if request.resource.data.id == accountProductId;
-      allow update: if isExistingOwner(accountProductId);
-      allow delete: if isExistingOwner(accountProductId);
-    }
-
-    /**
-     * @description Controls access to products.
-     * @path /products/{productId}
-     * @allow (get, list) Anyone can read products.
-     * @deny (create, update, delete) No one can create, update, or delete products.
-     * @principle Allows public read-only access to product information.
-     */
-    match /products/{productId} {
-      allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Controls access to shipping locations.
-     * @path /shipping-locations/{locationId}
-     * @allow (get, list) Anyone can read shipping locations.
-     * @allow (create) Only the user whose ID matches the locationId can create a shipping location.
-     * @allow (update, delete) Only the user whose ID matches the locationId can update or delete the shipping location.
-     * @deny (create) Users cannot create shipping locations with mismatched locationId.
-     * @deny (update, delete) Users cannot update or delete shipping locations they don't own.
-     * @principle Allows public read access with owner-only writes, validated through the locationId field.
-     */
-    match /shipping-locations/{locationId} {
-      allow get, list: if true;
-      allow create: if request.resource.data.id == locationId;
-      allow update: if isExistingOwner(locationId);
-      allow delete: if isExistingOwner(locationId);
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
 
+    /**
+     * @description Checks if the requesting user is the owner of the resource.
+     * @param {string} userId The user ID to compare against the request's auth UID.
+     * @return {boolean} True if the user is the owner, false otherwise.
+     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(documentId) {
-        return isSignedIn() && request.auth.uid == documentId && resource != null;
+    /**
+     * @description Checks if the requesting user is the owner of the resource and it exists.
+     * @param {string} userId The user ID to compare against the request's auth UID.
+     * @return {boolean} True if the user is the owner and resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profiles.
+     * @path /users/{userId}
+     * @allow (create) Signed-in user creates their own profile.
+     * @allow (get, update, delete) Signed-in user accesses their own profile.
+     * @deny (create) Signed-in user tries to create a profile for another user.
+     * @deny (get, update, delete) Signed-in user tries to access another user's profile.
+     * @principle Enforces user ownership of profile data.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for accounts database.
+     * @path /accounts-db/{accountId}
+     * @allow (get, list) Any user can read account information.
+     * @deny (create, update, delete) Only authenticated users with specific roles can modify account information (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /accounts-db/{accountId} {
+      allow get, list: if true;
+      allow create: if false; // TODO: Add authorization check for account creation
+      allow update: if false; // TODO: Add authorization check for account updates
+      allow delete: if false; // TODO: Add authorization check for account deletion
+    }
+
+    /**
+     * @description Rules for contacts.
+     * @path /contacts/{contactId}
+     * @allow (get, list) Any user can read contact information.
+     * @deny (create, update, delete) Only authenticated users with specific roles can modify contact information (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /contacts/{contactId} {
+      allow get, list: if true;
+      allow create: if false; // TODO: Add authorization check for contact creation
+      allow update: if false; // TODO: Add authorization check for contact updates
+      allow delete: if false; // TODO: Add authorization check for contact deletion
+    }
+
+    /**
+     * @description Rules for account product notes.
+     * @path /account-products/{accountProductId}
+     * @allow (get, list) Any user can read account product notes.
+     * @deny (create, update, delete) Only authenticated users with specific roles can modify account product notes (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /account-products/{accountProductId} {
+      allow get, list: if true;
+      allow create: if false; // TODO: Add authorization check for account product note creation
+      allow update: if false; // TODO: Add authorization check for account product note updates
+      allow delete: if false; // TODO: Add authorization check for account product note deletion
+    }
+
+    /**
+     * @description Rules for products.
+     * @path /products/{productId}
+     * @allow (get, list) Any user can read product information.
+     * @deny (create, update, delete) Only authenticated users with specific roles can modify product information (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if false; // TODO: Add authorization check for product creation
+      allow update: if false; // TODO: Add authorization check for product updates
+      allow delete: if false; // TODO: Add authorization check for product deletion
+    }
+
+    /**
+     * @description Rules for shipping locations.
+     * @path /shipping-locations/{locationId}
+     * @allow (get, list) Any user can read shipping location information.
+     * @deny (create, update, delete) Only authenticated users with specific roles can modify shipping location information (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /shipping-locations/{locationId} {
+      allow get, list: if true;
+      allow create: if false; // TODO: Add authorization check for shipping location creation
+      allow update: if false; // TODO: Add authorization check for shipping location updates
+      allow delete: if false; // TODO: Add authorization check for shipping location deletion
+    }
+
+    /**
+     * @description Rules for call notes.
+     * @path /call-notes/{noteId}
+     * @allow (create) Signed-in user creates a call note.
+     * @allow (get, list) Any user can read call note information.
+     * @deny (update, delete) Only authenticated users with specific roles can modify/delete call note information (not implemented).
+     * @principle Public read access with restricted write access.
+     */
+    match /call-notes/{noteId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add authorization check for call note updates
+      allow delete: if false; // TODO: Add authorization check for call note deletion
     }
   }
 }
