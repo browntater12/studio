@@ -18,8 +18,8 @@ export default function DashboardLayout({
   if (isMobile) {
     return (
       <SidebarProvider>
-         <div className="flex flex-col min-h-screen">
-          <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+         <div className="flex flex-col h-screen">
+          <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 shrink-0">
              <Sheet>
                 <SheetTrigger asChild>
                   <Button size="icon" variant="outline">
@@ -33,7 +33,7 @@ export default function DashboardLayout({
               </Sheet>
               <h1 className="text-lg font-semibold flex-1">Territory map</h1>
           </header>
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-h-0">{children}</main>
         </div>
       </SidebarProvider>
     );
@@ -47,7 +47,7 @@ export default function DashboardLayout({
             <SidebarTrigger />
             <h1 className="text-lg font-semibold flex-1">Territory map</h1>
         </header>
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8 h-[calc(100vh-3.5rem)]">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

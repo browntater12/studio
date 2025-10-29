@@ -46,7 +46,7 @@ export default function MapPage() {
 
   if (error) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center p-4">
+      <div className="flex h-[calc(100vh-8rem)] w-full items-center justify-center p-4">
         <Alert variant="destructive">
           <Terminal className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -60,7 +60,7 @@ export default function MapPage() {
 
   if (!apiKey) {
     return (
-       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center p-4">
+       <div className="flex h-[calc(100vh-8rem)] w-full items-center justify-center p-4">
         <Alert>
           <Terminal className="h-4 w-4" />
           <AlertTitle>Google Maps API Key is Missing</AlertTitle>
@@ -73,7 +73,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] w-full">
+    <div className="flex flex-col h-full w-full">
         <MapFilters 
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
@@ -82,7 +82,7 @@ export default function MapPage() {
             industries={industries}
             isLoading={combinedIsLoading}
         />
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
             {combinedIsLoading ? (
                  <div className="flex h-full w-full items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
