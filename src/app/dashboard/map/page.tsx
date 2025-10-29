@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { type Account } from '@/lib/types';
 import { APIProvider } from '@vis.gl/react-google-maps';
@@ -12,16 +12,19 @@ import { Terminal } from 'lucide-react';
 
 export default function MapPage() {
   const firestore = useFirestore();
+  const { isUserLoading } = useUser();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const accountsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (isUserLoading || !firestore) return null;
     return collection(firestore, 'accounts-db');
-  }, [firestore]);
+  }, [firestore, isUserLoading]);
 
   const { data: accounts, isLoading, error } = useCollection<Account>(accountsQuery);
+  
+  const combinedIsLoading = isLoading || isUserLoading;
 
-  if (isLoading) {
+  if (combinedIsLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
