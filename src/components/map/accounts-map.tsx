@@ -11,6 +11,7 @@ import { type Account } from '@/lib/types';
 import { Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
 const geocodeCache = new Map<string, google.maps.LatLngLiteral>();
 
@@ -50,8 +51,15 @@ function AccountMarker({ account }: { account: Account }) {
         position={position}
         title={account.name}
       >
-        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
-            <Building2 size={14} />
+        <div
+          className={cn(
+            'w-6 h-6 rounded-full flex items-center justify-center',
+            account.status === 'lead'
+              ? 'bg-yellow-500 text-black'
+              : 'bg-primary text-primary-foreground'
+          )}
+        >
+          <Building2 size={14} />
         </div>
       </AdvancedMarker>
       {infowindowOpen && (
