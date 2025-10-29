@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import {
-  Map,
+  Map as GoogleMap,
   AdvancedMarker,
   InfoWindow,
   useAdvancedMarkerRef,
@@ -77,7 +77,7 @@ export function AccountsMap({ accounts }: { accounts: Account[] }) {
   const accountsWithAddress = accounts.filter(account => account.address);
 
   return (
-    <Map
+    <GoogleMap
       mapId="sales-territory-map"
       defaultCenter={{ lat: 41.2565, lng: -95.9345 }} // Default to Omaha, NE
       defaultZoom={6}
@@ -87,6 +87,6 @@ export function AccountsMap({ accounts }: { accounts: Account[] }) {
       {accountsWithAddress.map(account => (
         <AccountMarker key={account.id} account={account} />
       ))}
-    </Map>
+    </GoogleMap>
   );
 }
