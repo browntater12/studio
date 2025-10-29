@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PlusCircle, Building, Search, Package, LogIn, LogOut, PanelLeft } from 'lucide-react';
+import { PlusCircle, Building, Search, Package, LogIn, LogOut, PanelLeft, Map } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from '@/firebase';
 import { collection, orderBy, query } from 'firebase/firestore';
 
@@ -129,6 +129,18 @@ export function MainSidebar() {
 
       <SidebarContent>
         <div className="p-2 space-y-2">
+            <Link href="/dashboard/map">
+                <Button
+                    asChild
+                    variant={pathname === '/dashboard/map' ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                >
+                    <div>
+                        <Map />
+                        <span>Map</span>
+                    </div>
+                </Button>
+            </Link>
             <Link href="/dashboard/products">
                 <Button
                     asChild
