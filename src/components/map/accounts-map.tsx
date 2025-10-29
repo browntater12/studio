@@ -6,14 +6,64 @@ import {
   AdvancedMarker,
   InfoWindow,
   useAdvancedMarkerRef,
+  Pin,
 } from '@vis.gl/react-google-maps';
 import { type Account } from '@/lib/types';
-import { Building2 } from 'lucide-react';
+import { Building2, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
 const geocodeCache = new Map<string, google.maps.LatLngLiteral>();
+
+function CurrentLocationMarker() {
+    const [markerRef, marker] = useAdvancedMarkerRef();
+    const [position, setPosition] = React.useState<google.maps.LatLngLiteral | null>(null);
+    const [infowindowOpen, setInfowindowOpen] = React.useState(true);
+
+    React.useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position: GeolocationPosition) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    setPosition(pos);
+                },
+                (error) => {
+                    console.error("Error getting user location:", error.message);
+                }
+            );
+        }
+    }, []);
+
+    if (!position) return null;
+
+    return (
+        <>
+            <AdvancedMarker
+                ref={markerRef}
+                position={position}
+                onClick={() => setInfowindowOpen(true)}
+                title={"Your Location"}
+            >
+                <div className="relative">
+                    <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
+                </div>
+            </AdvancedMarker>
+             {infowindowOpen && (
+                <InfoWindow
+                    anchor={marker}
+                    onCloseClick={() => setInfowindowOpen(false)}
+                >
+                    <div className="p-1 font-semibold">Your Location</div>
+                </InfoWindow>
+            )}
+        </>
+    );
+}
+
 
 function AccountMarker({ account }: { account: Account }) {
   const [markerRef, marker] = useAdvancedMarkerRef();
@@ -55,11 +105,11 @@ function AccountMarker({ account }: { account: Account }) {
           className={cn(
             'w-6 h-6 rounded-full flex items-center justify-center',
             account.status === 'lead'
-              ? 'bg-yellow-500 text-white'
+              ? 'bg-yellow-500'
               : 'bg-primary text-primary-foreground'
           )}
         >
-          <Building2 size={14} />
+          <Building2 size={14} className={cn(account.status === 'lead' ? 'text-white' : '')}/>
         </div>
       </AdvancedMarker>
       {infowindowOpen && (
@@ -92,6 +142,7 @@ export function AccountsMap({ accounts }: { accounts: Account[] }) {
       gestureHandling={'greedy'}
       disableDefaultUI={true}
     >
+      <CurrentLocationMarker />
       {accountsWithAddress.map(account => (
         <AccountMarker key={account.id} account={account} />
       ))}
