@@ -55,7 +55,7 @@ function AccountMarker({ account }: { account: Account }) {
           className={cn(
             'w-6 h-6 rounded-full flex items-center justify-center',
             account.status === 'lead'
-              ? 'bg-yellow-500 text-black'
+              ? 'bg-yellow-500 text-white'
               : 'bg-primary text-primary-foreground'
           )}
         >
