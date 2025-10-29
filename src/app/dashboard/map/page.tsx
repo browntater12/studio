@@ -9,11 +9,15 @@ import { AccountsMap } from '@/components/map/accounts-map';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { MapFilters } from '@/components/map/map-filters';
 
 export default function MapPage() {
   const firestore = useFirestore();
   const { isUserLoading } = useUser();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [industryFilter, setIndustryFilter] = React.useState('all');
 
   const accountsQuery = useMemoFirebase(() => {
     if (isUserLoading || !firestore) return null;
@@ -24,13 +28,21 @@ export default function MapPage() {
   
   const combinedIsLoading = isLoading || isUserLoading;
 
-  if (combinedIsLoading) {
-    return (
-      <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const industries = React.useMemo(() => {
+    if (!accounts) return [];
+    const allIndustries = accounts.map(acc => acc.industry).filter(Boolean) as string[];
+    return [...new Set(allIndustries)].sort();
+  }, [accounts]);
+
+  const filteredAccounts = React.useMemo(() => {
+    if (!accounts) return [];
+    return accounts.filter(account => {
+      const statusMatch = statusFilter === 'all' || account.status === statusFilter;
+      const industryMatch = industryFilter === 'all' || account.industry === industryFilter;
+      return statusMatch && industryMatch;
+    });
+  }, [accounts, statusFilter, industryFilter]);
+
 
   if (error) {
     return (
@@ -61,10 +73,26 @@ export default function MapPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full">
-      <APIProvider apiKey={apiKey}>
-        <AccountsMap accounts={accounts || []} />
-      </APIProvider>
+    <div className="flex flex-col h-[calc(100vh-4rem)] w-full">
+        <MapFilters 
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            industryFilter={industryFilter}
+            setIndustryFilter={setIndustryFilter}
+            industries={industries}
+            isLoading={combinedIsLoading}
+        />
+        <div className="flex-1">
+            {combinedIsLoading ? (
+                 <div className="flex h-full w-full items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : (
+                <APIProvider apiKey={apiKey}>
+                    <AccountsMap accounts={filteredAccounts || []} />
+                </APIProvider>
+            )}
+        </div>
     </div>
   );
 }
