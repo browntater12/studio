@@ -31,7 +31,7 @@ export default function DashboardLayout({
                   <MainSidebar />
                 </SheetContent>
               </Sheet>
-              <h1 className="text-lg font-semibold flex-1">Territory Manager</h1>
+              <h1 className="text-lg font-semibold flex-1">Territory map</h1>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
@@ -45,7 +45,7 @@ export default function DashboardLayout({
       <SidebarInset>
          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
             <SidebarTrigger />
-            <h1 className="text-lg font-semibold flex-1">Dashboard</h1>
+            <h1 className="text-lg font-semibold flex-1">Territory map</h1>
         </header>
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </SidebarInset>
