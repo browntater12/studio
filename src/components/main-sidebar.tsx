@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PlusCircle, Building, Search, Package, LogIn, LogOut } from 'lucide-react';
+import { PlusCircle, Building, Search, Package, LogIn, LogOut, PanelLeft } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from '@/firebase';
 import { collection, orderBy, query } from 'firebase/firestore';
 
@@ -17,6 +17,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  useSidebar,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
@@ -26,6 +28,7 @@ import { SidebarMenuSkeleton } from './ui/sidebar';
 import { DbStatus } from './db-status';
 import { User } from 'firebase/auth';
 import { signOut } from '@/firebase/non-blocking-login';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 function UserDisplay({ user }: { user: User | null }) {
@@ -70,11 +73,31 @@ function UserDisplay({ user }: { user: User | null }) {
 
 }
 
+function DesktopSidebar({ children }: { children: React.ReactNode }) {
+    return (
+        <Sidebar>
+            {children}
+        </Sidebar>
+    );
+}
+
+function MobileSidebar({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="flex flex-col h-full">
+            {children}
+        </div>
+    );
+}
+
+
 export function MainSidebar() {
   const pathname = usePathname();
   const [search, setSearch] = React.useState('');
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const isMobile = useIsMobile();
+  const { state } = useSidebar();
+
 
   const accountsQuery = useMemoFirebase(() => {
     if (isUserLoading || !firestore) return null;
@@ -91,12 +114,16 @@ export function MainSidebar() {
     acc.accountNumber?.toLowerCase().includes(search.toLowerCase())
   ) || [];
 
+  const Wrapper = isMobile ? MobileSidebar : DesktopSidebar;
+
   return (
-    <Sidebar>
+    <Wrapper>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <Logo className="h-8 w-8 text-primary" />
-          <span className="text-lg font-semibold">Territory Manager</span>
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <Logo className="h-8 w-8 text-primary" />
+                <span className={`text-lg font-semibold ${state === 'collapsed' && !isMobile ? 'hidden' : ''}`}>Territory Manager</span>
+            </div>
         </div>
       </SidebarHeader>
 
@@ -147,6 +174,7 @@ export function MainSidebar() {
                 <SidebarMenuButton
                   isActive={pathname.includes(`/dashboard/account/${account.id}`)}
                   className="w-full justify-start"
+                  tooltip={account.name}
                 >
                   <Building />
                   <div className="flex flex-col items-start">
@@ -168,6 +196,6 @@ export function MainSidebar() {
         <DbStatus />
         <ThemeToggle />
       </SidebarFooter>
-    </Sidebar>
+    </Wrapper>
   );
 }
