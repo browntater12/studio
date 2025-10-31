@@ -49,7 +49,7 @@ interface MultiSelectProps
     value: string
     icon?: React.ComponentType<{ className?: string }>
   }[]
-  onValueChange: (value: string[]) => void
+  onValueChange?: (value: string[]) => void
   defaultValue?: string[]
   placeholder?: string
   animation?: number
@@ -79,9 +79,10 @@ const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
     ref
   ) => {
     const [open, setOpen] = React.useState(false)
+    const currentSelected = selected || [];
 
     const handleUnselect = (item: string) => {
-      onChange(selected.filter((i) => i !== item))
+      onChange(currentSelected.filter((i) => i !== item))
     }
 
     return (
@@ -92,13 +93,13 @@ const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={`w-full justify-between ${selected.length > 1 ? "h-full" : "h-10"
+            className={`w-full justify-between ${currentSelected.length > 1 ? "h-full" : "h-10"
               }`}
             onClick={() => setOpen(!open)}
           >
             <div className="flex gap-1 flex-wrap">
-              {selected.length > 0 ? (
-                selected.map((item) => (
+              {currentSelected.length > 0 ? (
+                currentSelected.map((item) => (
                   <Badge
                     key={item}
                     className={cn(multiSelectVariants({ variant, className }))}
@@ -131,16 +132,16 @@ const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
                   key={option.value}
                   onSelect={() => {
                     onChange(
-                      selected.includes(option.value)
-                        ? selected.filter((item) => item !== option.value)
-                        : [...selected, option.value]
+                      currentSelected.includes(option.value)
+                        ? currentSelected.filter((item) => item !== option.value)
+                        : [...currentSelected, option.value]
                     )
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      selected.includes(option.value)
+                      currentSelected.includes(option.value)
                         ? "opacity-100"
                         : "opacity-0"
                     )}
