@@ -72,3 +72,9 @@ export type CallNote = {
   note: string;
   type: CallNoteType;
 };
+
+export type ProductUsage = {
+  accountName: string;
+  accountId: string;
+  notes: string;
+};

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { PlusCircle, Search, Edit } from 'lucide-react';
 import { type Product } from '@/lib/types';
 
@@ -45,11 +46,11 @@ function CreateProductDialog() {
   );
 }
 
-function EditProductDialog({ product, children }: { product: Product, children: React.ReactNode }) {
+function EditProductDialog({ product, children, onEditClick }: { product: Product, children: React.ReactNode, onEditClick: (e: React.MouseEvent) => void }) {
     const [open, setOpen] = React.useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogTrigger asChild onClick={onEditClick}>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit Product</DialogTitle>
@@ -62,11 +63,16 @@ function EditProductDialog({ product, children }: { product: Product, children: 
 
 export function ProductTable({ products }: { products: Product[] }) {
   const [search, setSearch] = React.useState('');
+  const router = useRouter();
 
   const filteredProducts = products.filter(
     p =>
       p.name.toLowerCase().includes(search.toLowerCase())
   );
+  
+  const handleRowClick = (productId: string) => {
+    router.push(`/dashboard/products/${productId}`);
+  };
 
   return (
     <Card>
@@ -96,7 +102,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                 </TableHeader>
                 <TableBody>
                 {filteredProducts.map(product => (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.id} onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -109,7 +115,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">{product.notes}</TableCell>
                     <TableCell>
-                        <EditProductDialog product={product}>
+                        <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <Edit className="h-4 w-4" />
                             </Button>
