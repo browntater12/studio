@@ -104,12 +104,16 @@ function AccountMarker({ account }: { account: Account }) {
         <div
           className={cn(
             'w-6 h-6 rounded-full flex items-center justify-center',
-            account.status === 'lead'
-              ? 'bg-yellow-500'
-              : 'bg-primary text-primary-foreground'
+            {
+              'bg-yellow-500': account.status === 'lead',
+              'bg-purple-500': account.status === 'key-account',
+              'bg-primary text-primary-foreground': account.status === 'customer',
+            }
           )}
         >
-          <Building2 size={14} className={cn(account.status === 'lead' ? 'text-white' : '')}/>
+          <Building2 size={14} className={cn(
+            (account.status === 'lead' || account.status === 'key-account') ? 'text-white' : ''
+          )}/>
         </div>
       </AdvancedMarker>
       {infowindowOpen && (
