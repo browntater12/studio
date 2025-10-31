@@ -52,7 +52,7 @@ function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSub
   return (
     <Button type="submit" disabled={isSubmitting} className="flex-1">
       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {isEditMode ? 'Save Changes' : 'Create Product'}
+      {isEditMode ? 'Save Changes' : 'Create Base Product'}
     </Button>
   );
 }
