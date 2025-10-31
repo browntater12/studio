@@ -20,18 +20,18 @@ export const addAccountSchema = z.object({
 
 export const createProductSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
-    productNumber: z.string().min(1, 'Product number is required.'),
-    volumes: z.array(z.string()).refine(value => value.some(item => item), {
-        message: "You must select at least one volume.",
+    notes: z.string().optional(),
+    industries: z.array(z.string()).refine(value => value.length > 0, {
+        message: "You must select at least one industry.",
     }),
 });
 
 export const editProductSchema = z.object({
     id: z.string(),
     name: z.string().min(1, 'Name is required.'),
-    productNumber: z.string().min(1, 'Product number is required.'),
-    volumes: z.array(z.string()).refine(value => value.some(item => item), {
-        message: "You must select at least one volume.",
+    notes: z.string().optional(),
+    industries: z.array(z.string()).refine(value => value.length > 0, {
+        message: "You must select at least one industry.",
     }),
 });
 

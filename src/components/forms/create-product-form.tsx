@@ -1,18 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { useFormStatus } from 'react-dom';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
-
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 import { createProductSchema, editProductSchema } from '@/lib/schema';
-import { type Product, type ProductVolume } from '@/lib/types';
+import { type Product } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +23,6 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -40,13 +37,30 @@ import {
 } from '@/components/ui/alert-dialog';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Textarea } from '../ui/textarea';
+import { MultiSelect } from '../ui/multi-select';
 
-const VOLUMES: { id: ProductVolume; label: string }[] = [
-  { id: 'pails', label: 'Pails' },
-  { id: 'drums', label: 'Drums' },
-  { id: 'totes', label: 'Totes' },
-  { id: 'bulk', label: 'Bulk' },
-];
+const industryOptions = [
+    { value: 'Adhesives', label: 'Adhesives' },
+    { value: 'Agriculture', label: 'Agriculture' },
+    { value: 'Alcohol', label: 'Alcohol' },
+    { value: 'Animal Butchering', label: 'Animal Butchering' },
+    { value: 'Animal By-Products', label: 'Animal By-Products' },
+    { value: 'Chemical Services', label: 'Chemical Services' },
+    { value: 'Cooling', label: 'Cooling' },
+    { value: 'Cooperative', label: 'Cooperative' },
+    { value: 'Ethanol', label: 'Ethanol' },
+    { value: 'Manufacturing', label: 'Manufacturing' },
+    { value: 'Mechanical Contractor', label: 'Mechanical Contractor' },
+    { value: 'Mining & Wells', label: 'Mining & Wells' },
+    { value: 'Municipal', label: 'Municipal' },
+    { value: 'Oil and Gas', label: 'Oil and Gas' },
+    { value: 'Pharmaceuticals', label: 'Pharmaceuticals' },
+    { value: 'Plating and Coating', label: 'Plating and Coating' },
+    { value: 'Soybean Processing', label: 'Soybean Processing' },
+    { value: 'Stone and Concrete', label: 'Stone and Concrete' },
+    { value: 'Water Treatment', label: 'Water Treatment' },
+  ];
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSubmitting: boolean }) {
   return (
@@ -138,8 +152,8 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
       ? { ...product, id: product.id }
       : {
           name: '',
-          productNumber: '',
-          volumes: [],
+          notes: '',
+          industries: [],
         },
   });
   
@@ -153,25 +167,6 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
 
     try {
       const productsCollection = collection(firestore, 'products');
-
-      // Check for uniqueness on both create and edit
-      const q = query(productsCollection, where("productNumber", "==", values.productNumber));
-      const querySnapshot = await getDocs(q);
-      
-      let productNumberExists = false;
-      querySnapshot.forEach((doc) => {
-        if (!isEditMode || (isEditMode && doc.id !== product.id)) {
-            productNumberExists = true;
-        }
-      });
-
-      if (productNumberExists) {
-        form.setError('productNumber', {
-            type: 'manual',
-            message: 'A product with this product number already exists.',
-        });
-        throw new Error("Product number already exists.");
-      }
       
       if (isEditMode) {
           const productRef = doc(firestore, 'products', product.id!);
@@ -184,13 +179,11 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
       }
       onSuccess();
     } catch (error: any) {
-      if (error.message !== "Product number already exists.") {
         toast({
           variant: "destructive",
           title: "Error",
           description: error.message || "Failed to save product.",
         });
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -214,65 +207,34 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
           )}
         />
         <FormField
-          control={form.control}
-          name="productNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Number</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., CHEM-001A" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="Internal notes about this product..." {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
         />
         <FormField
-          control={form.control}
-          name="volumes"
-          render={() => (
-            <FormItem>
-              <div className="mb-4">
-                <FormLabel className="text-base">Available Volumes</FormLabel>
-                <FormDescription>
-                  Select all packaging sizes this product is available in.
-                </FormDescription>
-              </div>
-              {VOLUMES.map(item => (
-                <FormField
-                  key={item.id}
-                  control={form.control}
-                  name="volumes"
-                  render={({ field }) => {
-                    return (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-start space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={checked => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      value => value !== item.id
-                                    )
-                                  );
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal capitalize">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    );
-                  }}
-                />
-              ))}
-              <FormMessage />
-            </FormItem>
-          )}
+            control={form.control}
+            name="industries"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Industries</FormLabel>
+                    <MultiSelect
+                        options={industryOptions}
+                        selected={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select industries..."
+                        className="w-full"
+                    />
+                    <FormMessage />
+                </FormItem>
+            )}
         />
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />

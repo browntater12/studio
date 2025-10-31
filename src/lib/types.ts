@@ -50,8 +50,8 @@ export type Account = {
 export type Product = {
   id: string;
   name: string;
-  productNumber: string;
-  volumes: ('pails' | 'drums' | 'totes' | 'bulk')[];
+  notes?: string;
+  industries: string[];
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';

@@ -65,8 +65,7 @@ export function ProductTable({ products }: { products: Product[] }) {
 
   const filteredProducts = products.filter(
     p =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.productNumber.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -90,8 +89,8 @@ export function ProductTable({ products }: { products: Product[] }) {
                 <TableHeader>
                 <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Product Number</TableHead>
-                    <TableHead>Volumes</TableHead>
+                    <TableHead>Industries</TableHead>
+                    <TableHead>Notes</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
@@ -99,16 +98,16 @@ export function ProductTable({ products }: { products: Product[] }) {
                 {filteredProducts.map(product => (
                     <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.productNumber}</TableCell>
                     <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                        {product.volumes.map(v => (
-                            <Badge key={v} variant="secondary" className="capitalize">
-                            {v}
+                        <div className="flex flex-wrap gap-1">
+                        {product.industries.map(industry => (
+                            <Badge key={industry} variant="secondary">
+                            {industry}
                             </Badge>
                         ))}
                         </div>
                     </TableCell>
+                    <TableCell className="text-muted-foreground max-w-xs truncate">{product.notes}</TableCell>
                     <TableCell>
                         <EditProductDialog product={product}>
                             <Button variant="ghost" size="icon" className="h-8 w-8">

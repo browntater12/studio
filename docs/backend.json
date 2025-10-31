@@ -100,20 +100,19 @@
           "type": "string",
           "description": "Name of the product."
         },
-        "productNumber": {
+        "notes": {
           "type": "string",
-          "description": "Product number."
+          "description": "Notes about the product."
         },
-        "volumes": {
+        "industries": {
           "type": "array",
           "items": {
-            "type": "string",
-            "enum": ["pails", "drums", "totes", "bulk"]
+            "type": "string"
           },
-          "description": "Available volume selections."
+          "description": "Industries this product is associated with."
         }
       },
-      "required": ["name", "productNumber", "volumes"]
+      "required": ["name", "industries"]
     },
     "AccountProductNote": {
       "title": "AccountProductNote",
