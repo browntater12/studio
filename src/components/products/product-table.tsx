@@ -100,7 +100,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>
                         <div className="flex flex-wrap gap-1">
-                        {product.industries.map(industry => (
+                        {(product.industries || []).map(industry => (
                             <Badge key={industry} variant="secondary">
                             {industry}
                             </Badge>
