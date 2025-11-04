@@ -8,9 +8,12 @@ import {
   FirestoreError,
   QuerySnapshot,
   CollectionReference,
+  collectionGroup,
+  Firestore,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useFirestore } from '../provider';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -37,6 +40,10 @@ export interface InternalQuery extends Query<DocumentData> {
   }
 }
 
+interface UseCollectionOptions {
+  subcollection?: string;
+}
+
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
@@ -53,6 +60,7 @@ export interface InternalQuery extends Query<DocumentData> {
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
+    options?: UseCollectionOptions,
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
@@ -60,6 +68,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -71,9 +80,18 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
+    
+    let finalQuery: Query<DocumentData>;
+
+    if (options?.subcollection && firestore) {
+      finalQuery = collectionGroup(firestore, options.subcollection);
+    } else {
+      finalQuery = memoizedTargetRefOrQuery;
+    }
+
 
     const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
+      finalQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
         const results: ResultItemType[] = snapshot.docs.map(doc => ({
           ...(doc.data() as T),
@@ -84,10 +102,14 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (err: FirestoreError) => {
-        const path =
-          'path' in memoizedTargetRefOrQuery
+        let path: string;
+        if (options?.subcollection) {
+            path = options.subcollection;
+        } else {
+            path = 'path' in memoizedTargetRefOrQuery
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+        }
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
@@ -103,9 +125,9 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]);
+  }, [memoizedTargetRefOrQuery, firestore, options?.subcollection]);
 
-  if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
+  if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo && !options?.subcollection) {
     throw new Error('Query passed to useCollection was not properly memoized with useMemoFirebase.');
   }
 

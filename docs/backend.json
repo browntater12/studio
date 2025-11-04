@@ -164,6 +164,10 @@
           "type": "string",
           "description": "Reference to Product. Not present for opportunities."
         },
+        "subProductId": {
+            "type": "string",
+            "description": "Reference to a SubProduct. Links the account to a specific product variation."
+        },
         "notes": {
           "type": "string",
           "description": "Note about the product for the specific account."

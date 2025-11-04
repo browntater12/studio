@@ -70,6 +70,7 @@ export const contactSchema = z.object({
 const accountProductBaseSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, 'Please select a product.').optional(),
+    subProductId: z.string().optional(),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),

@@ -17,6 +17,7 @@ export type AccountProduct = {
   id?: string;
   accountId: string;
   productId?: string;
+  subProductId?: string;
   notes: string;
   priceType?: 'spot' | 'bid';
   bidFrequency?: 'monthly' | 'quarterly' | 'yearly';

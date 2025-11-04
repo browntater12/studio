@@ -6,11 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, addDoc, serverTimestamp, query } from 'firebase/firestore';
 
 import { addProductToAccountSchema } from '@/lib/schema';
-import { type Product, type ProductVolume } from '@/lib/types';
+import { type Product, type ProductVolume, type SubProduct } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -77,6 +77,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     defaultValues: {
       accountId,
       productId: '',
+      subProductId: '',
       notes: '',
       priceType: 'spot',
       bidFrequency: undefined,
@@ -93,6 +94,18 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     },
   });
 
+  const selectedProductId = useWatch({
+    control: form.control,
+    name: 'productId',
+  });
+
+  const subProductsQuery = useMemoFirebase(() => {
+    if (!firestore || !selectedProductId) return null;
+    return query(collection(firestore, 'products', selectedProductId, 'sub-products'));
+  }, [firestore, selectedProductId]);
+
+  const { data: subProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
+
   const onSubmit = async (values: z.infer<typeof addProductToAccountSchema>) => {
     setIsSubmitting(true);
     try {
@@ -100,7 +113,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             throw new Error("Firestore is not available.");
         }
 
-        // Create a clean data object to avoid sending `undefined` to Firestore
         const productData: { [key: string]: any } = {
           createdAt: serverTimestamp(),
           isOpportunity: values.isOpportunity,
@@ -125,7 +137,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
                           productData[key] = cleanPriceDetails;
                         }
-                    } else if (value !== '') { // Also filter out empty strings for optional fields
+                    } else if (value !== '') {
                         productData[key] = value;
                     }
                 }
@@ -163,6 +175,11 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     control: form.control,
     name: 'isOpportunity',
   });
+
+  React.useEffect(() => {
+    // Reset subProductId when productId changes
+    form.resetField('subProductId');
+  }, [selectedProductId, form]);
 
   return (
     <Form {...form}>
@@ -326,7 +343,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                                 />
                                 <div>
                                     <div>{product.name}</div>
-                                    <div className="text-xs text-muted-foreground">{product.productNumber}</div>
                                 </div>
                             </CommandItem>
                             ))}
@@ -339,6 +355,38 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </FormItem>
             )}
             />
+
+            {selectedProductId && (
+                <FormField
+                    control={form.control}
+                    name="subProductId"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Product Code</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name} disabled={subProductsLoading || !subProducts || subProducts.length === 0}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder={subProductsLoading ? "Loading..." : "Select specific product"} />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {subProducts?.map(sp => (
+                                    <SelectItem key={sp.id} value={sp.id}>
+                                        {sp.name} ({sp.productCode})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                             {subProducts?.length === 0 && !subProductsLoading && (
+                                <FormDescription>
+                                    No specific products found for this base product.
+                                </FormDescription>
+                            )}
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
             
             <FormField
             control={form.control}
