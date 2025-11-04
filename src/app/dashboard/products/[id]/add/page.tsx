@@ -27,6 +27,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type Product } from '@/lib/types';
 import { doc } from 'firebase/firestore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: string, baseProductName: string }) {
   const { toast } = useToast();
@@ -41,7 +48,7 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
       name: '',
       description: '',
       productCode: '',
-      size: '',
+      size: undefined,
     },
   });
 
@@ -112,9 +119,20 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Size</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., 55 Gallon Drum" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a size" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="bags">Bags</SelectItem>
+                  <SelectItem value="pails">Pails</SelectItem>
+                  <SelectItem value="drums">Drums</SelectItem>
+                  <SelectItem value="totes">Totes</SelectItem>
+                  <SelectItem value="bulk">Bulk</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

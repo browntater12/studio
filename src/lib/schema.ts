@@ -40,7 +40,9 @@ export const subProductSchema = z.object({
     name: z.string().min(1, 'Product name is required.'),
     description: z.string().optional(),
     productCode: z.string().min(1, 'Product code is required.'),
-    size: z.string().min(1, 'Size is required.'),
+    size: z.enum(['bags', 'pails', 'drums', 'totes', 'bulk'], {
+        required_error: "You need to select a product size.",
+    }),
   });
 
 export const contactSchema = z.object({
