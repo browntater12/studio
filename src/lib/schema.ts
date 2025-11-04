@@ -35,7 +35,7 @@ export const editProductSchema = z.object({
     }),
 });
 
-export const subProductSchema = z.object({
+const baseSubProductSchema = z.object({
     baseProductId: z.string(),
     name: z.string().min(1, 'Product name is required.'),
     description: z.string().optional(),
@@ -45,7 +45,9 @@ export const subProductSchema = z.object({
     }),
     volume: z.number().optional(),
     volumeUnit: z.enum(['lb', 'gal', 'kg']).optional(),
-  }).refine(data => {
+});
+
+export const subProductSchema = baseSubProductSchema.refine(data => {
     // If volume is provided, volumeUnit must also be provided.
     if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
       return false;
@@ -56,9 +58,19 @@ export const subProductSchema = z.object({
     path: ['volumeUnit'],
   });
 
-export const editSubProductSchema = subProductSchema.extend({
+export const editSubProductSchema = baseSubProductSchema.extend({
     id: z.string(),
-});
+}).refine(data => {
+    // If volume is provided, volumeUnit must also be provided.
+    if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Unit is required when volume is provided.",
+    path: ['volumeUnit'],
+  });
+
 
 export const contactSchema = z.object({
     accountNumber: z.string(),
