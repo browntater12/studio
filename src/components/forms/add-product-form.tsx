@@ -101,7 +101,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
   const subProductsQuery = useMemoFirebase(() => {
     if (!firestore || !selectedProductId) return null;
-    return query(collection(firestore, 'products', selectedProductId, 'sub-products'));
+    return query(collection(firestore, 'products', selectedProductId, 'individual-products'));
   }, [firestore, selectedProductId]);
 
   const { data: subProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);

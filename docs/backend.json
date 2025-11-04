@@ -301,7 +301,7 @@
       },
       "description": "Global collection for all available products."
     },
-    "/products/{productId}/sub-products/{subProductId}": {
+    "/products/{productId}/individual-products/{subProductId}": {
       "schema": {
         "$ref": "#/entities/SubProduct"
       },

@@ -45,7 +45,7 @@ function AccountDetails() {
     return collection(firestore, 'products'); // Dummy query, logic in component will handle filtering
   }, [firestore]);
   const { data: allSubProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsRef, {
-      subcollection: 'sub-products',
+      subcollection: 'individual-products',
   });
 
 

@@ -142,10 +142,10 @@ service cloud.firestore {
 
       /**
        * @description Rules for sub-products.
-       * @path /products/{productId}/sub-products/{subProductId}
+       * @path /products/{productId}/individual-products/{subProductId}
        * @allow (get, list, create, update, delete) - Authenticated users have full access to sub-products.
        */
-      match /sub-products/{subProductId} {
+      match /individual-products/{subProductId} {
         allow get: if isSignedIn();
         allow list: if isSignedIn();
         allow create: if isSignedIn();

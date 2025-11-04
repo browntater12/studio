@@ -26,7 +26,7 @@ function ProductUsageDetails() {
 
   const subProductsQuery = useMemoFirebase(() => {
     if (!firestore || !productId) return null;
-    return collection(firestore, 'products', productId, 'sub-products');
+    return collection(firestore, 'products', productId, 'individual-products');
   }, [firestore, productId]);
   const { data: subProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
 

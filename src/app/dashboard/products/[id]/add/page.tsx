@@ -67,7 +67,7 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
     }
 
     try {
-      const subProductsCollection = collection(firestore, 'products', baseProductId, 'sub-products');
+      const subProductsCollection = collection(firestore, 'products', baseProductId, 'individual-products');
       const dataToSave = {
         ...values,
         volume: values.volume ? Number(values.volume) : undefined,
