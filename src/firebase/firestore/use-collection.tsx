@@ -71,7 +71,13 @@ export function useCollection<T = any>(
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (!memoizedTargetRefOrQuery) {
+    let finalQuery: Query<DocumentData> | null | undefined = memoizedTargetRefOrQuery;
+
+    if (options?.subcollection && firestore) {
+      finalQuery = collectionGroup(firestore, options.subcollection);
+    }
+
+    if (!finalQuery) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -80,15 +86,6 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
-    
-    let finalQuery: Query<DocumentData>;
-
-    if (options?.subcollection && firestore) {
-      finalQuery = collectionGroup(firestore, options.subcollection);
-    } else {
-      finalQuery = memoizedTargetRefOrQuery;
-    }
-
 
     const unsubscribe = onSnapshot(
       finalQuery,
@@ -106,7 +103,7 @@ export function useCollection<T = any>(
         if (options?.subcollection) {
             path = options.subcollection;
         } else {
-            path = 'path' in memoizedTargetRefOrQuery
+            path = 'path' in memoizedTargetRefOrQuery!
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
         }

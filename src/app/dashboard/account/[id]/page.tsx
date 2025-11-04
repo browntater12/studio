@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, where, collectionGroup } from 'firebase/firestore';
 import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote, type SubProduct } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
@@ -38,15 +38,11 @@ function AccountDetails() {
   }, [firestore]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
-  const subProductsRef = useMemoFirebase(() => {
+  const subProductsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // This is not efficient, but for the sake of simplicity we fetch all sub-products.
-    // A better approach would be to query sub-products based on the products used by the account.
-    return collection(firestore, 'products'); // Dummy query, logic in component will handle filtering
+    return collectionGroup(firestore, 'individual-products');
   }, [firestore]);
-  const { data: allSubProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsRef, {
-      subcollection: 'individual-products',
-  });
+  const { data: allSubProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
 
 
   const productNotesQuery = useMemoFirebase(() => {

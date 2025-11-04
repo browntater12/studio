@@ -141,9 +141,9 @@ service cloud.firestore {
       allow delete: if isSignedIn();
 
       /**
-       * @description Rules for sub-products.
+       * @description Rules for individual products.
        * @path /products/{productId}/individual-products/{subProductId}
-       * @allow (get, list, create, update, delete) - Authenticated users have full access to sub-products.
+       * @allow (get, list, create, update, delete) - Authenticated users have full access to individual-products.
        */
       match /individual-products/{subProductId} {
         allow get: if isSignedIn();
