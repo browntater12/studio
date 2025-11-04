@@ -49,6 +49,8 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
       description: '',
       productCode: '',
       size: undefined,
+      volume: undefined,
+      volumeUnit: undefined,
     },
   });
 
@@ -66,7 +68,11 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
 
     try {
       const subProductsCollection = collection(firestore, 'products', baseProductId, 'sub-products');
-      await addDoc(subProductsCollection, values);
+      const dataToSave = {
+        ...values,
+        volume: values.volume ? Number(values.volume) : undefined,
+      }
+      await addDoc(subProductsCollection, dataToSave);
       toast({
         title: 'Success!',
         description: `New product variation added to ${baseProductName}.`,
@@ -137,6 +143,43 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
             </FormItem>
           )}
         />
+        <div className="grid grid-cols-3 gap-4">
+            <FormField
+            control={form.control}
+            name="volume"
+            render={({ field }) => (
+                <FormItem className="col-span-2">
+                <FormLabel>Volume</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="e.g., 55" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="volumeUnit"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Unit</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    <SelectItem value="gal">gal</SelectItem>
+                    <SelectItem value="lb">lb</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
         <FormField
           control={form.control}
           name="description"

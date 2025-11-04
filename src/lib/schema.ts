@@ -43,6 +43,17 @@ export const subProductSchema = z.object({
     size: z.enum(['bags', 'pails', 'drums', 'totes', 'bulk'], {
         required_error: "You need to select a product size.",
     }),
+    volume: z.number().optional(),
+    volumeUnit: z.enum(['lb', 'gal', 'kg']).optional(),
+  }).refine(data => {
+    // If volume is provided, volumeUnit must also be provided.
+    if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Unit is required when volume is provided.",
+    path: ['volumeUnit'],
   });
 
 export const contactSchema = z.object({

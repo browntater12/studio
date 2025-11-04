@@ -88,7 +88,7 @@ function ProductUsageDetails() {
         <div>
             <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
             <div className="flex flex-wrap gap-2 mt-2">
-                {product.industries.map(industry => (
+                {(product.industries || []).map(industry => (
                     <Badge key={industry} variant="secondary">{industry}</Badge>
                 ))}
             </div>
@@ -113,6 +113,7 @@ function ProductUsageDetails() {
                 <TableHead>Name</TableHead>
                 <TableHead>Product Code</TableHead>
                 <TableHead>Size</TableHead>
+                <TableHead>Volume</TableHead>
                 <TableHead>Description</TableHead>
               </TableRow>
             </TableHeader>
@@ -123,12 +124,13 @@ function ProductUsageDetails() {
                     <TableCell className="font-medium">{sp.name}</TableCell>
                     <TableCell>{sp.productCode}</TableCell>
                     <TableCell>{sp.size}</TableCell>
+                    <TableCell>{sp.volume ? `${sp.volume} ${sp.volumeUnit}` : 'N/A'}</TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">{sp.description}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     No specific products have been added yet.
                   </TableCell>
                 </TableRow>

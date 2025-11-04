@@ -61,6 +61,8 @@ export type SubProduct = {
   description?: string;
   productCode: string;
   size: string;
+  volume?: number;
+  volumeUnit?: 'lb' | 'gal' | 'kg';
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
