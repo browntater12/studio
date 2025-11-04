@@ -56,6 +56,10 @@ export const subProductSchema = z.object({
     path: ['volumeUnit'],
   });
 
+export const editSubProductSchema = subProductSchema.extend({
+    id: z.string(),
+});
+
 export const contactSchema = z.object({
     accountNumber: z.string(),
     name: z.string().min(1, 'Name is required.'),

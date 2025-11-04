@@ -11,7 +11,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EditSubProductForm } from '@/components/forms/edit-sub-product-form';
+
+function EditSubProductDialog({ subProduct, children, onEditClick }: { subProduct: SubProduct, children: React.ReactNode, onEditClick: (e: React.MouseEvent) => void }) {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild onClick={onEditClick}>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Product Variation</DialogTitle>
+                </DialogHeader>
+                <EditSubProductForm subProduct={subProduct} onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 function ProductUsageDetails() {
   const params = useParams();
@@ -82,6 +99,14 @@ function ProductUsageDetails() {
     return notFound();
   }
 
+  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, subProductId: string) => {
+    // a bit of a hack to prevent row click when clicking on the button
+    if ((e.target as HTMLElement).closest('button')) {
+        return;
+    }
+    // router.push(`/dashboard/products/${productId}/${subProductId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -115,6 +140,7 @@ function ProductUsageDetails() {
                 <TableHead>Size</TableHead>
                 <TableHead>Volume</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,11 +152,18 @@ function ProductUsageDetails() {
                     <TableCell>{sp.size}</TableCell>
                     <TableCell>{sp.volume ? `${sp.volume} ${sp.volumeUnit}` : 'N/A'}</TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">{sp.description}</TableCell>
+                    <TableCell>
+                        <EditSubProductDialog subProduct={sp} onEditClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                        </EditSubProductDialog>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No specific products have been added yet.
                   </TableCell>
                 </TableRow>
