@@ -139,19 +139,19 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
+    }
 
-      /**
-       * @description Rules for individual products.
-       * @path /products/{productId}/individual-products/{subProductId}
-       * @allow (get, list, create, update, delete) - Authenticated users have full access to individual-products.
-       */
-      match /individual-products/{subProductId} {
+    /**
+     * @description Rules for individual products (sub-products). This allows collection group queries.
+     * @path /{path=**}/individual-products/{subProductId}
+     * @allow (get, list, create, update, delete) - Authenticated users have full access.
+     */
+    match /{path=**}/individual-products/{subProductId} {
         allow get: if isSignedIn();
         allow list: if isSignedIn();
         allow create: if isSignedIn();
         allow update: if isSignedIn();
         allow delete: if isSignedIn();
-      }
     }
 
     /**
