@@ -8,6 +8,8 @@ import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 import { addProductToAccountSchema } from '@/lib/schema';
 import { type Product, type ProductVolume, type SubProduct } from '@/lib/types';
@@ -107,59 +109,67 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
   const { data: subProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
 
   const onSubmit = async (values: z.infer<typeof addProductToAccountSchema>) => {
-    setIsSubmitting(true);
-    try {
-        if (!firestore) {
-            throw new Error("Firestore is not available.");
-        }
-
-        const productData: { [key: string]: any } = {
-          createdAt: serverTimestamp(),
-          isOpportunity: values.isOpportunity,
-          accountId: values.accountId,
-        };
-
-        if (values.isOpportunity) {
-            productData.opportunityName = values.opportunityName;
-            productData.estimatedVolumes = values.estimatedVolumes;
-            productData.competition = values.competition;
-            productData.notes = values.notes;
-        } else {
-            Object.entries(values).forEach(([key, value]) => {
-                if (value !== undefined && !['isOpportunity', 'opportunityName', 'estimatedVolumes', 'competition'].includes(key)) {
-                    if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
-                        const cleanPriceDetails: { [key: string]: any } = {};
-                        Object.entries(value).forEach(([pdKey, pdValue]) => {
-                            if (pdValue !== undefined) {
-                                cleanPriceDetails[pdKey] = pdValue;
-                            }
-                        });
-                        if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
-                          productData[key] = cleanPriceDetails;
-                        }
-                    } else if (value !== '') {
-                        productData[key] = value;
-                    }
-                }
-            });
-        }
-        
-        const accountProductsCollection = collection(firestore, 'account-products');
-        await addDoc(accountProductsCollection, productData);
-
-        toast({ title: 'Success!', description: 'Product added to account successfully.' });
-        onSuccess();
-
-    } catch(error: any) {
-        console.error("Error adding product to account: ", error);
+    if (!firestore) {
         toast({
-            variant: "destructive",
-            title: "Error",
-            description: error.message || "Failed to add product to account."
+            title: 'Error',
+            description: 'Database not available.',
+            variant: 'destructive'
         });
-    } finally {
-        setIsSubmitting(false);
+        return;
     }
+
+    setIsSubmitting(true);
+
+    const productData: { [key: string]: any } = {
+        createdAt: serverTimestamp(),
+        isOpportunity: values.isOpportunity,
+        accountId: values.accountId,
+    };
+
+    if (values.isOpportunity) {
+        productData.opportunityName = values.opportunityName;
+        productData.estimatedVolumes = values.estimatedVolumes;
+        productData.competition = values.competition;
+        productData.notes = values.notes;
+    } else {
+        Object.entries(values).forEach(([key, value]) => {
+            if (value !== undefined && !['isOpportunity', 'opportunityName', 'estimatedVolumes', 'competition'].includes(key)) {
+                if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
+                    const cleanPriceDetails: { [key: string]: any } = {};
+                    Object.entries(value).forEach(([pdKey, pdValue]) => {
+                        if (pdValue !== undefined) {
+                            cleanPriceDetails[pdKey] = pdValue;
+                        }
+                    });
+                    if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
+                      productData[key] = cleanPriceDetails;
+                    }
+                } else if (value !== '') {
+                    productData[key] = value;
+                }
+            }
+        });
+    }
+    
+    const accountProductsCollection = collection(firestore, 'account-products');
+    
+    addDoc(accountProductsCollection, productData)
+        .then(() => {
+            toast({ title: 'Success!', description: 'Product added to account successfully.' });
+            onSuccess();
+        })
+        .catch((error) => {
+            console.error("Error adding product to account: ", error);
+            const permissionError = new FirestorePermissionError({
+                path: accountProductsCollection.path,
+                operation: 'create',
+                requestResourceData: productData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
   }
 
 
