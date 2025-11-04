@@ -114,6 +114,34 @@
       },
       "required": ["name", "industries"]
     },
+    "SubProduct": {
+      "title": "Sub Product",
+      "description": "Represents a specific product variation under a base product.",
+      "type": "object",
+      "properties": {
+        "baseProductId": {
+          "type": "string",
+          "description": "The ID of the base product this sub-product belongs to."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the sub-product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the sub-product."
+        },
+        "productCode": {
+          "type": "string",
+          "description": "Product code for the sub-product."
+        },
+        "size": {
+          "type": "string",
+          "description": "Size of the sub-product."
+        }
+      },
+      "required": ["baseProductId", "name", "productCode", "size"]
+    },
     "AccountProductNote": {
       "title": "AccountProductNote",
       "type": "object",
@@ -259,6 +287,12 @@
         "$ref": "#/entities/Product"
       },
       "description": "Global collection for all available products."
+    },
+    "/products/{productId}/sub-products/{subProductId}": {
+      "schema": {
+        "$ref": "#/entities/SubProduct"
+      },
+      "description": "Collection of specific product variations under a base product."
     },
     "/shipping-locations/{locationId}": {
       "schema": {

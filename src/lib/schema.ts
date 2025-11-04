@@ -35,6 +35,14 @@ export const editProductSchema = z.object({
     }),
 });
 
+export const subProductSchema = z.object({
+    baseProductId: z.string(),
+    name: z.string().min(1, 'Product name is required.'),
+    description: z.string().optional(),
+    productCode: z.string().min(1, 'Product code is required.'),
+    size: z.string().min(1, 'Size is required.'),
+  });
+
 export const contactSchema = z.object({
     accountNumber: z.string(),
     name: z.string().min(1, 'Name is required.'),

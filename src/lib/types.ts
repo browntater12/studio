@@ -54,6 +54,15 @@ export type Product = {
   industries: string[];
 };
 
+export type SubProduct = {
+  id: string;
+  baseProductId: string;
+  name: string;
+  description?: string;
+  productCode: string;
+  size: string;
+};
+
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
 
 export type ShippingLocation = {
