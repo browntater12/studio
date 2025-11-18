@@ -549,6 +549,7 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      children,
       ...props
     },
     ref
@@ -564,7 +565,29 @@ const SidebarMenuButton = React.forwardRef<
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
-      />
+      >
+        {React.Children.map(children, (child, index) => {
+            if (React.isValidElement(child)) {
+                // The first child is the icon, the second is the div with text
+                if (index === 1 && child.type === 'div') {
+                    return React.cloneElement(child, {
+                        ...child.props,
+                        className: cn(child.props.className, 'flex-1 min-w-0'),
+                        children: React.Children.map(child.props.children, (textChild) => {
+                            if (React.isValidElement(textChild) && textChild.type === 'span' && textChild.props.className.includes('font-medium')) {
+                                return React.cloneElement(textChild, {
+                                    ...textChild.props,
+                                    className: cn(textChild.props.className, 'truncate')
+                                });
+                            }
+                            return textChild;
+                        })
+                    });
+                }
+            }
+            return child;
+        })}
+    </Comp>
     )
 
     if (!tooltip) {
