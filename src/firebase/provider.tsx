@@ -83,8 +83,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       (firebaseUser) => { // Auth state determined
         if (!firebaseUser) {
           initiateAnonymousSignIn(auth);
+          // Don't set state here; wait for the next onAuthStateChanged event with the new anonymous user
+        } else {
+            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
         }
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
