@@ -37,7 +37,9 @@ const industryOptions = [
     'Chemical Services',
     'Cooling',
     'Cooperative',
+    'Energy',
     'Ethanol',
+    'Food',
     'Manufacturing',
     'Mechanical Contractor',
     'Mining & Wells',
@@ -188,7 +190,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {industryOptions.map(option => (
+                  {industryOptions.sort().map(option => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
                   ))}
                 </SelectContent>

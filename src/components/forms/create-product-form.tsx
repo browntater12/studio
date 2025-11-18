@@ -49,7 +49,9 @@ const industryOptions = [
     { value: 'Chemical Services', label: 'Chemical Services' },
     { value: 'Cooling', label: 'Cooling' },
     { value: 'Cooperative', label: 'Cooperative' },
+    { value: 'Energy', label: 'Energy' },
     { value: 'Ethanol', label: 'Ethanol' },
+    { value: 'Food', label: 'Food' },
     { value: 'Manufacturing', label: 'Manufacturing' },
     { value: 'Mechanical Contractor', label: 'Mechanical Contractor' },
     { value: 'Mining & Wells', label: 'Mining & Wells' },
@@ -60,7 +62,7 @@ const industryOptions = [
     { value: 'Soybean Processing', label: 'Soybean Processing' },
     { value: 'Stone and Concrete', label: 'Stone and Concrete' },
     { value: 'Water Treatment', label: 'Water Treatment' },
-  ];
+  ].sort((a, b) => a.label.localeCompare(b.label));
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSubmitting: boolean }) {
   return (
