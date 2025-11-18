@@ -136,7 +136,7 @@ function AccountMarker({ account }: { account: Account }) {
             <Button asChild size="sm" className="w-full">
                 <Link href={`/dashboard/account/${account.id}`}>View Account</Link>
             </Button>
-            <Button variant="secondary" size="sm" className="w-full" onClick={handleGetDirections}>
+            <Button variant="outline" size="sm" className="w-full" onClick={handleGetDirections}>
                 Get Directions
             </Button>
           </div>
