@@ -76,10 +76,6 @@
   }
 }
 
-.gm-style-iw-tc .gm-style-iw-close-button {
-  filter: none !important;
-}
-
 .gm-style-iw-tc .gm-style-iw-close-button svg {
-  filter: invert(0) !important;
+  filter: invert(1) sepia(1) saturate(0) hue-rotate(0deg) brightness(0) contrast(100);
 }
