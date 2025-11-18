@@ -219,7 +219,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
                             <FormControl>
                                 <RadioGroupItem value="new" />
                             </FormControl>
-                            <FormLabel className="font-normal">New Location for this Account</FormLabel>
+                            <FormLabel className="font-normal">New Location</FormLabel>
                         </FormItem>
                     </RadioGroup>
                     </FormControl>
