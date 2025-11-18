@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CallNoteForm } from '../forms/call-note-form';
+import { ScrollArea } from '../ui/scroll-area';
 
 function AddNoteDialog({ accountId }: { accountId: string }) {
   const [open, setOpen] = React.useState(false);
@@ -98,32 +99,34 @@ export function CallNotes({
       </CardHeader>
       <CardContent>
         {sortedNotes.length > 0 ? (
-          <div className="space-y-4">
-            {sortedNotes.map(note => (
-              <div
-                key={note.id}
-                className="flex items-start gap-4 p-4 border rounded-lg relative group"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CalendarIcon className="h-4 w-4" />
-                    <span>{format(note.callDate.toDate(), 'PPP')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={getBadgeVariant(note.type)} className="capitalize">
-                      {formatNoteType(note.type)}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-sm whitespace-pre-wrap">{note.note}</p>
+          <ScrollArea className="h-72">
+            <div className="space-y-4 pr-4">
+                {sortedNotes.map(note => (
+                <div
+                    key={note.id}
+                    className="flex items-start gap-4 p-4 border rounded-lg relative group"
+                >
+                    <div className="flex-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>{format(note.callDate.toDate(), 'PPP')}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                        <Badge variant={getBadgeVariant(note.type)} className="capitalize">
+                        {formatNoteType(note.type)}
+                        </Badge>
+                    </div>
+                    <p className="mt-2 text-sm whitespace-pre-wrap">{note.note}</p>
+                    </div>
+                    <EditNoteDialog note={note}>
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                    </EditNoteDialog>
                 </div>
-                <EditNoteDialog note={note}>
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                </EditNoteDialog>
-              </div>
-            ))}
-          </div>
+                ))}
+            </div>
+          </ScrollArea>
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No call notes added yet.</p>
