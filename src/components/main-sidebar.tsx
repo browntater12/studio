@@ -39,16 +39,20 @@ function UserDisplay({ user }: { user: User | null }) {
         await signOut(auth);
         router.push('/login');
     }
+    
+    const handleSignIn = async () => {
+        if (!auth) return;
+        await signOut(auth); // Sign out the anonymous user first
+        router.push('/login');
+    }
 
     if (!user) return null;
 
     if (user.isAnonymous) {
         return (
-            <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link href="/login">
-                    <LogIn />
-                    <span>Sign In</span>
-                </Link>
+            <Button variant="ghost" className="w-full justify-start" onClick={handleSignIn}>
+                <LogIn />
+                <span>Sign In</span>
             </Button>
         )
     }
