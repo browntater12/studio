@@ -75,3 +75,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.gm-style-iw-tc .gm-style-iw-close-button {
+  filter: none !important;
+}
+
+.gm-style-iw-tc .gm-style-iw-close-button svg {
+  filter: invert(0) !important;
+}
