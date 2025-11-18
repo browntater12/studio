@@ -2,13 +2,13 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Trash2 } from 'lucide-react';
-import { type ShippingLocation } from '@/lib/types';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { Loader2, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { type ShippingLocation, type Account } from '@/lib/types';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, addDoc, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 
 import { shippingLocationSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,10 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Textarea } from '../ui/textarea';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '../ui/command';
+import { cn } from '@/lib/utils';
 
 function DeleteLocationButton({ locationId, onSuccess }: { locationId: string; onSuccess: () => void; }) {
     const { toast } = useToast();
@@ -116,6 +120,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(shippingLocationSchema),
@@ -127,6 +132,12 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
           address: '',
         },
   });
+
+  const accountsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'accounts-db'));
+  }, [firestore]);
+  const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
   
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
@@ -164,9 +175,120 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
     }
   };
 
+  const formType = useWatch({
+    control: form.control,
+    name: 'formType',
+  })
+
+  React.useEffect(() => {
+    if (formType === 'new') {
+        form.setValue('accountId', accountId);
+    }
+  }, [formType, accountId, form]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+        {!isEditMode && (
+             <FormField
+                control={form.control}
+                name="formType"
+                render={({ field }) => (
+                <FormItem className="space-y-3">
+                    <FormLabel>Location for...</FormLabel>
+                    <FormControl>
+                    <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                    >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                            <RadioGroupItem value="new" />
+                        </FormControl>
+                        <FormLabel className="font-normal">New Location</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                            <RadioGroupItem value="other" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Other Account</FormLabel>
+                        </FormItem>
+                    </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
+        
+        {(formType === 'other' || isEditMode) && (
+             <FormField
+                control={form.control}
+                name="accountId"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                    <FormLabel>Account</FormLabel>
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                        <PopoverTrigger asChild>
+                        <FormControl>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                    "w-full justify-between",
+                                    !field.value && "text-muted-foreground"
+                                )}
+                                disabled={accountsLoading}
+                            >
+                            {field.value
+                                ? accounts?.find(
+                                    (account) => account.id === field.value
+                                )?.name
+                                : "Select an account"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                            <CommandInput placeholder="Search accounts..." />
+                            <CommandList>
+                            <CommandEmpty>No accounts found.</CommandEmpty>
+                            <CommandGroup>
+                                {accounts?.map((account) => (
+                                <CommandItem
+                                    value={account.name}
+                                    key={account.id}
+                                    onSelect={() => {
+                                        form.setValue("accountId", account.id);
+                                        setPopoverOpen(false);
+                                    }}
+                                >
+                                    <Check
+                                    className={cn(
+                                        "mr-2 h-4 w-4",
+                                        account.id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                    />
+                                    {account.name}
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            </CommandList>
+                        </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+        )}
+
+
         <FormField
           control={form.control}
           name="name"
