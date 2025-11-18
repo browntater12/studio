@@ -5,6 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -22,7 +25,9 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 }
 
 /** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): Promise<void> {
+export async function initiateEmailSignIn(authInstance: Auth, email: string, password: string, rememberMe: boolean): Promise<void> {
+  const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+  await setPersistence(authInstance, persistence);
   // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   return signInWithEmailAndPassword(authInstance, email, password).then(() => {});
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.

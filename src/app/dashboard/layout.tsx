@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { MainSidebar } from '@/components/main-sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-react';
+import { Loader2, PanelLeft } from 'lucide-react';
+import { useUser } from '@/firebase';
 
 export default function DashboardLayout({
   children,
@@ -14,6 +16,31 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const isMobile = useIsMobile();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      if (pathname !== '/login') {
+        router.replace('/login');
+      }
+    }
+  }, [user, isUserLoading, router, pathname]);
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This will be briefly visible before the redirect happens.
+    // Or you can return a loading spinner here as well.
+    return null;
+  }
 
   if (isMobile) {
     return (
