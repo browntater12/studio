@@ -127,7 +127,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
     defaultValues: isEditMode
       ? { ...location }
       : {
-          accountId: '', // Default to empty, will be set by form logic
+          accountId: accountId, // Default to the current account for new locations
           name: '',
           address: '',
           formType: 'other',
@@ -150,7 +150,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         const locationData = {
           name: values.name,
           address: values.address,
-          accountId: values.accountId,
+          accountId: values.formType === 'new' ? accountId : values.accountId,
         }
 
         if (isEditMode && location) {
@@ -185,9 +185,8 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
     if (formType === 'new') {
         form.setValue('accountId', accountId);
     } else {
-        // If switching back to 'other', clear the accountId unless it's edit mode
         if (!isEditMode) {
-            form.setValue('accountId', '');
+            form.resetField('accountId');
         }
     }
   }, [formType, accountId, form, isEditMode]);
