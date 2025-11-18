@@ -115,13 +115,11 @@ function AccountMarker({ account }: { account: Account }) {
             {
               'bg-yellow-500': account.status === 'lead',
               'bg-purple-500': account.status === 'key-account',
-              'bg-primary text-primary-foreground': account.status === 'customer',
+              'bg-primary': account.status === 'customer',
             }
           )}
         >
-          <Building2 size={14} className={cn(
-            (account.status === 'lead' || account.status === 'key-account') ? 'text-white' : ''
-          )}/>
+          <Building2 size={14} className="text-white"/>
         </div>
       </AdvancedMarker>
       {infowindowOpen && (
