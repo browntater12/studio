@@ -57,7 +57,7 @@ function CurrentLocationMarker() {
                     anchor={marker}
                     onCloseClick={() => setInfowindowOpen(false)}
                 >
-                    <div className="p-1 font-semibold">Your Location</div>
+                    <div className="p-1 font-semibold text-black">Your Location</div>
                 </InfoWindow>
             )}
         </>
@@ -131,7 +131,7 @@ function AccountMarker({ account }: { account: Account }) {
           onCloseClick={() => setInfowindowOpen(false)}
         >
           <div className="p-2 space-y-2">
-            <h3 className="font-semibold">{account.name}</h3>
+            <h3 className="font-semibold text-black">{account.name}</h3>
             <p className="text-sm text-muted-foreground">{account.address}</p>
             <Button asChild size="sm" className="w-full">
                 <Link href={`/dashboard/account/${account.id}`}>View Account</Link>
