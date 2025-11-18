@@ -142,10 +142,10 @@ export const editAccountProductSchema = accountProductBaseSchema.extend({
 });
 
 export const shippingLocationSchema = z.object({
-    accountId: z.string(),
+    accountId: z.string().min(1, 'Please select an account.'),
     name: z.string().min(1, 'Location name is required.'),
     address: z.string().min(1, 'Address is required.'),
-    formType: z.enum(['new', 'other']).default('new').optional(),
+    formType: z.enum(['new', 'other']).default('other').optional(),
 });
 
 export const callNoteSchema = z.object({

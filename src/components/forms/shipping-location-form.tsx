@@ -127,9 +127,10 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
     defaultValues: isEditMode
       ? { ...location }
       : {
-          accountId,
+          accountId: '', // Default to empty, will be set by form logic
           name: '',
           address: '',
+          formType: 'other',
         },
   });
 
@@ -183,8 +184,13 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   React.useEffect(() => {
     if (formType === 'new') {
         form.setValue('accountId', accountId);
+    } else {
+        // If switching back to 'other', clear the accountId unless it's edit mode
+        if (!isEditMode) {
+            form.setValue('accountId', '');
+        }
     }
-  }, [formType, accountId, form]);
+  }, [formType, accountId, form, isEditMode]);
 
   return (
     <Form {...form}>
@@ -204,16 +210,16 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
                         className="flex space-x-4"
                     >
                         <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                            <RadioGroupItem value="new" />
-                        </FormControl>
-                        <FormLabel className="font-normal">New Location</FormLabel>
+                            <FormControl>
+                                <RadioGroupItem value="other" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Other Account</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                            <RadioGroupItem value="other" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Other Account</FormLabel>
+                            <FormControl>
+                                <RadioGroupItem value="new" />
+                            </FormControl>
+                            <FormLabel className="font-normal">New Location for this Account</FormLabel>
                         </FormItem>
                     </RadioGroup>
                     </FormControl>
