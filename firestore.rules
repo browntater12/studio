@@ -3,15 +3,15 @@
  *
  * Core Philosophy:
  * This ruleset prioritizes security by enforcing strict ownership and explicit access control.
- * All write operations require authentication.
+ * All read and write operations require authentication.
  *
  * Data Structure:
  * The database contains top-level collections for accounts, contacts, product notes, products, shipping locations, and call notes.
  * User profiles are stored under /users/{userId}.
  *
  * Key Security Decisions:
- * - Listing of call notes is publicly allowed for prototyping purposes, though a read should be reviewed to verify if this matches your final requirements.
- * - All write operations require authentication.
+ * - All data access (read and write) is restricted to authenticated users.
+ * - Public access to any collection is disallowed.
  * - Data validation is limited to relational integrity (ownership and IDs) during this prototyping phase.
  */
 rules_version = '2';
@@ -76,69 +76,37 @@ service cloud.firestore {
     /**
      * @description Rules for accounts.
      * @path /accounts-db/{accountId}
-     * @allow (create) - Authenticated user can create a new account.
-     * @deny (create) - Unauthenticated user cannot create a new account.
-     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete accounts.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to accounts.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /accounts-db/{accountId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     /**
      * @description Rules for contacts.
      * @path /contacts/{contactId}
-     * @allow (create) - Authenticated user can create a new contact.
-     * @deny (create) - Unauthenticated user cannot create a new contact.
-     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete contacts.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to contacts.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /contacts/{contactId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     /**
      * @description Rules for account product notes.
      * @path /account-products/{accountProductId}
-     * @allow (create) - Authenticated user can create a new account product note.
-     * @deny (create) - Unauthenticated user cannot create a new account product note.
-     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete account product notes.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to account product notes.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /account-products/{accountProductId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     /**
      * @description Rules for products.
      * @path /products/{productId}
-     * @allow (create) - Authenticated user can create a new product.
-     * @deny (create) - Unauthenticated user cannot create a new product.
-     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete products.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to products.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /products/{productId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     /**
@@ -147,45 +115,25 @@ service cloud.firestore {
      * @allow (get, list, create, update, delete) - Authenticated users have full access.
      */
     match /{path=**}/individual-products/{subProductId} {
-        allow get: if isSignedIn();
-        allow list: if isSignedIn();
-        allow create: if isSignedIn();
-        allow update: if isSignedIn();
-        allow delete: if isSignedIn();
+        allow read, write: if isSignedIn();
     }
 
     /**
      * @description Rules for shipping locations.
      * @path /shipping-locations/{locationId}
-     * @allow (create) - Authenticated user can create a new shipping location.
-     * @deny (create) - Unauthenticated user cannot create a new shipping location.
-     * @allow (get, list, update, delete) - Authenticated user can read, update, and delete shipping locations.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to shipping locations.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /shipping-locations/{locationId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     /**
      * @description Rules for call notes.
      * @path /call-notes/{callNoteId}
-     * @allow (create) - Authenticated user can create a new call note.
-     * @deny (create) - Unauthenticated user cannot create a new call note.
-     * @allow (get, update, delete) - Authenticated user can read, update, and delete call notes.
-     * @deny (update, delete) - Updating/deleting a non-existent document is disallowed.
-     * @principle Authenticated users have full access to call notes.
+     * @allow (create, get, list, update, delete) - Authenticated users have full access.
      */
     match /call-notes/{callNoteId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
   }
 }

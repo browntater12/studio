@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 import { useAuth, useUser } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
@@ -41,8 +40,8 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'admin@example.com',
+      password: 'password',
       rememberMe: true,
     },
   });
@@ -158,12 +157,6 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm">
-            <p>
-              Don&apos;t have an account?&nbsp;
-              <Link href="/signup" className="text-primary hover:underline">Sign Up</Link>
-            </p>
-        </CardFooter>
       </Card>
     </div>
   );
