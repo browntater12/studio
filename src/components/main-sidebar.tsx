@@ -25,7 +25,6 @@ import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarMenuSkeleton } from './ui/sidebar';
-import { DbStatus } from './db-status';
 import { User } from 'firebase/auth';
 import { signOut } from '@/firebase/non-blocking-login';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -205,7 +204,6 @@ export function MainSidebar() {
 
       <SidebarFooter>
         <UserDisplay user={user} />
-        <DbStatus />
         <ThemeToggle />
       </SidebarFooter>
     </Wrapper>
