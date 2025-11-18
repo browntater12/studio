@@ -91,6 +91,14 @@ function AccountMarker({ account }: { account: Account }) {
     });
   }, [account.address]);
 
+  const handleGetDirections = () => {
+    if (account.address) {
+      const encodedAddress = encodeURIComponent(account.address);
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+      window.open(url, '_blank');
+    }
+  }
+
   if (!position) return null;
 
   return (
@@ -127,6 +135,9 @@ function AccountMarker({ account }: { account: Account }) {
             <p className="text-sm text-muted-foreground">{account.address}</p>
             <Button asChild size="sm" className="w-full">
                 <Link href={`/dashboard/account/${account.id}`}>View Account</Link>
+            </Button>
+            <Button variant="secondary" size="sm" className="w-full" onClick={handleGetDirections}>
+                Get Directions
             </Button>
           </div>
         </InfoWindow>
