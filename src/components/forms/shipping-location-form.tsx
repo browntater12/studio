@@ -127,7 +127,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
     defaultValues: isEditMode
       ? { ...location }
       : {
-          accountId: accountId, // Default to the current account for new locations
+          accountId: '', // Set explicitly later
           name: '',
           address: '',
           formType: 'other',
@@ -146,11 +146,19 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         if (!firestore) {
             throw new Error("Firestore is not initialized");
         }
+        
+        const finalAccountId = values.formType === 'new' ? accountId : values.accountId;
+
+        if (!finalAccountId) {
+            form.setError('accountId', { type: 'manual', message: 'An account must be selected.'});
+            setIsSubmitting(false);
+            return;
+        }
 
         const locationData = {
           name: values.name,
           address: values.address,
-          accountId: values.formType === 'new' ? accountId : values.accountId,
+          accountId: finalAccountId,
         }
 
         if (isEditMode && location) {
