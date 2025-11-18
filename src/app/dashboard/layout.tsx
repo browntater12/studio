@@ -19,6 +19,7 @@ export default function DashboardLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileSheetOpen, setMobileSheetOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -47,7 +48,7 @@ export default function DashboardLayout({
       <SidebarProvider>
          <div className="flex flex-col h-screen">
           <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 shrink-0">
-             <Sheet>
+             <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
                 <SheetTrigger asChild>
                   <Button size="icon" variant="outline">
                     <PanelLeft className="h-5 w-5" />
@@ -55,7 +56,7 @@ export default function DashboardLayout({
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-72">
-                  <MainSidebar />
+                  <MainSidebar onNavigate={() => setMobileSheetOpen(false)} />
                 </SheetContent>
               </Sheet>
               <h1 className="text-lg font-semibold flex-1">Territory map</h1>

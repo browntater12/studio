@@ -93,7 +93,7 @@ function MobileSidebar({ children }: { children: React.ReactNode }) {
 }
 
 
-export function MainSidebar() {
+export function MainSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const [search, setSearch] = React.useState('');
   const { user, isUserLoading } = useUser();
@@ -119,6 +119,12 @@ export function MainSidebar() {
 
   const Wrapper = isMobile ? MobileSidebar : DesktopSidebar;
 
+  const handleLinkClick = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  }
+
   return (
     <Wrapper>
       <SidebarHeader>
@@ -132,7 +138,7 @@ export function MainSidebar() {
 
       <SidebarContent>
         <div className="p-2 space-y-2">
-            <Link href="/dashboard/map">
+            <Link href="/dashboard/map" onClick={handleLinkClick}>
                 <Button
                     asChild
                     variant={pathname === '/dashboard/map' ? 'secondary' : 'ghost'}
@@ -144,7 +150,7 @@ export function MainSidebar() {
                     </div>
                 </Button>
             </Link>
-            <Link href="/dashboard/products">
+            <Link href="/dashboard/products" onClick={handleLinkClick}>
                 <Button
                     asChild
                     variant={pathname === '/dashboard/products' ? 'secondary' : 'ghost'}
@@ -169,7 +175,7 @@ export function MainSidebar() {
 
         <SidebarMenu>
           <Button asChild className="m-2">
-              <Link href="/dashboard/account/new">
+              <Link href="/dashboard/account/new" onClick={handleLinkClick}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Account
               </Link>
@@ -185,7 +191,7 @@ export function MainSidebar() {
 
           {!combinedIsLoading && filteredAccounts.map(account => (
             <SidebarMenuItem key={account.id}>
-              <Link href={`/dashboard/account/${account.id}`} passHref>
+              <Link href={`/dashboard/account/${account.id}`} passHref onClick={handleLinkClick}>
                 <SidebarMenuButton
                   isActive={pathname.includes(`/dashboard/account/${account.id}`)}
                   className="w-full justify-start"
