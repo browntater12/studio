@@ -295,28 +295,32 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         )}
 
 
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location Name</FormLabel>
-              <FormControl><Input placeholder="e.g., Main Warehouse" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Address</FormLabel>
-              <FormControl><Textarea placeholder="123 Industrial Dr, Suite 100&#10;Anytown, ST 12345" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {(formType === 'new' || isEditMode) && (
+            <>
+                <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Location Name</FormLabel>
+                    <FormControl><Input placeholder="e.g., Main Warehouse" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Full Address</FormLabel>
+                    <FormControl><Textarea placeholder="123 Industrial Dr, Suite 100&#10;Anytown, ST 12345" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </>
+        )}
         
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
