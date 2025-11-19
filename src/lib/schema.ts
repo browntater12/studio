@@ -46,6 +46,7 @@ const baseSubProductSchema = z.object({
     }),
     volume: z.number().optional(),
     volumeUnit: z.enum(['lb', 'gal', 'kg']).optional(),
+    weightPerGallon: z.number().optional(),
 });
 
 export const subProductSchema = baseSubProductSchema.refine(data => {

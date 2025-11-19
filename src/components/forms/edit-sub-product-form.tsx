@@ -116,6 +116,7 @@ export function EditSubProductForm({ subProduct, onSuccess }: EditSubProductForm
       ...subProduct,
       volume: subProduct.volume ?? undefined,
       volumeUnit: subProduct.volumeUnit ?? 'lb',
+      weightPerGallon: subProduct.weightPerGallon ?? undefined,
     },
   });
 
@@ -136,6 +137,7 @@ export function EditSubProductForm({ subProduct, onSuccess }: EditSubProductForm
         const dataToSave = {
             ...values,
             volume: values.volume ? Number(values.volume) : undefined,
+            weightPerGallon: values.weightPerGallon ? Number(values.weightPerGallon) : undefined,
         };
         await updateDoc(subProductRef, dataToSave);
 
@@ -246,6 +248,19 @@ export function EditSubProductForm({ subProduct, onSuccess }: EditSubProductForm
             )}
           />
         </div>
+        <FormField
+          control={form.control}
+          name="weightPerGallon"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Weight per Gallon (lbs)</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g., 8.34" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="description"

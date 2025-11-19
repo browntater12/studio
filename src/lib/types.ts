@@ -68,6 +68,7 @@ export type SubProduct = {
   size: string;
   volume?: number;
   volumeUnit?: 'lb' | 'gal' | 'kg';
+  weightPerGallon?: number;
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';

@@ -151,6 +151,10 @@
           "type": "string",
           "enum": ["lb", "gal", "kg"],
           "description": "The unit for the volume."
+        },
+        "weightPerGallon": {
+          "type": "number",
+          "description": "The weight per gallon of the sub-product in lbs."
         }
       },
       "required": ["baseProductId", "name", "productCode", "size"]
