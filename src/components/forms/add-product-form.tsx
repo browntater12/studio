@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { Loader2, Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -35,15 +35,33 @@ import {
 } from '@/components/ui/command';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from '@/components/ui/select';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { CreateProductForm } from './create-product-form';
+
+function CreateProductDialog() {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon">
+            <PlusCircle className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Add New Product</DialogTitle>
+        </DialogHeader>
+        <CreateProductForm onSuccess={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (
@@ -127,60 +145,63 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             name="productId"
             render={({ field }) => (
                 <FormItem className="flex flex-col">
-                <FormLabel>Product</FormLabel>
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                    <FormControl>
-                        <Button
-                        variant="outline"
-                        role="combobox"
-                        className={cn(
-                            "w-full justify-between",
-                            !field.value && "text-muted-foreground"
-                        )}
-                        >
-                        {field.value
-                            ? allProducts.find(
-                                (product) => product.id === field.value
-                            )?.name
-                            : "Select a product"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                        <CommandInput placeholder="Search products..." />
-                        <CommandList>
-                        <CommandEmpty>No product found.</CommandEmpty>
-                        <CommandGroup>
-                            {allProducts.map((product) => (
-                            <CommandItem
-                                value={product.name}
-                                key={product.id}
-                                onSelect={() => {
-                                form.setValue("productId", product.id);
-                                setPopoverOpen(false);
-                                }}
-                            >
-                                <Check
+                    <FormLabel>Product</FormLabel>
+                    <div className="flex gap-2">
+                        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                            <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                variant="outline"
+                                role="combobox"
                                 className={cn(
-                                    "mr-2 h-4 w-4",
-                                    product.id === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
+                                    "w-full justify-between",
+                                    !field.value && "text-muted-foreground"
                                 )}
-                                />
-                                <div>
-                                    <div>{product.name}</div>
-                                </div>
-                            </CommandItem>
-                            ))}
-                        </CommandGroup>
-                        </CommandList>
-                    </Command>
-                    </PopoverContent>
-                </Popover>
+                                >
+                                {field.value
+                                    ? allProducts.find(
+                                        (product) => product.id === field.value
+                                    )?.name
+                                    : "Select a product"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search products..." />
+                                <CommandList>
+                                <CommandEmpty>No product found.</CommandEmpty>
+                                <CommandGroup>
+                                    {allProducts.map((product) => (
+                                    <CommandItem
+                                        value={product.name}
+                                        key={product.id}
+                                        onSelect={() => {
+                                        form.setValue("productId", product.id);
+                                        setPopoverOpen(false);
+                                        }}
+                                    >
+                                        <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            product.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                        />
+                                        <div>
+                                            <div>{product.name}</div>
+                                        </div>
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                </CommandList>
+                            </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <CreateProductDialog />
+                    </div>
                 <FormMessage />
                 </FormItem>
             )}
