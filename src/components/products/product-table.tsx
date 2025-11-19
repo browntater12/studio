@@ -67,16 +67,14 @@ export function ProductTable({ products }: { products: Product[] }) {
   const filteredProducts = products.filter(
     p =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.productCode.toLowerCase().includes(search.toLowerCase())
+      (p.productCode && p.productCode.toLowerCase().includes(search.toLowerCase()))
   );
   
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, productId: string) => {
      if ((e.target as HTMLElement).closest('button')) {
         return;
     }
-    // For now, clicking a row does nothing, but this is where you'd navigate
-    // to a detailed product view if you had one.
-    // router.push(`/dashboard/products/${productId}`);
+    router.push(`/dashboard/products/${productId}`);
   };
 
   return (
