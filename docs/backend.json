@@ -94,19 +94,23 @@
     "Product": {
       "title": "Product",
       "type": "object",
-      "description": "Represents a product in the catalog.",
+      "description": "Represents a single product in the catalog.",
       "properties": {
-        "productNumber": {
-          "type": "string",
-          "description": "The product number."
-        },
         "name": {
           "type": "string",
           "description": "Name of the product."
         },
+        "productCode": {
+          "type": "string",
+          "description": "Product code for the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the product."
+        },
         "notes": {
           "type": "string",
-          "description": "Notes about the product."
+          "description": "Internal notes about the product."
         },
         "industries": {
           "type": "array",
@@ -114,38 +118,14 @@
             "type": "string"
           },
           "description": "Industries this product is associated with."
-        }
-      },
-      "required": ["name", "industries"]
-    },
-    "SubProduct": {
-      "title": "Sub Product",
-      "description": "Represents a specific product variation under a base product.",
-      "type": "object",
-      "properties": {
-        "baseProductId": {
-          "type": "string",
-          "description": "The ID of the base product this sub-product belongs to."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the sub-product."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the sub-product."
-        },
-        "productCode": {
-          "type": "string",
-          "description": "Product code for the sub-product."
         },
         "size": {
           "type": "string",
-          "description": "Size of the sub-product."
+          "description": "Size of the product."
         },
         "volume": {
           "type": "number",
-          "description": "The volume of the sub-product."
+          "description": "The volume of the product."
         },
         "volumeUnit": {
           "type": "string",
@@ -154,10 +134,10 @@
         },
         "weightPerGallon": {
           "type": "number",
-          "description": "The weight per gallon of the sub-product in lbs."
+          "description": "The weight per gallon of the product in lbs."
         }
       },
-      "required": ["baseProductId", "name", "productCode", "size"]
+      "required": ["name", "productCode", "industries", "size"]
     },
     "AccountProductNote": {
       "title": "AccountProductNote",
@@ -171,10 +151,6 @@
         "productId": {
           "type": "string",
           "description": "Reference to Product. Not present for opportunities."
-        },
-        "subProductId": {
-            "type": "string",
-            "description": "Reference to a SubProduct. Links the account to a specific product variation."
         },
         "notes": {
           "type": "string",
@@ -321,12 +297,6 @@
         "$ref": "#/entities/Product"
       },
       "description": "Global collection for all available products."
-    },
-    "/products/{productId}/individual-products/{subProductId}": {
-      "schema": {
-        "$ref": "#/entities/SubProduct"
-      },
-      "description": "Collection of specific product variations under a base product."
     },
     "/shipping-locations/{locationId}": {
       "schema": {

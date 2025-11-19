@@ -7,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
 import { addProductToAccountSchema } from '@/lib/schema';
-import { type Product, type SubProduct } from '@/lib/types';
+import { type Product } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +23,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -72,7 +71,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     defaultValues: {
       accountId,
       productId: '',
-      subProductId: '',
       notes: '',
       priceType: 'spot',
       spotFrequency: undefined,
@@ -92,18 +90,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       competition: '',
     },
   });
-
-  const selectedProductId = useWatch({
-    control: form.control,
-    name: 'productId',
-  });
-
-  const subProductsQuery = useMemoFirebase(() => {
-    if (!firestore || !selectedProductId) return null;
-    return query(collection(firestore, 'products', selectedProductId, 'individual-products'));
-  }, [firestore, selectedProductId]);
-
-  const { data: subProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
 
   const onSubmit = async (values: z.infer<typeof addProductToAccountSchema>) => {
     if (!firestore) {
@@ -141,7 +127,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 if (value.type !== undefined) cleanPriceDetails.type = value.type;
                 if (value.price !== undefined && value.price !== null) cleanPriceDetails.price = Number(value.price);
                 
-                if (Object.keys(cleanPriceDetails).length === 2) {
+                if (Object.keys(cleanPriceDetails).length === 2 && cleanPriceDetails.price !== undefined) {
                   productData[key] = cleanPriceDetails;
                 }
             } else if (['spotQuantity', 'lastBidPrice', 'winningBidPrice'].includes(key)) {
@@ -186,11 +172,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     control: form.control,
     name: 'isOpportunity',
   });
-
-  React.useEffect(() => {
-    // Reset subProductId when productId changes
-    form.resetField('subProductId');
-  }, [selectedProductId, form]);
 
   return (
     <Form {...form}>
@@ -359,38 +340,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </FormItem>
             )}
             />
-
-            {selectedProductId && (
-                <FormField
-                    control={form.control}
-                    name="subProductId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Product Code</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name} disabled={subProductsLoading || !subProducts || subProducts.length === 0}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder={subProductsLoading ? "Loading..." : "Select specific product"} />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {subProducts?.map(sp => (
-                                    <SelectItem key={sp.id} value={sp.id}>
-                                        {sp.name} ({sp.productCode})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                             {subProducts?.length === 0 && !subProductsLoading && (
-                                <FormDescription>
-                                    No specific products found for this base product.
-                                </FormDescription>
-                            )}
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            )}
             
             <FormField
             control={form.control}

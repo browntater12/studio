@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
-import { doc, collection, query, where, collectionGroup } from 'firebase/firestore';
-import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote, type SubProduct } from '@/lib/types';
+import { doc, collection, query, where } from 'firebase/firestore';
+import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
@@ -38,13 +38,6 @@ function AccountDetails() {
   }, [firestore]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
-  const subProductsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collectionGroup(firestore, 'individual-products');
-  }, [firestore]);
-  const { data: allSubProducts, isLoading: subProductsLoading } = useCollection<SubProduct>(subProductsQuery);
-
-
   const productNotesQuery = useMemoFirebase(() => {
     if (!firestore || !accountId) return null;
     return query(collection(firestore, 'account-products'), where('accountId', '==', accountId));
@@ -64,7 +57,7 @@ function AccountDetails() {
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
 
 
-  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading || subProductsLoading;
+  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading;
 
   if (isLoading && !account) {
     return (
@@ -105,7 +98,6 @@ function AccountDetails() {
             accountId={accountId}
             accountProducts={accountProducts || []}
             allProducts={allProducts || []}
-            allSubProducts={allSubProducts || []}
           />}
         </div>
         <div className="lg:col-span-1 space-y-8">

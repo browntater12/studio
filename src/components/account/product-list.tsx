@@ -6,14 +6,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PlusCircle, Package, Edit, Loader2, DollarSign } from 'lucide-react';
-import { type AccountProduct, type Product, type SubProduct } from '@/lib/types';
+import { type AccountProduct, type Product } from '@/lib/types';
 import { updateProductNote } from '@/app/actions';
 import { editProductNoteSchema } from '@/lib/schema';
 import { format } from 'date-fns';
 
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -98,18 +97,13 @@ export function ProductList({
   accountId,
   accountProducts,
   allProducts,
-  allSubProducts,
 }: {
   accountId: string;
   accountProducts: AccountProduct[];
   allProducts: Product[];
-  allSubProducts: SubProduct[];
 }) {
     const getProductDetails = (productId: string) => {
         return allProducts.find(p => p.id === productId);
-    }
-    const getSubProductDetails = (subProductId: string) => {
-        return allSubProducts.find(sp => sp.id === subProductId);
     }
 
   return (
@@ -160,7 +154,6 @@ export function ProductList({
                 }
 
                 const product = getProductDetails(ap.productId!);
-                const subProduct = ap.subProductId ? getSubProductDetails(ap.subProductId) : null;
                 const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
                 const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
                 const isQuote = ap.priceType === 'spot' && ap.priceDetails?.type === 'quote';
@@ -171,8 +164,7 @@ export function ProductList({
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
-                            {subProduct && <Badge variant="outline">{subProduct.name}</Badge>}
-                            {subProduct && <Badge variant="secondary">{subProduct.productCode}</Badge>}
+                            {product && <Badge variant="secondary">{product.productCode}</Badge>}
                             {ap.priceType && <Badge variant="outline" className="capitalize">{ap.priceType}</Badge>}
                             {isQuote && <Badge variant="warning" className="capitalize">Quote</Badge>}
                         </div>

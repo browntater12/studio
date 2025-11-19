@@ -18,30 +18,14 @@ export const addAccountSchema = z.object({
     path: ['accountNumber'],
 });
 
-export const createProductSchema = z.object({
-    name: z.string().min(1, 'Name is required.'),
-    productNumber: z.string().optional(),
-    notes: z.string().optional(),
-    industries: z.array(z.string()).refine(value => value.length > 0, {
-        message: "You must select at least one industry.",
-    }),
-});
-
-export const editProductSchema = z.object({
-    id: z.string(),
-    name: z.string().min(1, 'Name is required.'),
-    productNumber: z.string().optional(),
-    notes: z.string().optional(),
-    industries: z.array(z.string()).refine(value => value.length > 0, {
-        message: "You must select at least one industry.",
-    }),
-});
-
-const baseSubProductSchema = z.object({
-    baseProductId: z.string(),
+const baseProductSchema = z.object({
     name: z.string().min(1, 'Product name is required.'),
     description: z.string().optional(),
     productCode: z.string().min(1, 'Product code is required.'),
+    notes: z.string().optional(),
+    industries: z.array(z.string()).refine(value => value.length > 0, {
+        message: "You must select at least one industry.",
+    }),
     size: z.enum(['bags', 'pails', 'drums', 'totes', 'bulk'], {
         required_error: "You need to select a product size.",
     }),
@@ -50,7 +34,7 @@ const baseSubProductSchema = z.object({
     weightPerGallon: z.number().optional(),
 });
 
-export const subProductSchema = baseSubProductSchema.refine(data => {
+export const createProductSchema = baseProductSchema.refine(data => {
     // If volume is provided, volumeUnit must also be provided.
     if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
       return false;
@@ -61,18 +45,9 @@ export const subProductSchema = baseSubProductSchema.refine(data => {
     path: ['volumeUnit'],
   });
 
-export const editSubProductSchema = baseSubProductSchema.extend({
+export const editProductSchema = baseProductSchema.extend({
     id: z.string(),
-}).refine(data => {
-    // If volume is provided, volumeUnit must also be provided.
-    if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Unit is required when volume is provided.",
-    path: ['volumeUnit'],
-  });
+});
 
 
 export const contactSchema = z.object({
@@ -89,7 +64,6 @@ export const contactSchema = z.object({
 const accountProductBaseSchema = z.object({
     accountId: z.string(),
     productId: z.string().optional(),
-    subProductId: z.string().optional(),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     spotFrequency: z.enum(['monthly', 'quarterly', 'annually']).optional(),
@@ -115,9 +89,9 @@ const accountProductBaseSchema = z.object({
 // Refined schema for adding a product
 export const addProductToAccountSchema = accountProductBaseSchema.refine(data => {
     if (data.isOpportunity) {
-        return data.opportunityName && data.opportunityName.length > 0;
+        return !!data.opportunityName;
     }
-    return data.productId && data.productId.length > 0;
+    return !!data.productId;
 }, {
     message: 'A product must be selected or an opportunity name must be provided.',
     path: ['productId'], // Point error to productId if it's not an opportunity

@@ -20,7 +20,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +38,13 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Textarea } from '../ui/textarea';
 import { MultiSelect } from '../ui/multi-select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from '@/components/ui/select';
 
 const industryOptions = [
     { value: 'Adhesives', label: 'Adhesives' },
@@ -68,7 +74,7 @@ function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSub
   return (
     <Button type="submit" disabled={isSubmitting} className="flex-1">
       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {isEditMode ? 'Save Changes' : 'Create Base Product'}
+      {isEditMode ? 'Save Changes' : 'Create Product'}
     </Button>
   );
 }
@@ -151,11 +157,17 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
     defaultValues: isEditMode
-      ? { ...product, id: product.id }
+      ? { ...product }
       : {
           name: '',
+          productCode: '',
+          description: '',
           notes: '',
           industries: [],
+          size: undefined,
+          volume: undefined,
+          volumeUnit: 'lb',
+          weightPerGallon: undefined,
         },
   });
   
@@ -168,15 +180,20 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
     }
 
     try {
-      const productsCollection = collection(firestore, 'products');
-      
+        const dataToSave = {
+            ...values,
+            volume: values.volume ? Number(values.volume) : undefined,
+            weightPerGallon: values.weightPerGallon ? Number(values.weightPerGallon) : undefined,
+          }
+
       if (isEditMode) {
           const productRef = doc(firestore, 'products', product.id!);
-          const { id, ...updateData } = values as z.infer<typeof editProductSchema>;
+          const { id, ...updateData } = dataToSave as z.infer<typeof editProductSchema>;
           await updateDoc(productRef, updateData);
           toast({ title: "Success!", description: "Product updated successfully." });
       } else {
-          await addDoc(productsCollection, values);
+          const productsCollection = collection(firestore, 'products');
+          await addDoc(productsCollection, dataToSave);
           toast({ title: "Product Created", description: "The new product has been added to the catalog." });
       }
       onSuccess();
@@ -209,11 +226,111 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
           )}
         />
         <FormField
+          control={form.control}
+          name="productCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product Code</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., SA-93-55G" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="size"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Size</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a size" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="bags">Bags</SelectItem>
+                  <SelectItem value="pails">Pails</SelectItem>
+                  <SelectItem value="drums">Drums</SelectItem>
+                  <SelectItem value="totes">Totes</SelectItem>
+                  <SelectItem value="bulk">Bulk</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-3 gap-4">
+            <FormField
+            control={form.control}
+            name="volume"
+            render={({ field }) => (
+                <FormItem className="col-span-2">
+                <FormLabel>Volume</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="e.g., 55" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="volumeUnit"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Unit</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    <SelectItem value="gal">gal</SelectItem>
+                    <SelectItem value="lb">lb</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+        <FormField
+          control={form.control}
+          name="weightPerGallon"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Weight per Gallon (lbs)</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g., 8.34" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="Public-facing description of the product." {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+        <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>Internal Notes</FormLabel>
                     <FormControl>
                         <Textarea placeholder="Internal notes about this product..." {...field} value={field.value || ''} />
                     </FormControl>

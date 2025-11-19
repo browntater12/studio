@@ -33,12 +33,12 @@ function CreateProductDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Create Base Product
+          Create Product
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Base Product</DialogTitle>
+          <DialogTitle>Create New Product</DialogTitle>
         </DialogHeader>
         <CreateProductForm onSuccess={() => setOpen(false)} />
       </DialogContent>
@@ -51,7 +51,7 @@ function EditProductDialog({ product, children, onEditClick }: { product: Produc
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild onClick={onEditClick}>{children}</DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Edit Product</DialogTitle>
                 </DialogHeader>
@@ -67,11 +67,17 @@ export function ProductTable({ products }: { products: Product[] }) {
 
   const filteredProducts = products.filter(
     p =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.productCode.toLowerCase().includes(search.toLowerCase())
   );
   
-  const handleRowClick = (productId: string) => {
-    router.push(`/dashboard/products/${productId}`);
+  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, productId: string) => {
+     if ((e.target as HTMLElement).closest('button')) {
+        return;
+    }
+    // For now, clicking a row does nothing, but this is where you'd navigate
+    // to a detailed product view if you had one.
+    // router.push(`/dashboard/products/${productId}`);
   };
 
   return (
@@ -81,7 +87,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                 <div className="relative w-full max-w-sm">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Filter products..."
+                    placeholder="Filter by name or code..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="pl-8"
@@ -95,32 +101,34 @@ export function ProductTable({ products }: { products: Product[] }) {
                 <TableHeader>
                 <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Product Code</TableHead>
+                    <TableHead>Size</TableHead>
                     <TableHead>Industries</TableHead>
-                    <TableHead>Notes</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {filteredProducts.map(product => (
-                    <TableRow key={product.id} onClick={() => handleRowClick(product.id)} className="cursor-pointer">
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                        {(product.industries || []).map(industry => (
-                            <Badge key={industry} variant="secondary">
-                            {industry}
-                            </Badge>
-                        ))}
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-xs truncate">{product.notes}</TableCell>
-                    <TableCell>
-                        <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                        </EditProductDialog>
-                    </TableCell>
+                    <TableRow key={product.id} onClick={(e) => handleRowClick(e, product.id)} className="cursor-pointer">
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.productCode}</TableCell>
+                        <TableCell className="capitalize">{product.size}</TableCell>
+                        <TableCell>
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                            {(product.industries || []).map(industry => (
+                                <Badge key={industry} variant="secondary">
+                                {industry}
+                                </Badge>
+                            ))}
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </EditProductDialog>
+                        </TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

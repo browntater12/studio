@@ -16,7 +16,6 @@ export type AccountProduct = {
   id?: string;
   accountId: string;
   productId?: string;
-  subProductId?: string;
   notes: string;
   priceType?: 'spot' | 'bid';
   spotFrequency?: 'monthly' | 'quarterly' | 'annually';
@@ -53,18 +52,11 @@ export type Account = {
 
 export type Product = {
   id: string;
-  productNumber?: string;
   name: string;
+  productCode: string;
+  description?: string;
   notes?: string;
   industries: string[];
-};
-
-export type SubProduct = {
-  id: string;
-  baseProductId: string;
-  name: string;
-  description?: string;
-  productCode: string;
   size: string;
   volume?: number;
   volumeUnit?: 'lb' | 'gal' | 'kg';

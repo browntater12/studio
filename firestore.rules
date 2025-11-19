@@ -110,15 +110,6 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for individual products (sub-products). This allows collection group queries.
-     * @path /{path=**}/individual-products/{subProductId}
-     * @allow (get, list, create, update, delete) - Authenticated users have full access.
-     */
-    match /{path=**}/individual-products/{subProductId} {
-        allow read, write: if isSignedIn();
-    }
-
-    /**
      * @description Rules for shipping locations.
      * @path /shipping-locations/{locationId}
      * @allow (create, get, list, update, delete) - Authenticated users have full access.
