@@ -23,6 +23,7 @@ export type AccountProduct = {
   bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
   lastBidPrice?: number;
   winningBidPrice?: number;
+  priceUnit?: 'lb' | 'gal' | 'kg';
   priceDetails?: {
     type: 'quote' | 'last_paid';
     price?: number;

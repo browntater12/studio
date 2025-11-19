@@ -194,6 +194,10 @@
         "winningBidPrice": {
             "type": "number"
         },
+        "priceUnit": {
+          "type": "string",
+          "enum": ["lb", "gal", "kg"]
+        },
         "priceDetails": {
           "type": "object",
           "properties": {

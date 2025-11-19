@@ -75,7 +75,7 @@ function EditProductDetailsDialog({ accountProduct, allProducts, children }: { a
     );
 }
 
-const PriceDisplay = ({ label, price, date, isQuote }: { label: string, price: number | undefined, date?: Date, isQuote?: boolean }) => {
+const PriceDisplay = ({ label, price, unit, date, isQuote }: { label: string, price: number | undefined, unit?: string, date?: Date, isQuote?: boolean }) => {
     if (price === undefined) return null;
 
     const formattedDate = isQuote && date ? format(date, 'MM/dd/yyyy') : null;
@@ -85,6 +85,7 @@ const PriceDisplay = ({ label, price, date, isQuote }: { label: string, price: n
         <DollarSign className="h-4 w-4 text-muted-foreground" />
         <div>
           <span className="font-semibold">{`$${price}`}</span>
+          {unit && <span className="text-muted-foreground">{` / ${unit}`}</span>}
           <span className="text-muted-foreground ml-1">
             ({label}{formattedDate && `, ${formattedDate}`})
           </span>
@@ -178,11 +179,12 @@ export function ProductList({
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
                         
                         {hasWinningBid ? (
-                            <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} />
+                            <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} unit={ap.priceUnit} />
                         ) : hasSpotPrice && (
                             <PriceDisplay 
                                 label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} 
                                 price={ap.priceDetails!.price}
+                                unit={ap.priceUnit}
                                 date={createdAtDate}
                                 isQuote={ap.priceDetails!.type === 'quote'}
                             />

@@ -94,6 +94,7 @@ const accountProductBaseSchema = z.object({
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
     lastBidPrice: z.number().optional(),
     winningBidPrice: z.number().optional(),
+    priceUnit: z.enum(['lb', 'gal', 'kg']).optional(),
     priceDetails: z.object({
         type: z.enum(['quote', 'last_paid']),
         price: z.number().optional(),

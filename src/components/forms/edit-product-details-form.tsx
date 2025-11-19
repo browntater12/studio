@@ -143,6 +143,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
       spotFrequency: accountProduct.spotFrequency ?? undefined,
       lastBidPrice: accountProduct.lastBidPrice ?? undefined,
       winningBidPrice: accountProduct.winningBidPrice ?? undefined,
+      priceUnit: accountProduct.priceUnit ?? undefined,
       priceDetails: {
         type: accountProduct.priceDetails?.type || 'quote',
         price: accountProduct.priceDetails?.price ?? undefined,
@@ -351,7 +352,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                 />
             )}
             {priceTypeValue === 'bid' && (
-                <>
+                <div className="space-y-4">
                 <FormField
                     control={form.control}
                     name="bidFrequency"
@@ -374,20 +375,44 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                     </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="lastBidPrice"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Last Bid Price</FormLabel>
-                            <FormControl>
-                                <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                      control={form.control}
+                      name="lastBidPrice"
+                      render={({ field }) => (
+                          <FormItem className="col-span-2">
+                              <FormLabel>Last Bid Price</FormLabel>
+                              <FormControl>
+                                  <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                              </FormControl>
+                              <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                   <FormField
+                      control={form.control}
+                      name="priceUnit"
+                      render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Unit</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                                  <FormControl>
+                                      <SelectTrigger>
+                                          <SelectValue placeholder="Unit" />
+                                      </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                      <SelectItem value="lb">lb</SelectItem>
+                                      <SelectItem value="gal">gal</SelectItem>
+                                      <SelectItem value="kg">kg</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                </div>
+                 <FormField
                     control={form.control}
                     name="winningBidPrice"
                     render={({ field }) => (
@@ -400,7 +425,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                         </FormItem>
                     )}
                 />
-                </>
+                </div>
             )}
         </div>
         
@@ -437,19 +462,43 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                     </FormItem>
                 )}
                 />
-                <FormField
-                control={form.control}
-                name="priceDetails.price"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                    control={form.control}
+                    name="priceDetails.price"
+                    render={({ field }) => (
+                        <FormItem className="col-span-2">
+                        <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="priceUnit"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Unit</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Unit" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="lb">lb</SelectItem>
+                                        <SelectItem value="gal">gal</SelectItem>
+                                        <SelectItem value="kg">kg</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
             </div>
         )}
         
