@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 export const addAccountSchema = z.object({
@@ -20,6 +19,7 @@ export const addAccountSchema = z.object({
 
 export const createProductSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
+    productNumber: z.string().optional(),
     notes: z.string().optional(),
     industries: z.array(z.string()).refine(value => value.length > 0, {
         message: "You must select at least one industry.",
@@ -29,6 +29,7 @@ export const createProductSchema = z.object({
 export const editProductSchema = z.object({
     id: z.string(),
     name: z.string().min(1, 'Name is required.'),
+    productNumber: z.string().optional(),
     notes: z.string().optional(),
     industries: z.array(z.string()).refine(value => value.length > 0, {
         message: "You must select at least one industry.",
@@ -89,6 +90,7 @@ const accountProductBaseSchema = z.object({
     subProductId: z.string().optional(),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
+    spotFrequency: z.enum(['daily', 'monthly', 'annually']).optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
     lastBidPrice: z.number().optional(),
     winningBidPrice: z.number().optional(),
@@ -140,6 +142,16 @@ export const editAccountProductSchema = accountProductBaseSchema.extend({
     message: 'Bid frequency is required when price type is Bid.',
     path: ['bidFrequency'],
 });
+
+export const deleteAccountProductSchema = z.object({
+    id: z.string(),
+});
+
+export const editProductNoteSchema = z.object({
+    noteId: z.string(),
+    notes: z.string(),
+});
+
 
 export const shippingLocationSchema = z.object({
     accountId: z.string().min(1, 'Please select an account.'),

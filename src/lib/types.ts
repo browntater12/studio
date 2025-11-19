@@ -1,4 +1,3 @@
-
 import { DocumentReference, Timestamp } from 'firebase/firestore';
 
 export type Contact = {
@@ -20,6 +19,7 @@ export type AccountProduct = {
   subProductId?: string;
   notes: string;
   priceType?: 'spot' | 'bid';
+  spotFrequency?: 'daily' | 'monthly' | 'annually';
   bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
   lastBidPrice?: number;
   winningBidPrice?: number;
@@ -50,6 +50,7 @@ export type Account = {
 
 export type Product = {
   id: string;
+  productNumber?: string;
   name: string;
   notes?: string;
   industries: string[];

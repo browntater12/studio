@@ -82,6 +82,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       subProductId: '',
       notes: '',
       priceType: 'spot',
+      spotFrequency: undefined,
       bidFrequency: undefined,
       lastBidPrice: undefined,
       winningBidPrice: undefined,
@@ -444,6 +445,30 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     </FormItem>
                 )}
                 />
+                {priceTypeValue === 'spot' && (
+                    <FormField
+                        control={form.control}
+                        name="spotFrequency"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Spot Frequency</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="daily">Daily</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="annually">Annually</SelectItem>
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                )}
                 {priceTypeValue === 'bid' && (
                     <>
                     <FormField

@@ -140,6 +140,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     defaultValues: {
       ...accountProduct,
       id: accountProduct.id!,
+      spotFrequency: accountProduct.spotFrequency ?? undefined,
       lastBidPrice: accountProduct.lastBidPrice ?? undefined,
       winningBidPrice: accountProduct.winningBidPrice ?? undefined,
       priceDetails: {
@@ -186,6 +187,10 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
             updateData.bidFrequency = null; // or delete updateData.bidFrequency;
             updateData.lastBidPrice = null;
             updateData.winningBidPrice = null;
+        }
+
+        if (updateData.priceType !== 'spot') {
+            updateData.spotFrequency = null;
         }
 
 
@@ -335,6 +340,30 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                 </FormItem>
               )}
             />
+            {priceTypeValue === 'spot' && (
+                <FormField
+                    control={form.control}
+                    name="spotFrequency"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Spot Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="annually">Annually</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            )}
             {priceTypeValue === 'bid' && (
                 <>
                 <FormField

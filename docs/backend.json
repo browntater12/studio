@@ -96,6 +96,10 @@
       "type": "object",
       "description": "Represents a product in the catalog.",
       "properties": {
+        "productNumber": {
+          "type": "string",
+          "description": "The product number."
+        },
         "name": {
           "type": "string",
           "description": "Name of the product."
@@ -175,6 +179,10 @@
         "priceType": {
             "type": "string",
             "enum": ["spot", "bid"]
+        },
+        "spotFrequency": {
+          "type": "string",
+          "enum": ["daily", "monthly", "annually"]
         },
         "bidFrequency": {
             "type": "string",
