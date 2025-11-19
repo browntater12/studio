@@ -21,23 +21,13 @@ export const addAccountSchema = z.object({
 const baseProductSchema = z.object({
     name: z.string().min(1, 'Product name is required.'),
     productCode: z.string().min(1, 'Product code is required.'),
-    size: z.enum(['bags', 'pails', 'drums', 'totes', 'bulk'], {
-        required_error: "You need to select a product size.",
-    }),
-    volume: z.number().optional(),
-    volumeUnit: z.enum(['lb', 'gal', 'kg']).optional(),
+    attribute1: z.string().optional(),
+    attribute2: z.string().optional(),
+    attribute3: z.string().optional(),
+    attribute4: z.string().optional(),
 });
 
-export const createProductSchema = baseProductSchema.refine(data => {
-    // If volume is provided, volumeUnit must also be provided.
-    if (data.volume !== undefined && data.volume !== null && !data.volumeUnit) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Unit is required when volume is provided.",
-    path: ['volumeUnit'],
-  });
+export const createProductSchema = baseProductSchema;
 
 export const editProductSchema = baseProductSchema.extend({
     id: z.string(),

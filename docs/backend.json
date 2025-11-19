@@ -89,7 +89,7 @@
             "description": "URL for the contact's avatar."
         }
       },
-      "required": ["accountNumber", "name", "phone", "email", "location", "isMainContact"]
+      "required": ["accountNumber", "name"]
     },
     "Product": {
       "title": "Product",
@@ -104,21 +104,24 @@
           "type": "string",
           "description": "Product code for the product."
         },
-        "size": {
+        "attribute1": {
           "type": "string",
-          "description": "Size of the product."
+          "description": "Custom attribute 1 for the product."
         },
-        "volume": {
-          "type": "number",
-          "description": "The volume of the product."
-        },
-        "volumeUnit": {
+        "attribute2": {
           "type": "string",
-          "enum": ["lb", "gal", "kg"],
-          "description": "The unit for the volume."
+          "description": "Custom attribute 2 for the product."
+        },
+        "attribute3": {
+          "type": "string",
+          "description": "Custom attribute 3 for the product."
+        },
+        "attribute4": {
+          "type": "string",
+          "description": "Custom attribute 4 for the product."
         }
       },
-      "required": ["name", "productCode", "size"]
+      "required": ["name", "productCode"]
     },
     "AccountProductNote": {
       "title": "AccountProductNote",

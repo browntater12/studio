@@ -101,7 +101,6 @@ export function ProductTable({ products }: { products: Product[] }) {
                 <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Product Code</TableHead>
-                    <TableHead>Size</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
@@ -110,7 +109,6 @@ export function ProductTable({ products }: { products: Product[] }) {
                     <TableRow key={product.id} onClick={(e) => handleRowClick(e, product.id)} className="cursor-pointer">
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.productCode}</TableCell>
-                        <TableCell className="capitalize">{product.size}</TableCell>
                         <TableCell>
                             <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">

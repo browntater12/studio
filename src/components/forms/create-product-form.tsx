@@ -135,9 +135,10 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
       : {
           name: '',
           productCode: '',
-          size: undefined,
-          volume: undefined,
-          volumeUnit: 'lb',
+          attribute1: '',
+          attribute2: '',
+          attribute3: '',
+          attribute4: '',
         },
   });
   
@@ -152,7 +153,6 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
     try {
         const dataToSave = {
             ...values,
-            volume: values.volume ? Number(values.volume) : undefined,
           }
 
       if (isEditMode) {
@@ -207,65 +207,60 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="size"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Size</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a size" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="bags">Bags</SelectItem>
-                  <SelectItem value="pails">Pails</SelectItem>
-                  <SelectItem value="drums">Drums</SelectItem>
-                  <SelectItem value="totes">Totes</SelectItem>
-                  <SelectItem value="bulk">Bulk</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
             <FormField
-            control={form.control}
-            name="volume"
-            render={({ field }) => (
-                <FormItem className="col-span-2">
-                <FormLabel>Volume</FormLabel>
-                <FormControl>
-                    <Input type="number" placeholder="e.g., 55" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
+                control={form.control}
+                name="attribute1"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Attribute 1</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g. Color" {...field} value={field.value || ''}/>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
             />
             <FormField
-            control={form.control}
-            name="volumeUnit"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Unit</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                control={form.control}
+                name="attribute2"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Attribute 2</FormLabel>
                     <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
+                        <Input placeholder="e.g. Size" {...field} value={field.value || ''}/>
                     </FormControl>
-                    <SelectContent>
-                    <SelectItem value="gal">gal</SelectItem>
-                    <SelectItem value="lb">lb</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="attribute3"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Attribute 3</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g. Weight" {...field} value={field.value || ''}/>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="attribute4"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Attribute 4</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g. Unit" {...field} value={field.value || ''}/>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
             />
         </div>
         

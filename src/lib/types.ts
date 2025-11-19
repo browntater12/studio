@@ -5,9 +5,9 @@ export type Contact = {
   accountNumber: string; // Added to link to account
   name: string;
   position?: string;
-  phone: string;
-  email: string;
-  location: string;
+  phone?: string;
+  email?: string;
+  location?: string;
   isMainContact: boolean;
   avatarUrl?: string;
 };
@@ -38,9 +38,10 @@ export type Product = {
   id: string;
   name: string;
   productCode: string;
-  size: string;
-  volume?: number;
-  volumeUnit?: 'lb' | 'gal' | 'kg';
+  attribute1?: string;
+  attribute2?: string;
+  attribute3?: string;
+  attribute4?: string;
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
