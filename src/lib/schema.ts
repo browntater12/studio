@@ -20,7 +20,7 @@ export const addAccountSchema = z.object({
 
 const baseProductSchema = z.object({
     name: z.string().min(1, 'Product name is required.'),
-    productCode: z.string().min(1, 'Product code is required.'),
+    productCode: z.string().optional(),
     attribute1: z.string().optional(),
     attribute2: z.string().optional(),
     attribute3: z.string().optional(),
@@ -38,7 +38,7 @@ export const contactSchema = z.object({
     accountNumber: z.string(),
     name: z.string().min(1, 'Name is required.'),
     position: z.string().optional(),
-    email: z.string().email('Invalid email address.').optional(),
+    email: z.string().email('Invalid email address.').optional().or(z.literal('')),
     phone: z.string().optional(),
     location: z.string().optional(),
     isMainContact: z.boolean().default(false),
