@@ -17,13 +17,6 @@ export type AccountProduct = {
   accountId: string;
   productId: string;
   notes: string;
-  spotFrequency?: 'monthly' | 'quarterly' | 'annually';
-  spotQuantity?: number;
-  priceUnit?: 'lb' | 'gal' | 'kg';
-  priceDetails?: {
-    type: 'quote' | 'last_paid';
-    price?: number;
-  };
   createdAt?: Timestamp;
 };
 

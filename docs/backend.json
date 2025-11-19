@@ -136,29 +136,6 @@
         "notes": {
           "type": "string",
           "description": "Note about the product for the specific account."
-        },
-        "spotFrequency": {
-          "type": "string",
-          "enum": ["monthly", "quarterly", "annually"]
-        },
-        "spotQuantity": {
-          "type": "number"
-        },
-        "priceUnit": {
-          "type": "string",
-          "enum": ["lb", "gal", "kg"]
-        },
-        "priceDetails": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": ["quote", "last_paid"]
-            },
-            "price": {
-              "type": "number"
-            }
-          }
         }
       },
       "required": ["accountId", "productId"]

@@ -59,13 +59,6 @@ const accountProductBaseSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, "A product must be selected."),
     notes: z.string().optional(),
-    spotFrequency: z.enum(['monthly', 'quarterly', 'annually']).optional(),
-    spotQuantity: z.number().optional(),
-    priceUnit: z.enum(['lb', 'gal', 'kg']).optional(),
-    priceDetails: z.object({
-        type: z.enum(['quote', 'last_paid']),
-        price: z.number().optional(),
-    }).optional(),
     createdAt: z.any().optional(),
 });
 

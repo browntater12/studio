@@ -72,13 +72,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       accountId,
       productId: '',
       notes: '',
-      spotFrequency: undefined,
-      spotQuantity: undefined,
-      priceUnit: 'lb',
-      priceDetails: {
-        type: 'quote',
-        price: undefined,
-      },
     },
   });
 
@@ -97,27 +90,12 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     const productData: { [key: string]: any } = {
         createdAt: serverTimestamp(),
         accountId: values.accountId,
+        productId: values.productId,
     };
-
-    Object.entries(values).forEach(([key, value]) => {
-        if (value === undefined || value === null || value === '') {
-            return;
-        }
-
-        if (key === 'priceDetails' && typeof value === 'object') {
-            const cleanPriceDetails: { [key: string]: any } = {};
-            if (value.type !== undefined) cleanPriceDetails.type = value.type;
-            if (value.price !== undefined && value.price !== null) cleanPriceDetails.price = Number(value.price);
-            
-            if (Object.keys(cleanPriceDetails).length === 2 && cleanPriceDetails.price !== undefined) {
-              productData[key] = cleanPriceDetails;
-            }
-        } else if (['spotQuantity'].includes(key)) {
-             productData[key] = Number(value);
-        } else {
-            productData[key] = value;
-        }
-    });
+    
+    if (values.notes) {
+      productData.notes = values.notes;
+    }
     
     const accountProductsCollection = collection(firestore, 'account-products');
     
@@ -139,12 +117,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             setIsSubmitting(false);
         });
   }
-
-
-  const priceDetailsType = useWatch({
-    control: form.control,
-    name: 'priceDetails.type',
-  });
 
   return (
     <Form {...form}>
@@ -213,114 +185,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </FormItem>
             )}
             />
-            
-            <div className="space-y-4 rounded-md border p-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="spotFrequency"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Frequency</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="quarterly">Quarterly</SelectItem>
-                                <SelectItem value="annually">Annually</SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="spotQuantity"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>QTY</FormLabel>
-                                <FormControl>
-                                    <Input type="number" placeholder="500" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <FormField
-                    control={form.control}
-                    name="priceDetails.type"
-                    render={({ field }) => (
-                        <FormItem className="space-y-3">
-                        <FormLabel>Price Type</FormLabel>
-                        <FormControl>
-                            <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex space-x-4"
-                            name={field.name}
-                            >
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                <RadioGroupItem value="quote" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Quote</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                <RadioGroupItem value="last_paid" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Last Price Paid</FormLabel>
-                            </FormItem>
-                            </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="priceDetails.price"
-                    render={({ field }) => (
-                        <FormItem className="col-span-2">
-                        <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
-                        <FormControl>
-                            <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="priceUnit"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Unit</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Unit" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="lb">lb</SelectItem>
-                                        <SelectItem value="gal">gal</SelectItem>
-                                        <SelectItem value="kg">kg</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            </div>
 
         <FormField
             control={form.control}

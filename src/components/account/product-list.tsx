@@ -76,25 +76,6 @@ function EditProductDetailsDialog({ accountProduct, allProducts, children }: { a
     );
 }
 
-const PriceDisplay = ({ label, price, unit, date, isQuote }: { label: string, price: number | undefined, unit?: string, date?: Date, isQuote?: boolean }) => {
-    if (price === undefined) return null;
-
-    const formattedDate = isQuote && date ? format(date, 'MM/dd/yyyy') : null;
-
-    return (
-      <div className="flex items-center gap-2 text-sm mt-2">
-        <DollarSign className="h-4 w-4 text-muted-foreground" />
-        <div>
-          <span className="font-semibold">{`$${price}`}</span>
-          {unit && <span className="text-muted-foreground">{` / ${unit}`}</span>}
-          <span className="text-muted-foreground ml-1">
-            ({label}{formattedDate && `, ${formattedDate}`})
-          </span>
-        </div>
-      </div>
-    );
-  };
-
 export function ProductList({
   accountId,
   accountProducts,
@@ -127,9 +108,6 @@ export function ProductList({
           <div className="space-y-4">
             {accountProducts.map(ap => {
                 const product = getProductDetails(ap.productId!);
-                const hasSpotPrice = ap.priceDetails?.price !== undefined;
-                const isQuote = ap.priceDetails?.type === 'quote';
-                
                 const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
                 return (
@@ -137,19 +115,8 @@ export function ProductList({
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
                             {product && <Badge variant="secondary">{product.productCode}</Badge>}
-                            {isQuote && <Badge variant="warning" className="capitalize">Quote</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
-                        
-                        {hasSpotPrice && (
-                            <PriceDisplay 
-                                label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} 
-                                price={ap.priceDetails!.price}
-                                unit={ap.priceUnit}
-                                date={createdAtDate}
-                                isQuote={ap.priceDetails!.type === 'quote'}
-                            />
-                        )}
 
                         <EditProductDetailsDialog accountProduct={ap} allProducts={allProducts}>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">

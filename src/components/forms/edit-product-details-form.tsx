@@ -141,13 +141,6 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     defaultValues: {
       ...accountProduct,
       id: accountProduct.id!,
-      spotFrequency: accountProduct.spotFrequency ?? undefined,
-      spotQuantity: accountProduct.spotQuantity ?? undefined,
-      priceUnit: accountProduct.priceUnit ?? 'lb',
-      priceDetails: {
-        type: accountProduct.priceDetails?.type || 'quote',
-        price: accountProduct.priceDetails?.price ?? undefined,
-      }
     },
   });
 
@@ -163,25 +156,10 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     try {
         const { id, ...data } = values;
 
-        // Clean the data object to remove undefined values before sending to Firestore
         const updateData: { [key: string]: any } = {};
         Object.entries(data).forEach(([key, value]) => {
-             if (value !== undefined) {
-                if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
-                    const cleanPriceDetails: { [key: string]: any } = {};
-                    Object.entries(value).forEach(([pdKey, pdValue]) => {
-                        if (pdValue !== undefined) {
-                            cleanPriceDetails[pdKey] = pdValue;
-                        }
-                    });
-                    if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
-                      updateData[key] = cleanPriceDetails;
-                    }
-                } else if (key === 'spotQuantity' && value) {
-                    updateData[key] = Number(value);
-                } else if (value !== '' && value !== null) {
-                    updateData[key] = value;
-                }
+             if (value !== undefined && value !== null && value !== '') {
+                updateData[key] = value;
             }
         });
         
@@ -206,11 +184,6 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
         setIsSubmitting(false);
     }
   };
-
-  const priceDetailsType = useWatch({
-    control: form.control,
-    name: 'priceDetails.type',
-  });
 
   return (
     <Form {...form}>
@@ -279,114 +252,6 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
             </FormItem>
           )}
         />
-        
-        <div className="space-y-4 rounded-md border p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="spotFrequency"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Frequency</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="annually">Annually</SelectItem>
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="spotQuantity"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>QTY</FormLabel>
-                            <FormControl>
-                                <Input type="number" placeholder="500" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-            <FormField
-                control={form.control}
-                name="priceDetails.type"
-                render={({ field }) => (
-                    <FormItem className="space-y-3">
-                    <FormLabel>Price Type</FormLabel>
-                    <FormControl>
-                        <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                        {...field}
-                        >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                            <RadioGroupItem value="quote" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Quote</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                            <RadioGroupItem value="last_paid" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Last Price Paid</FormLabel>
-                        </FormItem>
-                        </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="priceDetails.price"
-                    render={({ field }) => (
-                        <FormItem className="col-span-2">
-                        <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
-                        <FormControl>
-                            <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="priceUnit"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Unit</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Unit" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="lb">lb</SelectItem>
-                                        <SelectItem value="gal">gal</SelectItem>
-                                        <SelectItem value="kg">kg</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-        </div>
         
         <FormField
           control={form.control}
