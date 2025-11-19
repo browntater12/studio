@@ -223,7 +223,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <FormControl><Input type="email" placeholder="john.doe@example.com" {...field} /></FormControl>
+              <FormControl><Input type="email" placeholder="john.doe@example.com" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -234,7 +234,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
-              <FormControl><Input placeholder="123-456-7890" {...field} /></FormControl>
+              <FormControl><Input placeholder="123-456-7890" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -245,7 +245,7 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <FormControl><Input placeholder="City, State" {...field} /></FormControl>
+              <FormControl><Input placeholder="City, State" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
