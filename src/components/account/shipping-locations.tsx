@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { PlusCircle, Truck, Edit, MapPin } from 'lucide-react';
+import { PlusCircle, Truck, Edit, MapPin, Building2 } from 'lucide-react';
 import { type ShippingLocation } from '@/lib/types';
 import {
   Card,
@@ -67,8 +67,8 @@ export function ShippingLocations({
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
-            <Truck className="h-5 w-5" />
-            <span>Locations</span>
+            <Building2 className="h-5 w-5" />
+            <span>Related Accounts</span>
           </CardTitle>
         </div>
         <AddLocationDialog accountId={accountId} />
