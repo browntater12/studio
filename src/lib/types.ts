@@ -17,12 +17,8 @@ export type AccountProduct = {
   accountId: string;
   productId: string;
   notes: string;
-  priceType?: 'spot' | 'bid';
   spotFrequency?: 'monthly' | 'quarterly' | 'annually';
   spotQuantity?: number;
-  bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
-  lastBidPrice?: number;
-  winningBidPrice?: number;
   priceUnit?: 'lb' | 'gal' | 'kg';
   priceDetails?: {
     type: 'quote' | 'last_paid';
@@ -76,5 +72,3 @@ export type ProductUsage = {
   accountId: string;
   notes: string;
 };
-
-    

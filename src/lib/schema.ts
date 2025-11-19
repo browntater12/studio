@@ -59,12 +59,8 @@ const accountProductBaseSchema = z.object({
     accountId: z.string(),
     productId: z.string().min(1, "A product must be selected."),
     notes: z.string().optional(),
-    priceType: z.enum(['spot', 'bid']).optional(),
     spotFrequency: z.enum(['monthly', 'quarterly', 'annually']).optional(),
     spotQuantity: z.number().optional(),
-    bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
-    lastBidPrice: z.number().optional(),
-    winningBidPrice: z.number().optional(),
     priceUnit: z.enum(['lb', 'gal', 'kg']).optional(),
     priceDetails: z.object({
         type: z.enum(['quote', 'last_paid']),
@@ -75,28 +71,12 @@ const accountProductBaseSchema = z.object({
 
 
 // Refined schema for adding a product
-export const addProductToAccountSchema = accountProductBaseSchema.refine(data => {
-    if (data.priceType === 'bid' && !data.bidFrequency) {
-        return false;
-    }
-    return true;
-}, {
-    message: 'Bid frequency is required when price type is Bid for an existing product.',
-    path: ['bidFrequency'],
-});
+export const addProductToAccountSchema = accountProductBaseSchema;
 
 
 // Extend the base schema first, then apply the same refinement
 export const editAccountProductSchema = accountProductBaseSchema.extend({
     id: z.string(),
-}).refine(data => {
-    if (data.priceType === 'bid' && !data.bidFrequency) {
-        return false;
-    }
-    return true;
-}, {
-    message: 'Bid frequency is required when price type is Bid.',
-    path: ['bidFrequency'],
 });
 
 export const deleteAccountProductSchema = z.object({
@@ -126,5 +106,3 @@ export const callNoteSchema = z.object({
     }),
     note: z.string().min(1, "Note content cannot be empty."),
 });
-
-    

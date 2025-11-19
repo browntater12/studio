@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -126,9 +127,8 @@ export function ProductList({
           <div className="space-y-4">
             {accountProducts.map(ap => {
                 const product = getProductDetails(ap.productId!);
-                const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
-                const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
-                const isQuote = ap.priceType === 'spot' && ap.priceDetails?.type === 'quote';
+                const hasSpotPrice = ap.priceDetails?.price !== undefined;
+                const isQuote = ap.priceDetails?.type === 'quote';
                 
                 const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
@@ -137,14 +137,11 @@ export function ProductList({
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
                             {product && <Badge variant="secondary">{product.productCode}</Badge>}
-                            {ap.priceType && <Badge variant="outline" className="capitalize">{ap.priceType}</Badge>}
                             {isQuote && <Badge variant="warning" className="capitalize">Quote</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
                         
-                        {hasWinningBid ? (
-                            <PriceDisplay label="Winning Bid" price={ap.winningBidPrice} unit={ap.priceUnit} />
-                        ) : hasSpotPrice && (
+                        {hasSpotPrice && (
                             <PriceDisplay 
                                 label={ap.priceDetails!.type === 'quote' ? 'Quote' : 'Last Paid'} 
                                 price={ap.priceDetails!.price}
@@ -172,5 +169,3 @@ export function ProductList({
     </Card>
   );
 }
-
-    

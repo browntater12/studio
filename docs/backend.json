@@ -137,26 +137,12 @@
           "type": "string",
           "description": "Note about the product for the specific account."
         },
-        "priceType": {
-            "type": "string",
-            "enum": ["spot", "bid"]
-        },
         "spotFrequency": {
           "type": "string",
           "enum": ["monthly", "quarterly", "annually"]
         },
         "spotQuantity": {
           "type": "number"
-        },
-        "bidFrequency": {
-            "type": "string",
-            "enum": ["monthly", "quarterly", "yearly"]
-        },
-        "lastBidPrice": {
-            "type": "number"
-        },
-        "winningBidPrice": {
-            "type": "number"
         },
         "priceUnit": {
           "type": "string",
@@ -272,5 +258,3 @@
     }
   }
 }
-
-    
