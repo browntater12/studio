@@ -11,9 +11,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapFilters } from '@/components/map/map-filters';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { PublicSidebar } from '@/components/public-sidebar';
 
 // Hardcoded data for the public landing page
-const staticAccounts: Account[] = [
+export const staticAccounts: Account[] = [
   {
     id: '1',
     name: 'Garratt Callahan HQ',
@@ -106,47 +108,51 @@ export default function MainPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <Logo className="h-8 w-8 text-primary" />
-          <h1 className="text-lg font-semibold">Territory Manager</h1>
-        </div>
-        <Button asChild>
-          <Link href="/login">Sign In</Link>
-        </Button>
-      </header>
-      <main className="flex-1 flex flex-col">
-        <MapFilters 
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            industryFilter={industryFilter}
-            setIndustryFilter={setIndustryFilter}
-            industries={industries}
-            isLoading={isLoading}
-        />
-        <div className="flex-1 min-h-0">
-            {isLoading ? (
-                 <div className="flex h-full w-full items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-            ) : error ? (
-                <div className="flex h-full w-full items-center justify-center p-4">
-                    <Alert variant="destructive">
-                    <Terminal className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>
-                        Failed to load account data. Please check your connection and permissions.
-                    </AlertDescription>
-                    </Alert>
-                </div>
-            ) : (
-                <APIProvider apiKey={apiKey}>
-                    <AccountsMap accounts={filteredAccounts || []} />
-                </APIProvider>
-            )}
-        </div>
-      </main>
-    </div>
+    <SidebarProvider>
+      <PublicSidebar accounts={staticAccounts} />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+            <SidebarTrigger />
+            <div className="flex items-center gap-2 flex-1">
+              <Logo className="h-8 w-8 text-primary" />
+              <h1 className="text-lg font-semibold">Territory Manager</h1>
+            </div>
+            <Button asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+        </header>
+        <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
+          <MapFilters 
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              industryFilter={industryFilter}
+              setIndustryFilter={setIndustryFilter}
+              industries={industries}
+              isLoading={isLoading}
+          />
+          <div className="flex-1 min-h-0">
+              {isLoading ? (
+                  <div className="flex h-full w-full items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+              ) : error ? (
+                  <div className="flex h-full w-full items-center justify-center p-4">
+                      <Alert variant="destructive">
+                      <Terminal className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>
+                          Failed to load account data. Please check your connection and permissions.
+                      </AlertDescription>
+                      </Alert>
+                  </div>
+              ) : (
+                  <APIProvider apiKey={apiKey}>
+                      <AccountsMap accounts={filteredAccounts || []} />
+                  </APIProvider>
+              )}
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
