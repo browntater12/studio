@@ -169,6 +169,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
       ...accountProduct,
       id: accountProduct.id!,
       type: accountProduct.type || 'purchasing',
+      price: accountProduct.price ?? undefined,
     },
   });
 
@@ -190,6 +191,10 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                 updateData[key] = value;
             }
         });
+
+        if (values.price) {
+            updateData.price = Number(values.price);
+        }
         
         const accountProductRef = doc(firestore, 'account-products', id);
         await updateDoc(accountProductRef, updateData);
@@ -316,6 +321,20 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
         />
 
         <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 2.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+
+        <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (
@@ -337,5 +356,3 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     </Form>
   );
 }
-
-    

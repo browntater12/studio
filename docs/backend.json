@@ -141,6 +141,10 @@
           "type": "string",
           "enum": ["purchasing", "opportunity"],
           "description": "The type of product association."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product for this account."
         }
       },
       "required": ["accountId", "productId", "type"]
@@ -240,5 +244,3 @@
     }
   }
 }
-
-    

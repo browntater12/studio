@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/dialog';
 import { CreateProductForm } from './create-product-form';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Input } from '../ui/input';
 
 function CreateProductDialog() {
   const [open, setOpen] = React.useState(false);
@@ -92,6 +93,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       productId: '',
       notes: '',
       type: 'purchasing',
+      price: undefined,
     },
   });
 
@@ -116,6 +118,9 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     
     if (values.notes) {
       productData.notes = values.notes;
+    }
+    if (values.price) {
+        productData.price = Number(values.price);
     }
     
     const accountProductsCollection = collection(firestore, 'account-products');
@@ -243,6 +248,20 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
         <FormField
             control={form.control}
+            name="price"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 2.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+
+        <FormField
+            control={form.control}
             name="notes"
             render={({ field }) => (
                 <FormItem>
@@ -259,5 +278,3 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     </Form>
   );
 }
-
-    

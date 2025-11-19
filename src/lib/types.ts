@@ -19,6 +19,7 @@ export type AccountProduct = {
   notes: string;
   createdAt?: Timestamp;
   type: 'purchasing' | 'opportunity';
+  price?: number;
 };
 
 export type Account = {
@@ -66,5 +67,3 @@ export type ProductUsage = {
   accountId: string;
   notes: string;
 };
-
-    

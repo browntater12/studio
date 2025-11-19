@@ -116,6 +116,7 @@ export function ProductList({
                             <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
                             {product && <Badge variant="secondary">{product.productCode}</Badge>}
                             {ap.type && <Badge variant={ap.type === 'opportunity' ? 'warning' : 'default'} className="capitalize">{ap.type}</Badge>}
+                            {ap.price && <Badge variant="success"><DollarSign className="h-3 w-3 mr-1" />{ap.price.toFixed(2)}</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
 
@@ -137,5 +138,3 @@ export function ProductList({
     </Card>
   );
 }
-
-    
