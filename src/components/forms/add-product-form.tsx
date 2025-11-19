@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -387,39 +388,40 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 />
             )}
             
-            <div className="space-y-4 rounded-md border p-4">
-                <FormField
-                control={form.control}
-                name="priceType"
-                render={({ field }) => (
-                    <FormItem className="space-y-3">
-                    <FormLabel>Pricing Type</FormLabel>
-                    <FormControl>
-                        <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                        name={field.name}
-                        >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                            <RadioGroupItem value="spot" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Spot Price</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                            <RadioGroupItem value="bid" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Bid Price</FormLabel>
-                        </FormItem>
-                        </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
+            <FormField
+            control={form.control}
+            name="priceType"
+            render={({ field }) => (
+                <FormItem className="space-y-3">
+                <FormLabel>Pricing Type</FormLabel>
+                <FormControl>
+                    <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex space-x-4"
+                    name={field.name}
+                    >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                        <RadioGroupItem value="spot" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Spot Price</FormLabel>
                     </FormItem>
-                )}
-                />
-                {priceTypeValue === 'spot' && (
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                        <RadioGroupItem value="bid" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Bid Price</FormLabel>
+                    </FormItem>
+                    </RadioGroup>
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+
+            {priceTypeValue === 'spot' && (
+                <div className="space-y-4 rounded-md border p-4">
                     <FormField
                         control={form.control}
                         name="spotFrequency"
@@ -442,9 +444,79 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         </FormItem>
                         )}
                     />
-                )}
-                {priceTypeValue === 'bid' && (
-                    <div className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="priceDetails.type"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Price Type</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                                name={field.name}
+                                >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="quote" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Quote</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="last_paid" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Last Price Paid</FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                      control={form.control}
+                      name="priceDetails.price"
+                      render={({ field }) => (
+                          <FormItem className="col-span-2">
+                          <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
+                          <FormControl>
+                              <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                      <FormField
+                          control={form.control}
+                          name="priceUnit"
+                          render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Unit</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                                      <FormControl>
+                                          <SelectTrigger>
+                                              <SelectValue placeholder="Unit" />
+                                          </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          <SelectItem value="lb">lb</SelectItem>
+                                          <SelectItem value="gal">gal</SelectItem>
+                                          <SelectItem value="kg">kg</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                    </div>
+                </div>
+            )}
+            
+            {priceTypeValue === 'bid' && (
+                <div className="space-y-4 rounded-md border p-4">
                     <FormField
                         control={form.control}
                         name="bidFrequency"
@@ -475,7 +547,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                               <FormItem className="col-span-2">
                                   <FormLabel>Last Bid Price</FormLabel>
                                   <FormControl>
-                                      <Input type="number" placeholder="e.g. 12.00" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                      <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                   </FormControl>
                                   <FormMessage />
                               </FormItem>
@@ -511,86 +583,12 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             <FormItem>
                                 <FormLabel>Winning Bid Price</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="e.g. 11.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                    <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    </div>
-                )}
-            </div>
-            
-            {priceTypeValue !== 'bid' && (
-                <div className="space-y-4 rounded-md border p-4">
-                    <FormField
-                    control={form.control}
-                    name="priceDetails.type"
-                    render={({ field }) => (
-                        <FormItem className="space-y-3">
-                        <FormLabel>Price Type</FormLabel>
-                        <FormControl>
-                            <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex space-x-4"
-                            name={field.name}
-                            >
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                <RadioGroupItem value="quote" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Quote</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                <RadioGroupItem value="last_paid" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Last Price Paid</FormLabel>
-                            </FormItem>
-                            </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <div className="grid grid-cols-3 gap-4">
-                      <FormField
-                      control={form.control}
-                      name="priceDetails.price"
-                      render={({ field }) => (
-                          <FormItem className="col-span-2">
-                          <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
-                          <FormControl>
-                              <Input type="number" placeholder="e.g. 15.50" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                          </FormControl>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                      <FormField
-                          control={form.control}
-                          name="priceUnit"
-                          render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>Unit</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                                      <FormControl>
-                                          <SelectTrigger>
-                                              <SelectValue placeholder="Unit" />
-                                          </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                          <SelectItem value="lb">lb</SelectItem>
-                                          <SelectItem value="gal">gal</SelectItem>
-                                          <SelectItem value="kg">kg</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                              </FormItem>
-                          )}
-                      />
-                    </div>
                 </div>
             )}
 
