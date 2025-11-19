@@ -218,12 +218,14 @@
             "type": "string",
             "description": "Name of the product opportunity."
         },
-        "estimatedVolumes": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "enum": ["pails", "drums", "totes", "bulk"]
-            }
+        "estimatedVolumeType": {
+          "type": "string",
+          "enum": ["bags", "drums", "totes", "bulk"],
+          "description": "The type of volume for the opportunity."
+        },
+        "estimatedQuantity": {
+          "type": "number",
+          "description": "The estimated quantity for the opportunity."
         },
         "competition": {
             "type": "string",

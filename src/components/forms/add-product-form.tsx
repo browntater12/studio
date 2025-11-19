@@ -12,7 +12,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
 import { addProductToAccountSchema } from '@/lib/schema';
-import { type Product, type ProductVolume, type SubProduct } from '@/lib/types';
+import { type Product, type SubProduct } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -44,14 +44,6 @@ import {
     SelectTrigger,
     SelectValue,
   } from '@/components/ui/select';
-import { Checkbox } from '../ui/checkbox';
-
-const VOLUMES: { id: ProductVolume; label: string }[] = [
-    { id: 'pails', label: 'Pails' },
-    { id: 'drums', label: 'Drums' },
-    { id: 'totes', label: 'Totes' },
-    { id: 'bulk', label: 'Bulk' },
-  ];
 
 function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (
@@ -93,7 +85,8 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       },
       isOpportunity: false,
       opportunityName: '',
-      estimatedVolumes: [],
+      estimatedVolumeType: undefined,
+      estimatedQuantity: undefined,
       competition: '',
     },
   });
@@ -130,12 +123,13 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
     if (values.isOpportunity) {
         productData.opportunityName = values.opportunityName;
-        productData.estimatedVolumes = values.estimatedVolumes;
         productData.competition = values.competition;
         productData.notes = values.notes;
+        if (values.estimatedVolumeType) productData.estimatedVolumeType = values.estimatedVolumeType;
+        if (values.estimatedQuantity) productData.estimatedQuantity = Number(values.estimatedQuantity);
     } else {
         Object.entries(values).forEach(([key, value]) => {
-            if (value !== undefined && !['isOpportunity', 'opportunityName', 'estimatedVolumes', 'competition'].includes(key)) {
+            if (value !== undefined && !['isOpportunity', 'opportunityName', 'estimatedVolumeType', 'estimatedQuantity', 'competition'].includes(key)) {
                 if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
                     const cleanPriceDetails: { [key: string]: any } = {};
                     Object.entries(value).forEach(([pdKey, pdValue]) => {
@@ -243,51 +237,44 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="estimatedVolumes"
-                    render={() => (
-                        <FormItem>
-                        <div className="mb-4">
-                            <FormLabel className="text-base">Estimated Volumes</FormLabel>
-                        </div>
-                        {VOLUMES.map(item => (
-                            <FormField
-                            key={item.id}
-                            control={form.control}
-                            name="estimatedVolumes"
-                            render={({ field }) => {
-                                return (
-                                <FormItem
-                                    key={item.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                >
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="estimatedVolumeType"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Volume</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
-                                    <Checkbox
-                                        checked={field.value?.includes(item.id)}
-                                        onCheckedChange={checked => {
-                                        return checked
-                                            ? field.onChange([...(field.value || []), item.id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                value => value !== item.id
-                                                )
-                                            );
-                                        }}
-                                    />
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
                                     </FormControl>
-                                    <FormLabel className="font-normal capitalize">
-                                    {item.label}
-                                    </FormLabel>
-                                </FormItem>
-                                );
-                            }}
-                            />
-                        ))}
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                                    <SelectContent>
+                                        <SelectItem value="bags">Bags</SelectItem>
+                                        <SelectItem value="drums">Drums</SelectItem>
+                                        <SelectItem value="totes">Totes</SelectItem>
+                                        <SelectItem value="bulk">Bulk</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="estimatedQuantity"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Quantity</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                  <FormField
                     control={form.control}
                     name="competition"

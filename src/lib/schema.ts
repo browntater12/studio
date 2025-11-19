@@ -102,7 +102,8 @@ const accountProductBaseSchema = z.object({
     createdAt: z.any().optional(),
     // Fields for Product Opportunity
     opportunityName: z.string().optional(),
-    estimatedVolumes: z.array(z.string()).optional(),
+    estimatedVolumeType: z.enum(['bags', 'drums', 'totes', 'bulk']).optional(),
+    estimatedQuantity: z.number().optional(),
     competition: z.string().optional(),
     isOpportunity: z.boolean().default(false).optional(),
 });

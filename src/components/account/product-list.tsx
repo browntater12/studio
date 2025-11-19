@@ -138,10 +138,10 @@ export function ProductList({
                                 <Badge variant="key-account">New Opportunity</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
-                            {ap.estimatedVolumes && ap.estimatedVolumes.length > 0 && (
+                            {ap.estimatedVolumeType && (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     <span className="text-sm font-medium mr-2">Estimated Volume:</span>
-                                    {ap.estimatedVolumes.map(v => <Badge key={v} variant="secondary" className="capitalize">{v}</Badge>)}
+                                    <Badge variant="secondary" className="capitalize">{ap.estimatedQuantity} {ap.estimatedVolumeType}</Badge>
                                 </div>
                             )}
                             {ap.competition && (

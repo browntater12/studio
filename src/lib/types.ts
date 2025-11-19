@@ -33,7 +33,8 @@ export type AccountProduct = {
   // New fields for Product Opportunity
   isOpportunity?: boolean;
   opportunityName?: string;
-  estimatedVolumes?: ProductVolume[];
+  estimatedVolumeType?: 'bags' | 'drums' | 'totes' | 'bulk';
+  estimatedQuantity?: number;
   competition?: string;
 };
 
