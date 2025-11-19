@@ -122,23 +122,23 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 
-  const form = useForm<SchemaType>({
-    resolver: zodResolver(shippingLocationSchema),
-    defaultValues: isEditMode
-      ? { ...location }
-      : {
-          accountId: '', // Set explicitly later
-          name: '',
-          address: '',
-          formType: 'other',
-        },
-  });
-
   const accountsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'accounts-db'));
   }, [firestore]);
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
+
+  const form = useForm<SchemaType>({
+    resolver: zodResolver(shippingLocationSchema),
+    defaultValues: isEditMode
+      ? { ...location, accountId: location.accountId, formType: 'other' }
+      : {
+          accountId: accountId,
+          name: '',
+          address: '',
+          formType: 'new',
+        },
+  });
   
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
@@ -146,19 +146,11 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         if (!firestore) {
             throw new Error("Firestore is not initialized");
         }
-        
-        const finalAccountId = values.formType === 'new' ? accountId : values.accountId;
-
-        if (!finalAccountId) {
-            form.setError('accountId', { type: 'manual', message: 'An account must be selected.'});
-            setIsSubmitting(false);
-            return;
-        }
 
         const locationData = {
           name: values.name,
           address: values.address,
-          accountId: finalAccountId,
+          accountId: values.accountId,
         }
 
         if (isEditMode && location) {
@@ -168,7 +160,9 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         } else {
             const locationsCol = collection(firestore, 'shipping-locations');
             await addDoc(locationsCol, locationData);
-            toast({ title: 'Success!', description: 'Location added successfully.' });
+            const selectedAccount = accounts?.find(acc => acc.id === values.accountId);
+            const accountName = selectedAccount ? selectedAccount.name : 'the account';
+            toast({ title: 'Success!', description: `Location '${values.name}' added to ${accountName}.` });
         }
         
         onSuccess();
@@ -218,15 +212,15 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
                     >
                         <FormItem className="flex items-center space-x-2 space-y-0">
                             <FormControl>
-                                <RadioGroupItem value="other" />
+                                <RadioGroupItem value="new" />
                             </FormControl>
-                            <FormLabel className="font-normal">Other Account</FormLabel>
+                            <FormLabel className="font-normal">This Account</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
                             <FormControl>
-                                <RadioGroupItem value="new" />
+                                <RadioGroupItem value="other" />
                             </FormControl>
-                            <FormLabel className="font-normal">New Location</FormLabel>
+                            <FormLabel className="font-normal">Other Account</FormLabel>
                         </FormItem>
                     </RadioGroup>
                     </FormControl>
@@ -302,32 +296,28 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         )}
 
 
-        {(formType === 'new' || isEditMode) && (
-            <>
-                <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Location Name</FormLabel>
-                    <FormControl><Input placeholder="e.g., Main Warehouse" {...field} /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Full Address</FormLabel>
-                    <FormControl><Textarea placeholder="123 Industrial Dr, Suite 100&#10;Anytown, ST 12345" {...field} /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </>
-        )}
+        <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Location Name</FormLabel>
+                <FormControl><Input placeholder="e.g., Main Warehouse" {...field} /></FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
+        <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Full Address</FormLabel>
+                <FormControl><Textarea placeholder="123 Industrial Dr, Suite 100&#10;Anytown, ST 12345" {...field} /></FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
         
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
