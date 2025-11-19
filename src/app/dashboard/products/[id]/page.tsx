@@ -122,10 +122,10 @@ export default function ProductDetailsPage() {
                         </TableCell>
                         <TableCell>
                             {usage.price ? (
-                                <Badge variant="success" className="flex items-center w-fit">
-                                    <DollarSign className="h-3 w-3 mr-1" />
-                                    {usage.price.toFixed(2)}
-                                </Badge>
+                                <div className="flex items-center">
+                                    <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                                    <span>{usage.price.toFixed(2)}</span>
+                                </div>
                             ) : (
                                 <span className="text-muted-foreground">N/A</span>
                             )}
