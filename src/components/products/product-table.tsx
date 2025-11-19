@@ -33,12 +33,12 @@ function CreateProductDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Create Product
+          Add Product
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Product</DialogTitle>
+          <DialogTitle>Add New Product</DialogTitle>
         </DialogHeader>
         <CreateProductForm onSuccess={() => setOpen(false)} />
       </DialogContent>
