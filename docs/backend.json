@@ -14,8 +14,13 @@
           "type": "string",
           "format": "email",
           "description": "The user's email address."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this user belongs to."
         }
-      }
+      },
+      "required": ["companyId"]
     },
     "Account": {
       "title": "Account",
@@ -46,9 +51,13 @@
         "address": {
           "type": "string",
           "description": "Address for the account, required for leads."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this account belongs to."
         }
       },
-      "required": ["name", "status"]
+      "required": ["name", "status", "companyId"]
     },
     "Contact": {
       "title": "Contact",
@@ -87,9 +96,13 @@
         "avatarUrl": {
             "type": "string",
             "description": "URL for the contact's avatar."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this contact belongs to."
         }
       },
-      "required": ["accountNumber", "name"]
+      "required": ["accountNumber", "name", "companyId"]
     },
     "Product": {
       "title": "Product",
@@ -119,9 +132,13 @@
         "attribute4": {
           "type": "string",
           "description": "Custom attribute 4 for the product."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this product belongs to."
         }
       },
-      "required": ["name", "productCode"]
+      "required": ["name", "productCode", "companyId"]
     },
     "AccountProductNote": {
       "title": "AccountProductNote",
@@ -148,9 +165,13 @@
         "price": {
           "type": "number",
           "description": "The price of the product for this account."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this note belongs to."
         }
       },
-      "required": ["accountId", "productId", "type"]
+      "required": ["accountId", "productId", "type", "companyId"]
     },
     "ShippingLocation": {
       "title": "Location",
@@ -164,9 +185,13 @@
         "relatedAccountId": {
           "type": "string",
           "description": "The ID of the related account."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this location belongs to."
         }
       },
-      "required": ["originalAccountId", "relatedAccountId"]
+      "required": ["originalAccountId", "relatedAccountId", "companyId"]
     },
     "CallNote": {
       "title": "Call Note",
@@ -190,9 +215,13 @@
           "type": "string",
           "enum": ["note", "phone-call", "in-person", "initial-meeting"],
           "description": "The type of interaction."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "The ID of the company this note belongs to."
         }
       },
-      "required": ["accountId", "callDate", "note", "type"]
+      "required": ["accountId", "callDate", "note", "type", "companyId"]
     }
   },
   "auth": {
@@ -203,43 +232,43 @@
       "schema": {
         "$ref": "#/entities/UserProfile"
       },
-      "description": "Stores public-facing user profile information."
+      "description": "Stores public-facing user profile information, including their company ID."
     },
     "/accounts-db/{accountId}": {
       "schema": {
         "$ref": "#/entities/Account"
       },
-      "description": "Top-level collection for all sales accounts."
+      "description": "Top-level collection for all sales accounts, partitioned by companyId."
     },
     "/contacts/{contactId}": {
       "schema": {
         "$ref": "#/entities/Contact"
       },
-      "description": "Top-level collection for all contacts, linked to accounts by accountNumber."
+      "description": "Top-level collection for all contacts, partitioned by companyId."
     },
     "/account-products/{accountProductId}": {
       "schema": {
         "$ref": "#/entities/AccountProductNote"
       },
-      "description": "Top-level collection for product notes, linking an account to a product."
+      "description": "Links accounts to products, partitioned by companyId."
     },
     "/products/{productId}": {
       "schema": {
         "$ref": "#/entities/Product"
       },
-      "description": "Global collection for all available products."
+      "description": "Global collection for all available products, partitioned by companyId."
     },
     "/shipping-locations/{locationId}": {
       "schema": {
         "$ref": "#/entities/ShippingLocation"
       },
-      "description": "Stores shipping locations for accounts."
+      "description": "Stores shipping locations for accounts, partitioned by companyId."
     },
     "/call-notes/{callNoteId}": {
       "schema": {
         "$ref": "#/entities/CallNote"
       },
-      "description": "Stores call notes for accounts."
+      "description": "Stores call notes for accounts, partitioned by companyId."
     }
   }
 }

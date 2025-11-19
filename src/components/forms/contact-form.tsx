@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
-import { type Contact } from '@/lib/types';
-import { useFirestore } from '@/firebase';
+import { type Contact, type UserProfile } from '@/lib/types';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, writeBatch, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 
 import { contactSchema } from '@/lib/schema';
@@ -117,14 +118,21 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
   });
   type SchemaType = z.infer<typeof schema>;
   
+  const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
     defaultValues: isEditMode
-      ? { ...contact, isMainContact: contact.isMainContact || false, accountNumber: contact.accountNumber }
+      ? { ...contact, isMainContact: contact.isMainContact || false }
       : {
           accountNumber,
           name: '',
@@ -133,11 +141,25 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           email: '',
           isMainContact: false,
           location: '',
+          companyId: '',
         },
   });
   
+  React.useEffect(() => {
+    if (userProfile && !form.getValues('companyId')) {
+      form.setValue('companyId', userProfile.companyId);
+    }
+  }, [userProfile, form]);
+
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
+
+    if (!values.companyId) {
+        toast({ title: 'Error', description: 'Company ID is missing.', variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+    }
+
     try {
         if (!firestore) {
             throw new Error("Firestore is not initialized");
@@ -152,12 +174,13 @@ export function ContactForm({ accountNumber, contact, onSuccess }: ContactFormPr
           location: values.location,
           isMainContact: values.isMainContact,
           accountNumber: values.accountNumber,
+          companyId: values.companyId,
           avatarUrl: contact?.avatarUrl,
         }
 
         if (values.isMainContact) {
             const batch = writeBatch(firestore);
-            const q = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true));
+            const q = query(contactsCol, where('accountNumber', '==', values.accountNumber), where('isMainContact', '==', true), where('companyId', '==', values.companyId));
             const snapshot = await getDocs(q);
             snapshot.forEach(doc => {
                 if (!isEditMode || (isEditMode && contact?.id !== doc.id)) {

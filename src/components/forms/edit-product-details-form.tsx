@@ -194,6 +194,8 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
 
         if (values.price) {
             updateData.price = Number(values.price);
+        } else {
+            updateData.price = null; // Explicitly set to null if empty
         }
         
         const accountProductRef = doc(firestore, 'account-products', id);

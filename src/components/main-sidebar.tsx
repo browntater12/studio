@@ -5,10 +5,10 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlusCircle, Building, Search, Package, LogIn, LogOut, PanelLeft, Map } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from '@/firebase';
-import { collection, orderBy, query } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
+import { collection, orderBy, query, where, doc } from 'firebase/firestore';
 
-import { type Account } from '@/lib/types';
+import { type Account, type UserProfile } from '@/lib/types';
 import {
   Sidebar,
   SidebarHeader,
@@ -102,14 +102,24 @@ export function MainSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { state } = useSidebar();
 
 
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
   const accountsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore) return null;
-    return query(collection(firestore, 'accounts-db'), orderBy('name'));
-  }, [firestore, isUserLoading]);
+    if (isUserLoading || !firestore || !userProfile) return null;
+    return query(
+        collection(firestore, 'accounts-db'), 
+        where('companyId', '==', userProfile.companyId),
+        orderBy('name')
+    );
+  }, [firestore, isUserLoading, userProfile]);
 
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
 
-  const combinedIsLoading = accountsLoading || isUserLoading;
+  const combinedIsLoading = accountsLoading || isUserLoading || !userProfile;
 
 
   const filteredAccounts = accounts?.filter(acc => 

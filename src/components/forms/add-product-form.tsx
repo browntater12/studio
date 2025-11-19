@@ -7,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
 import { addProductToAccountSchema } from '@/lib/schema';
-import { type Product } from '@/lib/types';
+import { type Product, type UserProfile } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -84,7 +84,14 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
   const { toast } = useToast();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { user } = useUser();
   const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<z.infer<typeof addProductToAccountSchema>>({
     resolver: zodResolver(addProductToAccountSchema),
@@ -94,8 +101,15 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       notes: '',
       type: 'purchasing',
       price: undefined,
+      companyId: '',
     },
   });
+
+  React.useEffect(() => {
+    if (userProfile) {
+        form.setValue('companyId', userProfile.companyId);
+    }
+  }, [userProfile, form]);
 
   const onSubmit = async (values: z.infer<typeof addProductToAccountSchema>) => {
     if (!firestore) {
@@ -106,6 +120,10 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         });
         return;
     }
+    if (!values.companyId) {
+        toast({ title: 'Error', description: 'Company ID is missing.', variant: 'destructive' });
+        return;
+    }
 
     setIsSubmitting(true);
 
@@ -114,6 +132,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         accountId: values.accountId,
         productId: values.productId,
         type: values.type,
+        companyId: values.companyId,
     };
     
     if (values.notes) {

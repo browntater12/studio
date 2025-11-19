@@ -1,3 +1,4 @@
+
 'use client'
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,12 +21,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { addAccountSchema } from "@/lib/schema"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { useFirestore } from "@/firebase"
+import { useState, useEffect } from "react"
+import { useFirestore, useDoc, useUser, useMemoFirebase } from "@/firebase"
 import { collection, addDoc, doc, updateDoc, query, where, getDocs } from "firebase/firestore"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { errorEmitter } from "@/firebase/error-emitter"
-import { type Account } from '@/lib/types';
+import { type Account, type UserProfile } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const industryOptions = [
@@ -56,19 +57,19 @@ export function AddAccountForm({ account }: { account?: Account}) {
     const { toast } = useToast()
     const router = useRouter()
     const [ isSubmitting, setIsSubmitting ] = useState(false)
-
+    const { user } = useUser();
     const firestore = useFirestore();
 
+    const userProfileRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<z.infer<typeof addAccountSchema>>({
     resolver: zodResolver(addAccountSchema),
     defaultValues: account ? {
-        name: account.name,
-        accountNumber: account.accountNumber,
-        industry: account.industry,
-        status: account.status,
-        address: account.address,
-        details: account.details,
+        ...account
     } : {
         name: "",
         accountNumber: "",
@@ -76,14 +77,32 @@ export function AddAccountForm({ account }: { account?: Account}) {
         status: "lead",
         address: "",
         details: "",
+        companyId: "",
     },
   })
+
+  useEffect(() => {
+    if (userProfile && !form.getValues('companyId')) {
+      form.setValue('companyId', userProfile.companyId);
+    }
+    if (account) {
+        form.reset(account);
+    }
+  }, [userProfile, form, account]);
  
   async function onSubmit(values: z.infer<typeof addAccountSchema>) {
     if (!firestore) {
         toast({
             title: 'Error',
             description: 'Database not available.',
+            variant: 'destructive'
+        });
+        return;
+    }
+    if (!values.companyId) {
+        toast({
+            title: 'Error',
+            description: 'Company information is not available. Cannot save account.',
             variant: 'destructive'
         });
         return;
@@ -104,12 +123,12 @@ export function AddAccountForm({ account }: { account?: Account}) {
         } else {
             // Check for unique account number on creation
             if (values.accountNumber) {
-                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber));
+                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", values.companyId));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     form.setError("accountNumber", {
                         type: "manual",
-                        message: "This account number is already in use.",
+                        message: "This account number is already in use within your company.",
                     });
                     setIsSubmitting(false);
                     return;
@@ -244,7 +263,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
             )}
         />
         
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" disabled={isSubmitting || !userProfile} className="w-full">
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {account ? 'Save Changes' : 'Add Account'}
         </Button>

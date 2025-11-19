@@ -8,6 +8,7 @@ export const addAccountSchema = z.object({
   status: z.enum(['lead', 'customer', 'key-account', 'supplier']),
   address: z.string().optional(),
   details: z.string().optional(),
+  companyId: z.string(),
 }).refine(data => {
     if (data.status !== 'lead') {
         return data.accountNumber && data.accountNumber.length > 0;
@@ -25,6 +26,7 @@ const baseProductSchema = z.object({
     attribute2: z.string().optional(),
     attribute3: z.string().optional(),
     attribute4: z.string().optional(),
+    companyId: z.string(),
 });
 
 export const createProductSchema = baseProductSchema;
@@ -42,6 +44,7 @@ export const contactSchema = z.object({
     phone: z.string().optional(),
     location: z.string().optional(),
     isMainContact: z.boolean().default(false),
+    companyId: z.string(),
 });
 
 // Base schema for account-product relationship without refinement
@@ -52,6 +55,7 @@ const accountProductBaseSchema = z.object({
     createdAt: z.any().optional(),
     type: z.enum(['purchasing', 'opportunity']),
     price: z.number().optional(),
+    companyId: z.string(),
 });
 
 
@@ -77,6 +81,7 @@ export const editProductNoteSchema = z.object({
 export const shippingLocationSchema = z.object({
     relatedAccountId: z.string().min(1, 'An account must be selected.'),
     originalAccountId: z.string(),
+    companyId: z.string(),
 });
 
 export const callNoteSchema = z.object({
@@ -88,4 +93,5 @@ export const callNoteSchema = z.object({
         required_error: "A date for the call is required.",
     }),
     note: z.string().min(1, "Note content cannot be empty."),
+    companyId: z.string(),
 });

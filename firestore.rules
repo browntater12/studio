@@ -1,130 +1,76 @@
-/**
- * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and explicit access control.
- * All read and write operations require authentication.
- *
- * Data Structure:
- * The database contains top-level collections for accounts, contacts, product notes, products, shipping locations, and call notes.
- * User profiles are stored under /users/{userId}.
- *
- * Key Security Decisions:
- * - All data access (read and write) is restricted to authenticated users.
- * - Public access to any collection is disallowed.
- * - Data validation is limited to relational integrity (ownership and IDs) during this prototyping phase.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if the user is signed in.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user's ID matches the provided user ID.
-     * @param {string} userId - The user ID to compare against.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the authenticated user is the owner of the existing document.
-     * @param {string} userId - The user ID to compare against.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource.data.uid == request.auth.uid;
+    // Get the user's profile data from the /users collection
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    /**
-     * @description Enforces that a request contains all the fields in a list
-     */
-    function hasAll(fields) {
-      return fields.toSet().subset(request.resource.data.keys().toSet());
+    // Check if the incoming document's companyId matches the user's companyId
+    function isSameCompany(companyId) {
+      let userProfile = getUserProfile();
+      return userProfile.companyId == companyId;
     }
 
-    /**
-     * @description Enforces that a request does not contain any fields in a list
-     */
-    function hasNone(fields) {
-      return fields.toSet().intersection(request.resource.data.keys().toSet()).size() == 0;
+    // Check if the existing document's companyId matches the user's companyId
+    function isSameCompanyForExistingDoc() {
+        let userProfile = getUserProfile();
+        return resource.data.companyId == userProfile.companyId;
     }
 
-
-    /**
-     * @description Rules for user profiles.
-     * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create their profile at /users/user123.
-     * @deny (create) - User with UID 'user123' cannot create a profile at /users/user456.
-     * @allow (get, update, delete) - User with UID 'user123' can get, update, and delete their profile at /users/user123.
-     * @deny (get, update, delete) - User with UID 'user123' cannot get, update, or delete the profile at /users/user456.
-     * @principle Enforces document ownership for writes.
-     */
     match /users/{userId} {
+      // Users can read their own profile to get their companyId
       allow get: if isOwner(userId);
-      allow list: if false;
+      // Logged-in users can create their own profile.
+      // We assume companyId is set on creation.
       allow create: if isOwner(userId);
+      // Users can update their own profile
       allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      // No one can list all users or delete profiles for security.
+      allow list, delete: if false;
     }
 
-    /**
-     * @description Rules for accounts.
-     * @path /accounts-db/{accountId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
+    // Generic rule for company-isolated data
+    function companyDataRules() {
+      return {
+        // Read is allowed if the document's companyId matches the user's.
+        allow read: if isSignedIn() && isSameCompany(resource.data.companyId),
+        // Create is allowed if the new document's companyId matches the user's.
+        allow create: if isSignedIn() && isSameCompany(request.resource.data.companyId),
+        // Update is allowed if both the existing and new data belong to the user's company.
+        allow update: if isSignedIn() && isSameCompanyForExistingDoc() && isSameCompany(request.resource.data.companyId),
+        // Delete is allowed if the document belongs to the user's company.
+        allow delete: if isSignedIn() && isSameCompanyForExistingDoc()
+      };
+    }
+
     match /accounts-db/{accountId} {
-      allow read, write: if isSignedIn();
+      allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
-
-    /**
-     * @description Rules for contacts.
-     * @path /contacts/{contactId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
     match /contacts/{contactId} {
-      allow read, write: if isSignedIn();
+        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
-
-    /**
-     * @description Rules for account product notes.
-     * @path /account-products/{accountProductId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
     match /account-products/{accountProductId} {
-      allow read, write: if isSignedIn();
+        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
-
-    /**
-     * @description Rules for products.
-     * @path /products/{productId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
     match /products/{productId} {
-      allow read, write: if isSignedIn();
+        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
-
-    /**
-     * @description Rules for shipping locations.
-     * @path /shipping-locations/{locationId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
     match /shipping-locations/{locationId} {
-      allow read, write: if isSignedIn();
+        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
-
-    /**
-     * @description Rules for call notes.
-     * @path /call-notes/{callNoteId}
-     * @allow (create, get, list, update, delete) - Authenticated users have full access.
-     */
     match /call-notes/{callNoteId} {
-      allow read, write: if isSignedIn();
+        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
   }
 }

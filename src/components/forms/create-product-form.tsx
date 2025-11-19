@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -6,11 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 import { createProductSchema, editProductSchema } from '@/lib/schema';
-import { type Product } from '@/lib/types';
+import { type Product, type UserProfile } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -124,9 +125,15 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
   type SchemaType = z.infer<typeof schema>;
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
+  const { user } = useUser();
   const { toast } = useToast();
   const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(schema),
@@ -139,8 +146,15 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
           attribute2: '',
           attribute3: '',
           attribute4: '',
+          companyId: '',
         },
   });
+
+  React.useEffect(() => {
+    if (userProfile && !form.getValues('companyId')) {
+      form.setValue('companyId', userProfile.companyId);
+    }
+  }, [userProfile, form]);
   
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
@@ -148,6 +162,11 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
       toast({ title: "Error", description: "Firestore is not available.", variant: "destructive" });
       setIsSubmitting(false);
       return;
+    }
+     if (!values.companyId) {
+        toast({ title: 'Error', description: 'Company ID is missing.', variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
     }
 
     try {

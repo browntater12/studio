@@ -1,10 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDoc, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { type Product, type AccountProduct, type Account } from '@/lib/types';
+import { type Product, type AccountProduct, type Account, type UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -27,6 +28,13 @@ export default function ProductDetailsPage() {
   const productId = params.id as string;
   const firestore = useFirestore();
   const router = useRouter();
+  const { user } = useUser();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const productRef = useMemoFirebase(() => {
     if (!firestore || !productId) return null;
@@ -35,15 +43,15 @@ export default function ProductDetailsPage() {
   const { data: product, isLoading: productLoading } = useDoc<Product>(productRef);
 
   const productUsageQuery = useMemoFirebase(() => {
-    if (!firestore || !productId) return null;
-    return query(collection(firestore, 'account-products'), where('productId', '==', productId));
-  }, [firestore, productId]);
+    if (!firestore || !productId || !userProfile?.companyId) return null;
+    return query(collection(firestore, 'account-products'), where('productId', '==', productId), where('companyId', '==', userProfile.companyId));
+  }, [firestore, productId, userProfile?.companyId]);
   const { data: productUsages, isLoading: usagesLoading } = useCollection<AccountProduct>(productUsageQuery);
 
   const accountsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'accounts-db');
-  }, [firestore]);
+    if (!firestore || !userProfile?.companyId) return null;
+    return query(collection(firestore, 'accounts-db'), where('companyId', '==', userProfile.companyId));
+  }, [firestore, userProfile?.companyId]);
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
 
   const isLoading = productLoading || usagesLoading || accountsLoading;

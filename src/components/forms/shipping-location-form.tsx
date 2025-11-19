@@ -6,8 +6,8 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2, Check, ChevronsUpDown } from 'lucide-react';
-import { type ShippingLocation, type Account } from '@/lib/types';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { type ShippingLocation, type Account, type UserProfile } from '@/lib/types';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 
 import { shippingLocationSchema } from '@/lib/schema';
@@ -114,10 +114,17 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   const isEditMode = !!location;
   type SchemaType = z.infer<typeof shippingLocationSchema>;
   
+  const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const accountsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -128,24 +135,33 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   const form = useForm<SchemaType>({
     resolver: zodResolver(shippingLocationSchema),
     defaultValues: isEditMode
-      ? { ...location, originalAccountId: accountId }
+      ? { ...location }
       : {
           relatedAccountId: '',
           originalAccountId: accountId,
+          companyId: '',
         },
   });
+
+  React.useEffect(() => {
+    if (userProfile && !form.getValues('companyId')) {
+        form.setValue('companyId', userProfile.companyId);
+    }
+  }, [userProfile, form]);
   
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
+    if (!values.companyId) {
+        toast({ title: 'Error', description: 'Company ID is missing.', variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+    }
     try {
         if (!firestore) {
             throw new Error("Firestore is not initialized");
         }
 
-        const locationData = {
-          relatedAccountId: values.relatedAccountId,
-          originalAccountId: values.originalAccountId,
-        }
+        const locationData = { ...values };
 
         if (isEditMode && location) {
             const locationRef = doc(firestore, 'shipping-locations', location.id);

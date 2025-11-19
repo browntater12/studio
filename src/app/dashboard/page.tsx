@@ -1,24 +1,38 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { type Account } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, where, doc } from 'firebase/firestore';
+import { type Account, type UserProfile } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileSearch, Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
   const router = useRouter();
+  const { user } = useUser();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const accountsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    // Get just the first account to redirect to
-    return query(collection(firestore, 'accounts-db'), orderBy('name'));
-  }, [firestore]);
+    if (!firestore || !userProfile) return null;
+    // Get just the first account to redirect to, filtered by company
+    return query(
+      collection(firestore, 'accounts-db'), 
+      where('companyId', '==', userProfile.companyId),
+      orderBy('name')
+    );
+  }, [firestore, userProfile]);
 
-  const { data: accounts, isLoading } = useCollection<Account>(accountsQuery);
+  const { data: accounts, isLoading: areAccountsLoading } = useCollection<Account>(accountsQuery);
+
+  const isLoading = isProfileLoading || areAccountsLoading;
 
   useEffect(() => {
     if (!isLoading && accounts && accounts.length > 0) {

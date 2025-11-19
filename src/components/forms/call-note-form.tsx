@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Trash2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { type CallNote } from '@/lib/types';
-import { useFirestore } from '@/firebase';
+import { type CallNote, type UserProfile } from '@/lib/types';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 import { cn } from '@/lib/utils';
@@ -127,9 +127,16 @@ export function CallNoteForm({ accountId, note, onSuccess }: CallNoteFormProps) 
   const isEditMode = !!note;
   type SchemaType = z.infer<typeof callNoteSchema>;
   
+  const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<SchemaType>({
     resolver: zodResolver(callNoteSchema),
@@ -140,21 +147,30 @@ export function CallNoteForm({ accountId, note, onSuccess }: CallNoteFormProps) 
           note: '',
           callDate: new Date(),
           type: 'note',
+          companyId: '',
         },
   });
+
+  React.useEffect(() => {
+    if (userProfile && !form.getValues('companyId')) {
+      form.setValue('companyId', userProfile.companyId);
+    }
+  }, [userProfile, form]);
   
   const onSubmit = async (values: SchemaType) => {
     setIsSubmitting(true);
+    if (!values.companyId) {
+        toast({ title: 'Error', description: 'Company ID is missing.', variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+    }
     try {
         if (!firestore) {
             throw new Error("Firestore is not initialized");
         }
 
         const noteData = {
-          accountId: values.accountId,
-          note: values.note,
-          callDate: values.callDate,
-          type: values.type,
+          ...values,
         };
 
         if (isEditMode && note) {

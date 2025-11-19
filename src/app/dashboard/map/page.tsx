@@ -1,28 +1,37 @@
+
 'use client';
 
 import * as React from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { type Account } from '@/lib/types';
+import { collection, query, where } from 'firebase/firestore';
+import { type Account, type UserProfile } from '@/lib/types';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { AccountsMap } from '@/components/map/accounts-map';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { MapFilters } from '@/components/map/map-filters';
+import { doc } from 'firebase/firestore';
+import { useDoc } from '@/firebase';
 
 export default function MapPage() {
   const firestore = useFirestore();
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [industryFilter, setIndustryFilter] = React.useState('all');
 
+  const userProfileRef = useMemoFirebase(() => {
+      if (!firestore || !user) return null;
+      return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
   const accountsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore) return null;
-    return collection(firestore, 'accounts-db');
-  }, [firestore, isUserLoading]);
+    if (isUserLoading || !firestore || !userProfile) return null;
+    return query(collection(firestore, 'accounts-db'), where('companyId', '==', userProfile.companyId));
+  }, [firestore, isUserLoading, userProfile]);
 
   const { data: accounts, isLoading, error } = useCollection<Account>(accountsQuery);
   

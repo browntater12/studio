@@ -1,19 +1,26 @@
+
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { type Product } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { type Product, type UserProfile } from '@/lib/types';
 import { ProductTable } from '@/components/products/product-table';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductsPage() {
     const firestore = useFirestore();
-    const { isUserLoading } = useUser();
+    const { user, isUserLoading } = useUser();
+
+    const userProfileRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
     
     const productsQuery = useMemoFirebase(() => {
-        if (isUserLoading || !firestore) return null;
-        return collection(firestore, 'products');
-    }, [firestore, isUserLoading]);
+        if (isUserLoading || !firestore || !userProfile) return null;
+        return query(collection(firestore, 'products'), where('companyId', '==', userProfile.companyId));
+    }, [firestore, isUserLoading, userProfile]);
 
     const { data: products, isLoading } = useCollection<Product>(productsQuery);
     const combinedIsLoading = isLoading || isUserLoading;

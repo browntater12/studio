@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { useDoc, useCollection, useMemoFirebase, useFirestore, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote } from '@/lib/types';
+import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote, type UserProfile } from '@/lib/types';
 import { AccountHeader } from '@/components/account/account-header';
 import { AccountInfo } from '@/components/account/account-info';
 import { ContactList } from '@/components/account/contact-list';
@@ -18,7 +18,13 @@ function AccountDetails() {
   const params = useParams();
   const accountId = params.id as string;
   const firestore = useFirestore();
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
+
+  const userProfileRef = useMemoFirebase(() => {
+      if (!firestore || !user) return null;
+      return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const accountRef = useMemoFirebase(() => {
     if (!firestore || !accountId) return null;
@@ -27,33 +33,49 @@ function AccountDetails() {
   const { data: account, isLoading: accountLoading } = useDoc<Account>(accountRef);
 
   const contactsQuery = useMemoFirebase(() => {
-    if (!firestore || !account?.accountNumber) return null;
-    return query(collection(firestore, 'contacts'), where('accountNumber', '==', account.accountNumber));
-  }, [firestore, account?.accountNumber]);
+    if (!firestore || !account?.accountNumber || !userProfile?.companyId) return null;
+    return query(
+        collection(firestore, 'contacts'), 
+        where('accountNumber', '==', account.accountNumber),
+        where('companyId', '==', userProfile.companyId)
+    );
+  }, [firestore, account?.accountNumber, userProfile?.companyId]);
   const { data: contacts, isLoading: contactsLoading } = useCollection<Contact>(contactsQuery);
 
   const productsRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
+    if (!firestore || !userProfile?.companyId) return null;
+    return query(collection(firestore, 'products'), where('companyId', '==', userProfile.companyId));
+  }, [firestore, userProfile?.companyId]);
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsRef);
 
   const productNotesQuery = useMemoFirebase(() => {
-    if (!firestore || !accountId) return null;
-    return query(collection(firestore, 'account-products'), where('accountId', '==', accountId));
-  }, [firestore, accountId]);
+    if (!firestore || !accountId || !userProfile?.companyId) return null;
+    return query(
+        collection(firestore, 'account-products'), 
+        where('accountId', '==', accountId),
+        where('companyId', '==', userProfile.companyId)
+    );
+  }, [firestore, accountId, userProfile?.companyId]);
   const { data: accountProducts, isLoading: productNotesLoading } = useCollection<AccountProduct>(productNotesQuery);
 
   const shippingLocationsQuery = useMemoFirebase(() => {
-    if (!firestore || !accountId) return null;
-    return query(collection(firestore, 'shipping-locations'), where('originalAccountId', '==', accountId));
-  }, [firestore, accountId]);
+    if (!firestore || !accountId || !userProfile?.companyId) return null;
+    return query(
+        collection(firestore, 'shipping-locations'), 
+        where('originalAccountId', '==', accountId),
+        where('companyId', '==', userProfile.companyId)
+    );
+  }, [firestore, accountId, userProfile?.companyId]);
   const { data: shippingLocations, isLoading: shippingLocationsLoading } = useCollection<ShippingLocation>(shippingLocationsQuery);
 
   const callNotesQuery = useMemoFirebase(() => {
-    if (!firestore || !accountId) return null;
-    return query(collection(firestore, 'call-notes'), where('accountId', '==', accountId));
-  }, [firestore, accountId]);
+    if (!firestore || !accountId || !userProfile?.companyId) return null;
+    return query(
+        collection(firestore, 'call-notes'), 
+        where('accountId', '==', accountId),
+        where('companyId', '==', userProfile.companyId)
+    );
+  }, [firestore, accountId, userProfile?.companyId]);
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
 
 
