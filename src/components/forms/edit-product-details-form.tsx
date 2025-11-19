@@ -354,8 +354,8 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
                             <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
                             <SelectItem value="annually">Annually</SelectItem>
                         </SelectContent>
                         </Select>

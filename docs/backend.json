@@ -182,7 +182,7 @@
         },
         "spotFrequency": {
           "type": "string",
-          "enum": ["daily", "monthly", "annually"]
+          "enum": ["monthly", "quarterly", "annually"]
         },
         "bidFrequency": {
             "type": "string",
@@ -276,7 +276,7 @@
     }
   },
   "auth": {
-    "providers": ["anonymous", "password"]
+    "providers": ["password"]
   },
   "firestore": {
     "/users/{userId}": {

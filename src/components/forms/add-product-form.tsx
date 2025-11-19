@@ -459,8 +459,8 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="daily">Daily</SelectItem>
                                 <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
                                 <SelectItem value="annually">Annually</SelectItem>
                             </SelectContent>
                             </Select>
