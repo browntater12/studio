@@ -16,11 +16,13 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
         warning:
-            "border-transparent bg-yellow-500/20 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400",
+            "border-transparent bg-yellow-500 text-white dark:bg-yellow-600 dark:text-white",
         'key-account':
             "border-transparent bg-purple-500/20 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
         supplier:
             "border-transparent bg-cyan-500/20 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400",
+        success:
+            "border-transparent bg-success text-success-foreground",
       },
     },
     defaultVariants: {
