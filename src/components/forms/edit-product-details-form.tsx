@@ -286,7 +286,6 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                             />
                             <div>
                                 <div>{product.name}</div>
-                                <div className="text-xs text-muted-foreground">{product.productNumber}</div>
                             </div>
                           </CommandItem>
                         ))}
