@@ -99,6 +99,10 @@ export function ProductTable({ products }: { products: Product[] }) {
                 <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Product Code</TableHead>
+                    <TableHead>Attribute 1</TableHead>
+                    <TableHead>Attribute 2</TableHead>
+                    <TableHead>Attribute 3</TableHead>
+                    <TableHead>Attribute 4</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
@@ -107,6 +111,10 @@ export function ProductTable({ products }: { products: Product[] }) {
                     <TableRow key={product.id} onClick={(e) => handleRowClick(e, product.id)} className="cursor-pointer">
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.productCode}</TableCell>
+                        <TableCell>{product.attribute1}</TableCell>
+                        <TableCell>{product.attribute2}</TableCell>
+                        <TableCell>{product.attribute3}</TableCell>
+                        <TableCell>{product.attribute4}</TableCell>
                         <TableCell>
                             <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
