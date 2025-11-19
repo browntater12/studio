@@ -232,7 +232,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormItem>
                             <FormLabel>Product Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. New Coolant 5000" {...field} />
+                                <Input placeholder="New Coolant 5000" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -248,7 +248,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select type" />
+                                            <SelectValue placeholder="Select Container" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -269,7 +269,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             <FormItem>
                                 <FormLabel>Quantity</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
+                                    <Input type="number" placeholder="330" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -405,13 +405,13 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         <FormControl>
                         <RadioGroupItem value="spot" />
                         </FormControl>
-                        <FormLabel className="font-normal">Spot Price</FormLabel>
+                        <FormLabel className="font-normal">Spot</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl>
                         <RadioGroupItem value="bid" />
                         </FormControl>
-                        <FormLabel className="font-normal">Bid Price</FormLabel>
+                        <FormLabel className="font-normal">Bid</FormLabel>
                     </FormItem>
                     </RadioGroup>
                 </FormControl>
@@ -483,7 +483,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                           <FormItem className="col-span-2">
                           <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
                           <FormControl>
-                              <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                              <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                           </FormControl>
                           <FormMessage />
                           </FormItem>
@@ -547,7 +547,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                               <FormItem className="col-span-2">
                                   <FormLabel>Last Bid Price</FormLabel>
                                   <FormControl>
-                                      <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                      <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                   </FormControl>
                                   <FormMessage />
                               </FormItem>
@@ -583,7 +583,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             <FormItem>
                                 <FormLabel>Winning Bid Price</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                    <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -602,7 +602,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                    <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
+                    <Textarea placeholder="Quarterly order of 5,000 gallons. Consistent usage." {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>

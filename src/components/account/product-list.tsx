@@ -52,7 +52,7 @@ function AddProductDialog({ accountId, allProducts }: { accountId: string, allPr
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Product to Account</DialogTitle>
+          <DialogTitle>Add Product</DialogTitle>
         </DialogHeader>
         <AddProductToAccountForm accountId={accountId} allProducts={allProducts} onSuccess={() => setOpen(false)} />
       </DialogContent>
