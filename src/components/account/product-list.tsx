@@ -111,27 +111,31 @@ export function ProductList({
                 const createdAtDate = ap.createdAt ? ap.createdAt.toDate() : undefined;
 
                 return (
-                    <div key={ap.id} className="p-4 border rounded-lg relative group">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
-                                {product && <Badge variant="secondary">{product.productCode}</Badge>}
-                                {ap.type && <Badge variant={ap.type === 'opportunity' ? 'warning' : 'default'} className="capitalize">{ap.type}</Badge>}
-                            </div>
-                            {ap.price && (
-                                <div className="flex items-center font-semibold">
-                                    <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-                                    <span>{ap.price.toFixed(2)}</span>
+                    <div key={ap.id} className="p-4 border rounded-lg group">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
+                                    {product && <Badge variant="secondary">{product.productCode}</Badge>}
+                                    {ap.type && <Badge variant={ap.type === 'opportunity' ? 'warning' : 'default'} className="capitalize">{ap.type}</Badge>}
                                 </div>
-                            )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
+                                <p className="text-sm text-muted-foreground mt-1">{ap.notes}</p>
+                            </div>
 
-                        <EditProductDetailsDialog accountProduct={ap} allProducts={allProducts}>
-                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                        </EditProductDetailsDialog>
+                            <div className="flex items-center gap-4 ml-4">
+                                {ap.price && (
+                                    <div className="flex items-center font-semibold">
+                                        <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                                        <span>{ap.price.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <EditProductDetailsDialog accountProduct={ap} allProducts={allProducts}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </EditProductDetailsDialog>
+                            </div>
+                        </div>
                     </div>
                 );
             })}
