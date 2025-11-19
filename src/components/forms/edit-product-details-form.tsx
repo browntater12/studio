@@ -505,7 +505,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Notes for this Account</FormLabel>
+              <FormLabel>Notes</FormLabel>
               <FormControl>
                 <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
               </FormControl>

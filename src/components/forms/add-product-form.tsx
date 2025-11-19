@@ -592,22 +592,22 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </div>
             )}
 
-            <FormField
+            </>
+        )}
+        
+        <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Product Notes for this Account</FormLabel>
+                <FormLabel>Notes</FormLabel>
                 <FormControl>
                     <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
             )}
-            />
-            </>
-        )}
-        
+        />
         <SubmitButton isSubmitting={isSubmitting} />
       </form>
     </Form>
