@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const addAccountSchema = z.object({
@@ -87,7 +88,7 @@ export const contactSchema = z.object({
 // Base schema for account-product relationship without refinement
 const accountProductBaseSchema = z.object({
     accountId: z.string(),
-    productId: z.string().min(1, 'Please select a product.').optional(),
+    productId: z.string().optional(),
     subProductId: z.string().optional(),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
@@ -118,8 +119,8 @@ export const addProductToAccountSchema = accountProductBaseSchema.refine(data =>
     }
     return data.productId && data.productId.length > 0;
 }, {
-    message: 'Product Name is required for an opportunity.',
-    path: ['opportunityName'],
+    message: 'A product must be selected or an opportunity name must be provided.',
+    path: ['productId'], // Point error to productId if it's not an opportunity
 }).refine(data => {
     if (data.isOpportunity) {
         return true; // No other validation needed for opportunities
