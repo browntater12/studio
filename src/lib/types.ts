@@ -54,13 +54,9 @@ export type Product = {
   id: string;
   name: string;
   productCode: string;
-  description?: string;
-  notes?: string;
-  industries: string[];
   size: string;
   volume?: number;
   volumeUnit?: 'lb' | 'gal' | 'kg';
-  weightPerGallon?: number;
 };
 
 export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';

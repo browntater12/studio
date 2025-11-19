@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { CreateProductForm } from '../forms/create-product-form';
 
@@ -103,7 +102,6 @@ export function ProductTable({ products }: { products: Product[] }) {
                     <TableHead>Name</TableHead>
                     <TableHead>Product Code</TableHead>
                     <TableHead>Size</TableHead>
-                    <TableHead>Industries</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
                 </TableHeader>
@@ -113,15 +111,6 @@ export function ProductTable({ products }: { products: Product[] }) {
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.productCode}</TableCell>
                         <TableCell className="capitalize">{product.size}</TableCell>
-                        <TableCell>
-                            <div className="flex flex-wrap gap-1 max-w-xs">
-                            {(product.industries || []).map(industry => (
-                                <Badge key={industry} variant="secondary">
-                                {industry}
-                                </Badge>
-                            ))}
-                            </div>
-                        </TableCell>
                         <TableCell>
                             <EditProductDialog product={product} onEditClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">

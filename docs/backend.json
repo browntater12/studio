@@ -104,21 +104,6 @@
           "type": "string",
           "description": "Product code for the product."
         },
-        "description": {
-          "type": "string",
-          "description": "Description of the product."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Internal notes about the product."
-        },
-        "industries": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Industries this product is associated with."
-        },
         "size": {
           "type": "string",
           "description": "Size of the product."
@@ -131,13 +116,9 @@
           "type": "string",
           "enum": ["lb", "gal", "kg"],
           "description": "The unit for the volume."
-        },
-        "weightPerGallon": {
-          "type": "number",
-          "description": "The weight per gallon of the product in lbs."
         }
       },
-      "required": ["name", "productCode", "industries", "size"]
+      "required": ["name", "productCode", "size"]
     },
     "AccountProductNote": {
       "title": "AccountProductNote",

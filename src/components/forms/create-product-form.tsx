@@ -36,8 +36,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Textarea } from '../ui/textarea';
-import { MultiSelect } from '../ui/multi-select';
 import {
     Select,
     SelectContent,
@@ -45,30 +43,6 @@ import {
     SelectTrigger,
     SelectValue,
   } from '@/components/ui/select';
-
-const industryOptions = [
-    { value: 'Adhesives', label: 'Adhesives' },
-    { value: 'Agriculture', label: 'Agriculture' },
-    { value: 'Alcohol', label: 'Alcohol' },
-    { value: 'Animal Butchering', label: 'Animal Butchering' },
-    { value: 'Animal By-Products', label: 'Animal By-Products' },
-    { value: 'Chemical Services', label: 'Chemical Services' },
-    { value: 'Cooling', label: 'Cooling' },
-    { value: 'Cooperative', label: 'Cooperative' },
-    { value: 'Energy', label: 'Energy' },
-    { value: 'Ethanol', label: 'Ethanol' },
-    { value: 'Food', label: 'Food' },
-    { value: 'Manufacturing', label: 'Manufacturing' },
-    { value: 'Mechanical Contractor', label: 'Mechanical Contractor' },
-    { value: 'Mining & Wells', label: 'Mining & Wells' },
-    { value: 'Municipal', label: 'Municipal' },
-    { value: 'Oil and Gas', label: 'Oil and Gas' },
-    { value: 'Pharmaceuticals', label: 'Pharmaceuticals' },
-    { value: 'Plating and Coating', label: 'Plating and Coating' },
-    { value: 'Soybean Processing', label: 'Soybean Processing' },
-    { value: 'Stone and Concrete', label: 'Stone and Concrete' },
-    { value: 'Water Treatment', label: 'Water Treatment' },
-  ].sort((a, b) => a.label.localeCompare(b.label));
 
 function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean, isSubmitting: boolean }) {
   return (
@@ -161,13 +135,9 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
       : {
           name: '',
           productCode: '',
-          description: '',
-          notes: '',
-          industries: [],
           size: undefined,
           volume: undefined,
           volumeUnit: 'lb',
-          weightPerGallon: undefined,
         },
   });
   
@@ -183,7 +153,6 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
         const dataToSave = {
             ...values,
             volume: values.volume ? Number(values.volume) : undefined,
-            weightPerGallon: values.weightPerGallon ? Number(values.weightPerGallon) : undefined,
           }
 
       if (isEditMode) {
@@ -299,62 +268,7 @@ export function CreateProductForm({ product, onSuccess }: CreateProductFormProps
             )}
             />
         </div>
-        <FormField
-          control={form.control}
-          name="weightPerGallon"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Weight per Gallon (lbs)</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="e.g., 8.34" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                        <Textarea placeholder="Public-facing description of the product." {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
-        <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Internal Notes</FormLabel>
-                    <FormControl>
-                        <Textarea placeholder="Internal notes about this product..." {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
-        <FormField
-            control={form.control}
-            name="industries"
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Industries</FormLabel>
-                    <MultiSelect
-                        options={industryOptions}
-                        selected={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select industries..."
-                        className="w-full"
-                    />
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
+        
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />
             {isEditMode && product && <DeleteProductButton productId={product.id} onSuccess={onSuccess} />}

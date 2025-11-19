@@ -20,18 +20,12 @@ export const addAccountSchema = z.object({
 
 const baseProductSchema = z.object({
     name: z.string().min(1, 'Product name is required.'),
-    description: z.string().optional(),
     productCode: z.string().min(1, 'Product code is required.'),
-    notes: z.string().optional(),
-    industries: z.array(z.string()).refine(value => value.length > 0, {
-        message: "You must select at least one industry.",
-    }),
     size: z.enum(['bags', 'pails', 'drums', 'totes', 'bulk'], {
         required_error: "You need to select a product size.",
     }),
     volume: z.number().optional(),
     volumeUnit: z.enum(['lb', 'gal', 'kg']).optional(),
-    weightPerGallon: z.number().optional(),
 });
 
 export const createProductSchema = baseProductSchema.refine(data => {
