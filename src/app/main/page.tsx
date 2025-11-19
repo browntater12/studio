@@ -3,8 +3,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
 import { type Account } from '@/lib/types';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { AccountsMap } from '@/components/map/accounts-map';
@@ -14,29 +12,78 @@ import { MapFilters } from '@/components/map/map-filters';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 
+// Hardcoded data for the public landing page
+const staticAccounts: Account[] = [
+  {
+    id: '1',
+    name: 'Garratt Callahan HQ',
+    address: '500 Unicorn Park Dr, Woburn, MA 01801',
+    status: 'key-account',
+    industry: 'Water Treatment',
+    details: 'Corporate Headquarters.',
+    companyId: 'static',
+    accountNumber: 'GC-HQ',
+  },
+  {
+    id: '2',
+    name: 'Midwest Manufacturing',
+    address: '123 Industrial Dr, Omaha, NE 68138',
+    status: 'customer',
+    industry: 'Manufacturing',
+    details: 'Key customer in the Midwest region.',
+    companyId: 'static',
+    accountNumber: 'MM-001',
+  },
+  {
+    id: '3',
+    name 'Tech Innovators Inc.',
+    address: '1010 Binary Blvd, Silicon Valley, CA 94043',
+    status: 'lead',
+    industry: 'Technology',
+    details: 'Promising lead for new chemical services.',
+    companyId: 'static',
+    accountNumber: 'TI-LEAD',
+  },
+  {
+    id: '4',
+    name: 'Agri-Solutions Corp',
+    address: '555 Farm Rd, Des Moines, IA 50309',
+    status: 'supplier',
+    industry: 'Agriculture',
+    details: 'Supplier of raw materials.',
+    companyId: 'static',
+    accountNumber: 'ASC-SUP',
+  },
+  {
+    id: '5',
+    name: 'PharmaGrade Labs',
+    address: '789 Research Pkwy, Philadelphia, PA 19104',
+    status: 'customer',
+    industry: 'Pharmaceuticals',
+    details: 'Long-term pharmaceutical client.',
+    companyId: 'static',
+    accountNumber: 'PGL-002',
+  }
+];
+
+
 export default function MainPage() {
-  const firestore = useFirestore();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [industryFilter, setIndustryFilter] = React.useState('all');
 
-  // For the public page, we fetch all accounts without company filtering.
-  const accountsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'accounts-db'));
-  }, [firestore]);
-
-  const { data: accounts, isLoading, error } = useCollection<Account>(accountsQuery);
+  // Since we are using static data, loading is always false and there are no errors.
+  const accounts = staticAccounts;
+  const isLoading = false;
+  const error = null;
 
   const industries = React.useMemo(() => {
-    if (!accounts) return [];
     const allIndustries = accounts.map(acc => acc.industry).filter(Boolean) as string[];
     return [...new Set(allIndustries)].sort();
   }, [accounts]);
 
   const filteredAccounts = React.useMemo(() => {
-    if (!accounts) return [];
     return accounts.filter(account => {
       const statusMatch = statusFilter === 'all' || account.status === statusFilter;
       const industryMatch = industryFilter === 'all' || account.industry === industryFilter;
