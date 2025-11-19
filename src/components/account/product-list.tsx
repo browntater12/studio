@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
