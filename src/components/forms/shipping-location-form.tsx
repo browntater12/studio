@@ -20,7 +20,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -35,7 +34,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Textarea } from '../ui/textarea';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '../ui/command';
 import { cn } from '@/lib/utils';
@@ -56,7 +54,7 @@ function DeleteLocationButton({ locationId, onSuccess }: { locationId: string; o
         
         try {
             await deleteDoc(locationRef);
-            toast({ title: 'Success!', description: 'Location deleted successfully.' });
+            toast({ title: 'Success!', description: 'Related account link deleted successfully.' });
             onSuccess();
             setOpen(false);
         } catch (error) {
@@ -82,7 +80,7 @@ function DeleteLocationButton({ locationId, onSuccess }: { locationId: string; o
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this location.
+                        This action cannot be undone. This will permanently delete this related account link.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -101,7 +99,7 @@ function SubmitButton({ isEditMode, isSubmitting }: { isEditMode: boolean; isSub
   return (
     <Button type="submit" disabled={isSubmitting} className="flex-1">
       {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      {isEditMode ? 'Save Changes' : 'Add Location'}
+      {isEditMode ? 'Save Changes' : 'Add Related Account'}
     </Button>
   );
 }
@@ -130,11 +128,10 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
   const form = useForm<SchemaType>({
     resolver: zodResolver(shippingLocationSchema),
     defaultValues: isEditMode
-      ? { ...location }
+      ? { ...location, originalAccountId: accountId }
       : {
-          accountId: '',
-          name: '',
-          address: '',
+          relatedAccountId: '',
+          originalAccountId: accountId,
         },
   });
   
@@ -146,21 +143,20 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         }
 
         const locationData = {
-          name: values.name,
-          address: values.address,
-          accountId: values.accountId,
+          relatedAccountId: values.relatedAccountId,
+          originalAccountId: values.originalAccountId,
         }
 
         if (isEditMode && location) {
             const locationRef = doc(firestore, 'shipping-locations', location.id);
             await updateDoc(locationRef, locationData);
-            toast({ title: 'Success!', description: 'Location updated successfully.' });
+            toast({ title: 'Success!', description: 'Related account updated successfully.' });
         } else {
             const locationsCol = collection(firestore, 'shipping-locations');
             await addDoc(locationsCol, locationData);
-            const selectedAccount = accounts?.find(acc => acc.id === values.accountId);
+            const selectedAccount = accounts?.find(acc => acc.id === values.relatedAccountId);
             const accountName = selectedAccount ? selectedAccount.name : 'the account';
-            toast({ title: 'Success!', description: `Location '${values.name}' added to ${accountName}.` });
+            toast({ title: 'Success!', description: `Related account '${accountName}' added.` });
         }
         
         onSuccess();
@@ -182,7 +178,7 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
         
          <FormField
             control={form.control}
-            name="accountId"
+            name="relatedAccountId"
             render={({ field }) => (
                 <FormItem className="flex flex-col">
                 <FormLabel>Account</FormLabel>
@@ -213,12 +209,12 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
                         <CommandList>
                         <CommandEmpty>No accounts found.</CommandEmpty>
                         <CommandGroup>
-                            {accounts?.map((account) => (
+                            {accounts?.filter(acc => acc.id !== accountId).map((account) => (
                             <CommandItem
                                 value={account.name}
                                 key={account.id}
                                 onSelect={() => {
-                                    form.setValue("accountId", account.id);
+                                    form.setValue("relatedAccountId", account.id);
                                     setPopoverOpen(false);
                                 }}
                             >
@@ -242,30 +238,6 @@ export function ShippingLocationForm({ accountId, location, onSuccess }: Shippin
                 </FormItem>
             )}
             />
-
-
-        <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Location Name</FormLabel>
-                <FormControl><Input placeholder="e.g., Main Warehouse" {...field} /></FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-        <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Full Address</FormLabel>
-                <FormControl><Textarea placeholder="123 Industrial Dr, Suite 100&#10;Anytown, ST 12345" {...field} /></FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
         
         <div className="flex gap-2">
             <SubmitButton isEditMode={isEditMode} isSubmitting={isSubmitting} />

@@ -46,7 +46,7 @@ function AccountDetails() {
 
   const shippingLocationsQuery = useMemoFirebase(() => {
     if (!firestore || !accountId) return null;
-    return query(collection(firestore, 'shipping-locations'), where('accountId', '==', accountId));
+    return query(collection(firestore, 'shipping-locations'), where('originalAccountId', '==', accountId));
   }, [firestore, accountId]);
   const { data: shippingLocations, isLoading: shippingLocationsLoading } = useCollection<ShippingLocation>(shippingLocationsQuery);
 

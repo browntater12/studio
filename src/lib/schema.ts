@@ -75,9 +75,8 @@ export const editProductNoteSchema = z.object({
 
 
 export const shippingLocationSchema = z.object({
-    accountId: z.string().min(1, 'An account must be selected.'),
-    name: z.string().min(1, 'Location name is required.'),
-    address: z.string().min(1, 'Address is required.'),
+    relatedAccountId: z.string().min(1, 'An account must be selected.'),
+    originalAccountId: z.string(),
 });
 
 export const callNoteSchema = z.object({

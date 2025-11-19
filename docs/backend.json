@@ -157,20 +157,16 @@
       "description": "Represents a shipping location for an account.",
       "type": "object",
       "properties": {
-        "accountId": {
+        "originalAccountId": {
           "type": "string",
           "description": "The ID of the account this location belongs to."
         },
-        "name": {
+        "relatedAccountId": {
           "type": "string",
-          "description": "The name of the location (e.g., 'Main Warehouse')."
-        },
-        "address": {
-          "type": "string",
-          "description": "The full address of the location."
+          "description": "The ID of the related account."
         }
       },
-      "required": ["accountId", "name", "address"]
+      "required": ["originalAccountId", "relatedAccountId"]
     },
     "CallNote": {
       "title": "Call Note",

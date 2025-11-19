@@ -48,9 +48,8 @@ export type ProductVolume = 'pails' | 'drums' | 'totes' | 'bulk';
 
 export type ShippingLocation = {
   id: string;
-  accountId: string;
-  name: string;
-  address: string;
+  originalAccountId: string;
+  relatedAccountId: string;
 };
 
 export type CallNoteType = 'note' | 'phone-call' | 'in-person' | 'initial-meeting';
