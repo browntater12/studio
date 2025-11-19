@@ -119,34 +119,35 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
     const productData: { [key: string]: any } = {
         createdAt: serverTimestamp(),
-        isOpportunity: values.isOpportunity,
         accountId: values.accountId,
     };
 
     if (values.isOpportunity) {
-        productData.opportunityName = values.opportunityName;
-        productData.competition = values.competition;
-        productData.notes = values.notes;
+        productData.isOpportunity = true;
+        if (values.opportunityName) productData.opportunityName = values.opportunityName;
+        if (values.competition) productData.competition = values.competition;
+        if (values.notes) productData.notes = values.notes;
         if (values.estimatedVolumeType) productData.estimatedVolumeType = values.estimatedVolumeType;
         if (values.estimatedQuantity) productData.estimatedQuantity = Number(values.estimatedQuantity);
     } else {
+        productData.isOpportunity = false;
         Object.entries(values).forEach(([key, value]) => {
-            if (value !== undefined && !['isOpportunity', 'opportunityName', 'estimatedVolumeType', 'estimatedQuantity', 'competition'].includes(key)) {
-                if (key === 'priceDetails' && typeof value === 'object' && value !== null) {
-                    const cleanPriceDetails: { [key: string]: any } = {};
-                    Object.entries(value).forEach(([pdKey, pdValue]) => {
-                        if (pdValue !== undefined) {
-                            cleanPriceDetails[pdKey] = pdValue;
-                        }
-                    });
-                    if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
-                      productData[key] = cleanPriceDetails;
-                    }
-                } else if (key === 'spotQuantity' && value) {
-                    productData[key] = Number(value);
-                } else if (value !== '') {
-                    productData[key] = value;
+            if (value === undefined || value === null || value === '' || ['isOpportunity', 'opportunityName', 'estimatedVolumeType', 'estimatedQuantity', 'competition'].includes(key)) {
+                return;
+            }
+
+            if (key === 'priceDetails' && typeof value === 'object') {
+                const cleanPriceDetails: { [key: string]: any } = {};
+                if (value.type !== undefined) cleanPriceDetails.type = value.type;
+                if (value.price !== undefined && value.price !== null) cleanPriceDetails.price = Number(value.price);
+                
+                if (Object.keys(cleanPriceDetails).length === 2) {
+                  productData[key] = cleanPriceDetails;
                 }
+            } else if (['spotQuantity', 'lastBidPrice', 'winningBidPrice'].includes(key)) {
+                 productData[key] = Number(value);
+            } else {
+                productData[key] = value;
             }
         });
     }
@@ -565,7 +566,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                               <FormItem className="col-span-2">
                                   <FormLabel>Last Bid Price</FormLabel>
                                   <FormControl>
-                                      <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                      <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                   </FormControl>
                                   <FormMessage />
                               </FormItem>
@@ -601,7 +602,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                             <FormItem>
                                 <FormLabel>Winning Bid Price</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                    <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
