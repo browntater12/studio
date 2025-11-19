@@ -22,7 +22,7 @@ import { addAccountSchema } from "@/lib/schema"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useFirestore } from "@/firebase"
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore"
+import { collection, addDoc, doc, updateDoc, query, where, getDocs } from "firebase/firestore"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { type Account } from '@/lib/types';
@@ -92,6 +92,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
     setIsSubmitting(true);
     
     try {
+        const accountsCollection = collection(firestore, 'accounts-db');
         if (account) {
             const accountRef = doc(firestore, 'accounts-db', account.id);
             updateDoc(accountRef, values);
@@ -101,7 +102,20 @@ export function AddAccountForm({ account }: { account?: Account}) {
             });
             router.push(`/dashboard/account/${account.id}`);
         } else {
-            const accountsCollection = collection(firestore, 'accounts-db');
+            // Check for unique account number on creation
+            if (values.accountNumber) {
+                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    form.setError("accountNumber", {
+                        type: "manual",
+                        message: "This account number is already in use.",
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+            
             const docRef = await addDoc(accountsCollection, values);
             toast({
                 title: 'Account Created',
@@ -122,7 +136,9 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         errorEmitter.emit('permission-error', permissionError);
     } finally {
-        setIsSubmitting(false);
+        if (form.formState.isValid) { // Only set submitting to false if we don't have a manual error
+            setIsSubmitting(false);
+        }
     }
   };
 
