@@ -136,9 +136,14 @@
         "notes": {
           "type": "string",
           "description": "Note about the product for the specific account."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["purchasing", "opportunity"],
+          "description": "The type of product association."
         }
       },
-      "required": ["accountId", "productId"]
+      "required": ["accountId", "productId", "type"]
     },
     "ShippingLocation": {
       "title": "Location",
@@ -235,3 +240,5 @@
     }
   }
 }
+
+    

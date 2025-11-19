@@ -60,6 +60,7 @@ const accountProductBaseSchema = z.object({
     productId: z.string().min(1, "A product must be selected."),
     notes: z.string().optional(),
     createdAt: z.any().optional(),
+    type: z.enum(['purchasing', 'opportunity']),
 });
 
 
@@ -99,3 +100,5 @@ export const callNoteSchema = z.object({
     }),
     note: z.string().min(1, "Note content cannot be empty."),
 });
+
+    

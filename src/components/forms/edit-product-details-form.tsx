@@ -168,6 +168,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     defaultValues: {
       ...accountProduct,
       id: accountProduct.id!,
+      type: accountProduct.type || 'purchasing',
     },
   });
 
@@ -285,6 +286,37 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
         
         <FormField
           control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex space-x-4"
+                >
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="purchasing" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Purchasing</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="opportunity" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Opportunity</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
@@ -305,3 +337,5 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     </Form>
   );
 }
+
+    

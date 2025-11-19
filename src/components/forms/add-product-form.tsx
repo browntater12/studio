@@ -43,6 +43,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CreateProductForm } from './create-product-form';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 function CreateProductDialog() {
   const [open, setOpen] = React.useState(false);
@@ -90,6 +91,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       accountId,
       productId: '',
       notes: '',
+      type: 'purchasing',
     },
   });
 
@@ -109,6 +111,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         createdAt: serverTimestamp(),
         accountId: values.accountId,
         productId: values.productId,
+        type: values.type,
     };
     
     if (values.notes) {
@@ -208,6 +211,37 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             />
 
         <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex space-x-4"
+                >
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="purchasing" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Purchasing</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="opportunity" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Opportunity</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
@@ -225,3 +259,5 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     </Form>
   );
 }
+
+    
