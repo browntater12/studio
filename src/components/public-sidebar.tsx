@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { Building, Search } from 'lucide-react';
+import { Building, Search, Map, Package } from 'lucide-react';
 import type { Account } from '@/lib/types';
 import {
   Sidebar,
@@ -30,7 +30,14 @@ function MobileSidebar({ children }: { children: React.ReactNode }) {
     return <div className="flex flex-col h-full">{children}</div>;
 }
 
-export function PublicSidebar({ accounts, onAccountSelect }: { accounts: Account[], onAccountSelect: (id: string) => void }) {
+interface PublicSidebarProps {
+    accounts: Account[];
+    onAccountSelect: (id: string) => void;
+    onNavigate: (view: 'map' | 'products') => void;
+    currentView: 'map' | 'products';
+}
+
+export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentView }: PublicSidebarProps) {
   const [search, setSearch] = React.useState('');
   const isMobile = useIsMobile();
   const { state } = useSidebar();
@@ -59,6 +66,23 @@ export function PublicSidebar({ accounts, onAccountSelect }: { accounts: Account
 
       <SidebarContent>
         <div className="p-2 space-y-2">
+            <Button
+                variant={currentView === 'map' ? 'secondary' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => onNavigate('map')}
+            >
+                <Map />
+                <span>Map</span>
+            </Button>
+            <Button
+                variant={currentView === 'products' ? 'secondary' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => onNavigate('products')}
+            >
+                <Package />
+                <span>Products</span>
+            </Button>
+
             <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 

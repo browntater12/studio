@@ -5,7 +5,7 @@ import * as React from 'react';
 import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote } from '@/lib/types';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { AccountsMap } from '@/components/map/accounts-map';
-import { Loader2, Terminal, ArrowLeft } from 'lucide-react';
+import { Loader2, Terminal, ArrowLeft, Package } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapFilters } from '@/components/map/map-filters';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import { PublicProductList } from '@/components/public/public-product-list';
 import { PublicShippingLocations } from '@/components/public/public-shipping-locations';
 import { PublicCallNotes } from '@/components/public/public-call-notes';
 import { Timestamp } from 'firebase/firestore';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Hardcoded data for the public landing page
 export const staticAccounts: Account[] = [
@@ -160,7 +161,7 @@ function MapView({ accounts, filters, onAccountSelect }: { accounts: Account[], 
   }
   
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col h-full">
         <MapFilters 
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
@@ -184,6 +185,39 @@ function MapView({ accounts, filters, onAccountSelect }: { accounts: Account[], 
   )
 }
 
+function ProductView({ products }: { products: Product[] }) {
+    return (
+        <div className="p-4 sm:p-6 lg:p-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Products
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Product Code</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {products.map(product => (
+                                <TableRow key={product.id}>
+                                    <TableCell>{product.name}</TableCell>
+                                    <TableCell>{product.productCode}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 function AccountDetailView({ account, onBack }: { account: Account, onBack: () => void }) {
     const accountContacts = staticContacts.filter(c => c.accountNumber === account.accountNumber);
     const accountProducts = staticAccountProducts.filter(ap => ap.accountId === account.id);
@@ -191,10 +225,10 @@ function AccountDetailView({ account, onBack }: { account: Account, onBack: () =
     const callNotes = staticCallNotes.filter(cn => cn.accountId === account.id);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto h-full">
             <Button variant="outline" onClick={onBack}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Map
+                Back
             </Button>
             <PublicAccountHeader account={account} />
             <div className="grid gap-8 lg:grid-cols-3">
@@ -215,10 +249,13 @@ function AccountDetailView({ account, onBack }: { account: Account, onBack: () =
     )
 }
 
+type View = 'map' | 'products' | 'account';
+
 export default function MainPage() {
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [industryFilter, setIndustryFilter] = React.useState('all');
   const [selectedAccountId, setSelectedAccountId] = React.useState<string | null>(null);
+  const [currentView, setCurrentView] = React.useState<'map' | 'products'>('map');
 
   const accounts = staticAccounts;
   const isLoading = false;
@@ -234,13 +271,42 @@ export default function MainPage() {
     setSelectedAccountId(id);
   }
 
-  const handleBack = () => {
+  const handleBackToMapView = () => {
     setSelectedAccountId(null);
+  }
+
+  const handleNavigation = (view: 'map' | 'products') => {
+      setSelectedAccountId(null);
+      setCurrentView(view);
+  }
+
+  const renderContent = () => {
+      if (selectedAccountId && selectedAccount) {
+          return <AccountDetailView account={selectedAccount} onBack={handleBackToMapView} />
+      }
+
+      switch (currentView) {
+          case 'map':
+              return <MapView 
+                accounts={accounts}
+                filters={{ statusFilter, setStatusFilter, industryFilter, setIndustryFilter, industries, isLoading }}
+                onAccountSelect={handleAccountSelect}
+             />;
+          case 'products':
+              return <ProductView products={staticProducts} />;
+          default:
+              return null;
+      }
   }
 
   return (
     <SidebarProvider>
-      <PublicSidebar accounts={accounts} onAccountSelect={handleAccountSelect} />
+      <PublicSidebar 
+        accounts={accounts} 
+        onAccountSelect={handleAccountSelect} 
+        onNavigate={handleNavigation}
+        currentView={currentView}
+      />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
             <SidebarTrigger />
@@ -253,15 +319,7 @@ export default function MainPage() {
             </Button>
         </header>
         <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
-          {selectedAccount ? (
-            <AccountDetailView account={selectedAccount} onBack={handleBack} />
-          ) : (
-             <MapView 
-                accounts={accounts}
-                filters={{ statusFilter, setStatusFilter, industryFilter, setIndustryFilter, industries, isLoading }}
-                onAccountSelect={handleAccountSelect}
-             />
-          )}
+          {renderContent()}
         </main>
       </SidebarInset>
     </SidebarProvider>
