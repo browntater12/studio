@@ -179,6 +179,70 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         
         <FormField
             control={form.control}
+            name="productId"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                <FormLabel>Product</FormLabel>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                    <FormControl>
+                        <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground"
+                        )}
+                        >
+                        {field.value
+                            ? allProducts.find(
+                                (product) => product.id === field.value
+                            )?.name
+                            : "Select a product"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandInput placeholder="Search products..." />
+                        <CommandList>
+                        <CommandEmpty>No product found.</CommandEmpty>
+                        <CommandGroup>
+                            {allProducts.map((product) => (
+                            <CommandItem
+                                value={product.name}
+                                key={product.id}
+                                onSelect={() => {
+                                form.setValue("productId", product.id);
+                                setPopoverOpen(false);
+                                }}
+                            >
+                                <Check
+                                className={cn(
+                                    "mr-2 h-4 w-4",
+                                    product.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                                />
+                                <div>
+                                    <div>{product.name}</div>
+                                </div>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
+                        </CommandList>
+                    </Command>
+                    </PopoverContent>
+                </Popover>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+
+        <FormField
+            control={form.control}
             name="isOpportunity"
             render={({ field }) => (
             <FormItem className="space-y-3">
@@ -207,9 +271,9 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
             </FormItem>
             )}
         />
-
-        {isOpportunity ? (
-            <div className="space-y-4 rounded-md border p-4">
+        
+        <div className="space-y-4 rounded-md border p-4">
+                <p className="text-sm font-medium">Opportunity Details</p>
                 <FormField
                     control={form.control}
                     name="opportunityName"
@@ -275,71 +339,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     )}
                 />
             </div>
-        ) : (
-            <>
-            <FormField
-            control={form.control}
-            name="productId"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                <FormLabel>Product</FormLabel>
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                    <FormControl>
-                        <Button
-                        variant="outline"
-                        role="combobox"
-                        className={cn(
-                            "w-full justify-between",
-                            !field.value && "text-muted-foreground"
-                        )}
-                        >
-                        {field.value
-                            ? allProducts.find(
-                                (product) => product.id === field.value
-                            )?.name
-                            : "Select a product"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                        <CommandInput placeholder="Search products..." />
-                        <CommandList>
-                        <CommandEmpty>No product found.</CommandEmpty>
-                        <CommandGroup>
-                            {allProducts.map((product) => (
-                            <CommandItem
-                                value={product.name}
-                                key={product.id}
-                                onSelect={() => {
-                                form.setValue("productId", product.id);
-                                setPopoverOpen(false);
-                                }}
-                            >
-                                <Check
-                                className={cn(
-                                    "mr-2 h-4 w-4",
-                                    product.id === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                                />
-                                <div>
-                                    <div>{product.name}</div>
-                                </div>
-                            </CommandItem>
-                            ))}
-                        </CommandGroup>
-                        </CommandList>
-                    </Command>
-                    </PopoverContent>
-                </Popover>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
             
             <FormField
             control={form.control}
@@ -560,9 +559,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </div>
             )}
 
-            </>
-        )}
-        
         <FormField
             control={form.control}
             name="notes"
