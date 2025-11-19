@@ -57,7 +57,7 @@ export const contactSchema = z.object({
 // Base schema for account-product relationship without refinement
 const accountProductBaseSchema = z.object({
     accountId: z.string(),
-    productId: z.string().optional(),
+    productId: z.string().min(1, "A product must be selected."),
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     spotFrequency: z.enum(['monthly', 'quarterly', 'annually']).optional(),
@@ -71,28 +71,11 @@ const accountProductBaseSchema = z.object({
         price: z.number().optional(),
     }).optional(),
     createdAt: z.any().optional(),
-    // Fields for Product Opportunity
-    opportunityName: z.string().optional(),
-    estimatedVolumeType: z.enum(['bags', 'drums', 'totes', 'bulk']).optional(),
-    estimatedQuantity: z.number().optional(),
-    competition: z.string().optional(),
-    isOpportunity: z.boolean().default(false).optional(),
 });
 
 
 // Refined schema for adding a product
 export const addProductToAccountSchema = accountProductBaseSchema.refine(data => {
-    if (data.isOpportunity) {
-        return !!data.opportunityName;
-    }
-    return !!data.productId;
-}, {
-    message: 'A product must be selected or an opportunity name must be provided.',
-    path: ['productId'], // Point error to productId if it's not an opportunity
-}).refine(data => {
-    if (data.isOpportunity) {
-        return true; // No other validation needed for opportunities
-    }
     if (data.priceType === 'bid' && !data.bidFrequency) {
         return false;
     }
@@ -143,3 +126,5 @@ export const callNoteSchema = z.object({
     }),
     note: z.string().min(1, "Note content cannot be empty."),
 });
+
+    

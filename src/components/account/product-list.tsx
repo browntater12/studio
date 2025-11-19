@@ -116,7 +116,7 @@ export function ProductList({
             <span>Products</span>
           </CardTitle>
           <CardDescription>
-            Products and opportunities for this account.
+            Products associated with this account.
           </CardDescription>
         </div>
         <AddProductDialog accountId={accountId} allProducts={allProducts} />
@@ -125,35 +125,6 @@ export function ProductList({
         {accountProducts.length > 0 ? (
           <div className="space-y-4">
             {accountProducts.map(ap => {
-                if (ap.isOpportunity) {
-                    return (
-                        <div key={ap.id} className="p-4 border rounded-lg relative group">
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold">{ap.opportunityName}</span>
-                                <Badge variant="key-account">New Opportunity</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
-                            {ap.estimatedVolumeType && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    <span className="text-sm font-medium mr-2">Estimated Volume:</span>
-                                    <Badge variant="secondary" className="capitalize">{ap.estimatedQuantity} {ap.estimatedVolumeType}</Badge>
-                                </div>
-                            )}
-                            {ap.competition && (
-                                <p className="text-sm mt-2">
-                                    <span className="font-medium">Competition: </span>
-                                    <span className="text-muted-foreground">{ap.competition}</span>
-                                </p>
-                            )}
-                             <EditProductDetailsDialog accountProduct={ap} allProducts={allProducts}>
-                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100">
-                                    <Edit className="h-4 w-4" />
-                                </Button>
-                            </EditProductDetailsDialog>
-                        </div>
-                    )
-                }
-
                 const product = getProductDetails(ap.productId!);
                 const hasWinningBid = ap.priceType === 'bid' && ap.winningBidPrice !== undefined;
                 const hasSpotPrice = ap.priceType === 'spot' && ap.priceDetails?.price !== undefined;
@@ -194,10 +165,12 @@ export function ProductList({
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No products or opportunities added yet.</p>
+            <p className="text-muted-foreground">No products added yet.</p>
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
+
+    

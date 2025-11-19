@@ -15,7 +15,7 @@ export type Contact = {
 export type AccountProduct = {
   id?: string;
   accountId: string;
-  productId?: string;
+  productId: string;
   notes: string;
   priceType?: 'spot' | 'bid';
   spotFrequency?: 'monthly' | 'quarterly' | 'annually';
@@ -29,13 +29,6 @@ export type AccountProduct = {
     price?: number;
   };
   createdAt?: Timestamp;
-
-  // New fields for Product Opportunity
-  isOpportunity?: boolean;
-  opportunityName?: string;
-  estimatedVolumeType?: 'bags' | 'drums' | 'totes' | 'bulk';
-  estimatedQuantity?: number;
-  competition?: string;
 };
 
 export type Account = {
@@ -83,3 +76,5 @@ export type ProductUsage = {
   accountId: string;
   notes: string;
 };
+
+    

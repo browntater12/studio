@@ -83,11 +83,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         type: 'quote',
         price: undefined,
       },
-      isOpportunity: false,
-      opportunityName: '',
-      estimatedVolumeType: undefined,
-      estimatedQuantity: undefined,
-      competition: '',
     },
   });
 
@@ -108,35 +103,25 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
         accountId: values.accountId,
     };
 
-    if (values.isOpportunity) {
-        productData.isOpportunity = true;
-        if (values.opportunityName) productData.opportunityName = values.opportunityName;
-        if (values.competition) productData.competition = values.competition;
-        if (values.notes) productData.notes = values.notes;
-        if (values.estimatedVolumeType) productData.estimatedVolumeType = values.estimatedVolumeType;
-        if (values.estimatedQuantity) productData.estimatedQuantity = Number(values.estimatedQuantity);
-    } else {
-        productData.isOpportunity = false;
-        Object.entries(values).forEach(([key, value]) => {
-            if (value === undefined || value === null || value === '' || ['isOpportunity', 'opportunityName', 'estimatedVolumeType', 'estimatedQuantity', 'competition'].includes(key)) {
-                return;
-            }
+    Object.entries(values).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') {
+            return;
+        }
 
-            if (key === 'priceDetails' && typeof value === 'object') {
-                const cleanPriceDetails: { [key: string]: any } = {};
-                if (value.type !== undefined) cleanPriceDetails.type = value.type;
-                if (value.price !== undefined && value.price !== null) cleanPriceDetails.price = Number(value.price);
-                
-                if (Object.keys(cleanPriceDetails).length === 2 && cleanPriceDetails.price !== undefined) {
-                  productData[key] = cleanPriceDetails;
-                }
-            } else if (['spotQuantity', 'lastBidPrice', 'winningBidPrice'].includes(key)) {
-                 productData[key] = Number(value);
-            } else {
-                productData[key] = value;
+        if (key === 'priceDetails' && typeof value === 'object') {
+            const cleanPriceDetails: { [key: string]: any } = {};
+            if (value.type !== undefined) cleanPriceDetails.type = value.type;
+            if (value.price !== undefined && value.price !== null) cleanPriceDetails.price = Number(value.price);
+            
+            if (Object.keys(cleanPriceDetails).length === 2 && cleanPriceDetails.price !== undefined) {
+              productData[key] = cleanPriceDetails;
             }
-        });
-    }
+        } else if (['spotQuantity', 'lastBidPrice', 'winningBidPrice'].includes(key)) {
+             productData[key] = Number(value);
+        } else {
+            productData[key] = value;
+        }
+    });
     
     const accountProductsCollection = collection(firestore, 'account-products');
     
@@ -167,10 +152,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
   const priceDetailsType = useWatch({
     control: form.control,
     name: 'priceDetails.type',
-  });
-  const isOpportunity = useWatch({
-    control: form.control,
-    name: 'isOpportunity',
   });
 
   return (
@@ -240,105 +221,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 </FormItem>
             )}
             />
-
-        <FormField
-            control={form.control}
-            name="isOpportunity"
-            render={({ field }) => (
-            <FormItem className="space-y-3">
-                <FormLabel>Type</FormLabel>
-                <FormControl>
-                <RadioGroup
-                    onValueChange={(val) => field.onChange(val === 'true')}
-                    defaultValue={String(field.value)}
-                    className="flex space-x-4"
-                >
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                        <RadioGroupItem value="false" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Existing Product</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                        <RadioGroupItem value="true" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Product Opportunity</FormLabel>
-                    </FormItem>
-                </RadioGroup>
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
-        
-        <div className="space-y-4 rounded-md border p-4">
-                <p className="text-sm font-medium">Opportunity Details</p>
-                <FormField
-                    control={form.control}
-                    name="opportunityName"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Product Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="New Coolant 5000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="estimatedVolumeType"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Volume</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Container" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="bags">Bags</SelectItem>
-                                        <SelectItem value="drums">Drums</SelectItem>
-                                        <SelectItem value="totes">Totes</SelectItem>
-                                        <SelectItem value="bulk">Bulk</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="estimatedQuantity"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Quantity</FormLabel>
-                                <FormControl>
-                                    <Input type="number" placeholder="330" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                 <FormField
-                    control={form.control}
-                    name="competition"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Competition</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Who are they currently buying from?" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
             
             <FormField
             control={form.control}
@@ -577,3 +459,5 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
     </Form>
   );
 }
+
+    

@@ -316,13 +316,13 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                     <FormControl>
                         <RadioGroupItem value="spot" />
                     </FormControl>
-                    <FormLabel className="font-normal">Spot Price</FormLabel>
+                    <FormLabel className="font-normal">Spot</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
                         <RadioGroupItem value="bid" />
                     </FormControl>
-                    <FormLabel className="font-normal">Bid Price</FormLabel>
+                    <FormLabel className="font-normal">Bid</FormLabel>
                     </FormItem>
                 </RadioGroup>
                 </FormControl>
@@ -540,3 +540,5 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
     </Form>
   );
 }
+
+    
