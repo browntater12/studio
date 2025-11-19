@@ -112,11 +112,18 @@ export function ProductList({
 
                 return (
                     <div key={ap.id} className="p-4 border rounded-lg relative group">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
-                            {product && <Badge variant="secondary">{product.productCode}</Badge>}
-                            {ap.type && <Badge variant={ap.type === 'opportunity' ? 'warning' : 'default'} className="capitalize">{ap.type}</Badge>}
-                            {ap.price && <Badge variant="success"><DollarSign className="h-3 w-3 mr-1" />{ap.price.toFixed(2)}</Badge>}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold">{product?.name || 'Unknown Product'}</span>
+                                {product && <Badge variant="secondary">{product.productCode}</Badge>}
+                                {ap.type && <Badge variant={ap.type === 'opportunity' ? 'warning' : 'default'} className="capitalize">{ap.type}</Badge>}
+                            </div>
+                            {ap.price && (
+                                <div className="flex items-center font-semibold">
+                                    <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                                    <span>{ap.price.toFixed(2)}</span>
+                                </div>
+                            )}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 pr-10">{ap.notes}</p>
 
