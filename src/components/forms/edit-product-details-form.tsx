@@ -394,7 +394,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                       name="priceUnit"
                       render={({ field }) => (
                           <FormItem>
-                              <FormLabel className="sr-only">Unit</FormLabel>
+                              <FormLabel>Unit</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
                                   <FormControl>
                                       <SelectTrigger>
@@ -481,7 +481,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                         name="priceUnit"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="sr-only">Unit</FormLabel>
+                                <FormLabel>Unit</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
                                     <FormControl>
                                         <SelectTrigger>

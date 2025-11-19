@@ -162,7 +162,7 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
             name="volumeUnit"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel className="sr-only">Unit</FormLabel>
+                <FormLabel>Unit</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                     <SelectTrigger>

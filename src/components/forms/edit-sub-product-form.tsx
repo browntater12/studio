@@ -228,7 +228,7 @@ export function EditSubProductForm({ subProduct, onSuccess }: EditSubProductForm
             name="volumeUnit"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="sr-only">Unit</FormLabel>
+                <FormLabel>Unit</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
