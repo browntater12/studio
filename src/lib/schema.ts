@@ -78,7 +78,6 @@ export const shippingLocationSchema = z.object({
     accountId: z.string().min(1, 'An account must be selected.'),
     name: z.string().min(1, 'Location name is required.'),
     address: z.string().min(1, 'Address is required.'),
-    formType: z.enum(['new', 'other']).default('other').optional(),
 });
 
 export const callNoteSchema = z.object({
