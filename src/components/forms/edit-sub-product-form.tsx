@@ -115,7 +115,7 @@ export function EditSubProductForm({ subProduct, onSuccess }: EditSubProductForm
     defaultValues: {
       ...subProduct,
       volume: subProduct.volume ?? undefined,
-      volumeUnit: subProduct.volumeUnit ?? undefined,
+      volumeUnit: subProduct.volumeUnit ?? 'lb',
     },
   });
 

@@ -143,7 +143,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
       spotFrequency: accountProduct.spotFrequency ?? undefined,
       lastBidPrice: accountProduct.lastBidPrice ?? undefined,
       winningBidPrice: accountProduct.winningBidPrice ?? undefined,
-      priceUnit: accountProduct.priceUnit ?? undefined,
+      priceUnit: accountProduct.priceUnit ?? 'lb',
       priceDetails: {
         type: accountProduct.priceDetails?.type || 'quote',
         price: accountProduct.priceDetails?.price ?? undefined,

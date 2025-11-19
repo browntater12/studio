@@ -50,7 +50,7 @@ function AddSubProductForm({ baseProductId, baseProductName }: { baseProductId: 
       productCode: '',
       size: undefined,
       volume: undefined,
-      volumeUnit: undefined,
+      volumeUnit: 'lb',
     },
   });
 

@@ -78,7 +78,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       bidFrequency: undefined,
       lastBidPrice: undefined,
       winningBidPrice: undefined,
-      priceUnit: undefined,
+      priceUnit: 'lb',
       priceDetails: {
         type: 'quote',
         price: undefined,
