@@ -399,20 +399,6 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                 />
             )}
             
-            <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Product Notes for this Account</FormLabel>
-                <FormControl>
-                    <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-
             <div className="space-y-4 rounded-md border p-4">
                 <FormField
                 control={form.control}
@@ -571,6 +557,20 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     />
                 </div>
             )}
+
+            <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Product Notes for this Account</FormLabel>
+                <FormControl>
+                    <Textarea placeholder="e.g., 'Quarterly order of 5,000 gallons. Consistent usage.'" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
             </>
         )}
         
