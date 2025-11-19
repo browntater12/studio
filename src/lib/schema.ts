@@ -91,6 +91,7 @@ const accountProductBaseSchema = z.object({
     notes: z.string().optional(),
     priceType: z.enum(['spot', 'bid']).optional(),
     spotFrequency: z.enum(['monthly', 'quarterly', 'annually']).optional(),
+    spotQuantity: z.number().optional(),
     bidFrequency: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
     lastBidPrice: z.number().optional(),
     winningBidPrice: z.number().optional(),

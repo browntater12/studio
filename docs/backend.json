@@ -184,6 +184,9 @@
           "type": "string",
           "enum": ["monthly", "quarterly", "annually"]
         },
+        "spotQuantity": {
+          "type": "number"
+        },
         "bidFrequency": {
             "type": "string",
             "enum": ["monthly", "quarterly", "yearly"]

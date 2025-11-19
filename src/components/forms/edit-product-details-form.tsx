@@ -142,6 +142,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
       ...accountProduct,
       id: accountProduct.id!,
       spotFrequency: accountProduct.spotFrequency ?? undefined,
+      spotQuantity: accountProduct.spotQuantity ?? undefined,
       lastBidPrice: accountProduct.lastBidPrice ?? undefined,
       winningBidPrice: accountProduct.winningBidPrice ?? undefined,
       priceUnit: accountProduct.priceUnit ?? 'lb',
@@ -178,6 +179,8 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
                     if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
                       updateData[key] = cleanPriceDetails;
                     }
+                } else if (key === 'spotQuantity' && value) {
+                    updateData[key] = Number(value);
                 } else if (value !== '' && value !== null) {
                     updateData[key] = value;
                 }
@@ -193,6 +196,7 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
 
         if (updateData.priceType !== 'spot') {
             updateData.spotFrequency = null;
+            updateData.spotQuantity = null;
         }
 
 
@@ -330,28 +334,43 @@ export function EditProductDetailsForm({ accountProduct, allProducts, onSuccess 
 
         {priceTypeValue === 'spot' && (
             <div className="space-y-4 rounded-md border p-4">
-                 <FormField
-                    control={form.control}
-                    name="spotFrequency"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Frequency</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="annually">Annually</SelectItem>
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+                 <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="spotFrequency"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Frequency</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                                <SelectItem value="annually">Annually</SelectItem>
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="spotQuantity"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>QTY</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="500" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <FormField
                     control={form.control}
                     name="priceDetails.type"

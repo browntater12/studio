@@ -76,6 +76,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
       notes: '',
       priceType: 'spot',
       spotFrequency: undefined,
+      spotQuantity: undefined,
       bidFrequency: undefined,
       lastBidPrice: undefined,
       winningBidPrice: undefined,
@@ -141,6 +142,8 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                     if(Object.keys(cleanPriceDetails).length > 0 && cleanPriceDetails.price !== undefined) {
                       productData[key] = cleanPriceDetails;
                     }
+                } else if (key === 'spotQuantity' && value) {
+                    productData[key] = Number(value);
                 } else if (value !== '') {
                     productData[key] = value;
                 }
@@ -422,28 +425,43 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
 
             {priceTypeValue === 'spot' && (
                 <div className="space-y-4 rounded-md border p-4">
-                    <FormField
-                        control={form.control}
-                        name="spotFrequency"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Frequency</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="quarterly">Quarterly</SelectItem>
-                                <SelectItem value="annually">Annually</SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="spotFrequency"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Frequency</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="monthly">Monthly</SelectItem>
+                                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                                    <SelectItem value="annually">Annually</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="spotQuantity"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>QTY</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="500" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <FormField
                         control={form.control}
                         name="priceDetails.type"
@@ -483,7 +501,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                           <FormItem className="col-span-2">
                           <FormLabel>{priceDetailsType === 'quote' ? 'Quote Price' : 'Last Price Paid'}</FormLabel>
                           <FormControl>
-                              <Input type="number" placeholder="1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                              <Input type="number" placeholder="e.g. 1.23" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value))} />
                           </FormControl>
                           <FormMessage />
                           </FormItem>

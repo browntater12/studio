@@ -20,6 +20,7 @@ export type AccountProduct = {
   notes: string;
   priceType?: 'spot' | 'bid';
   spotFrequency?: 'monthly' | 'quarterly' | 'annually';
+  spotQuantity?: number;
   bidFrequency?: 'monthly' | 'quarterly' | 'yearly';
   lastBidPrice?: number;
   winningBidPrice?: number;
