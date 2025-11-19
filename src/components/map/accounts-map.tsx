@@ -116,6 +116,7 @@ function AccountMarker({ account }: { account: Account }) {
               'bg-yellow-500': account.status === 'lead',
               'bg-purple-500': account.status === 'key-account',
               'bg-primary': account.status === 'customer',
+              'bg-cyan-500': account.status === 'supplier',
             }
           )}
         >

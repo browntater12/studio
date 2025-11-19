@@ -12,6 +12,8 @@ export function AccountHeader({ account }: { account: Account }) {
             return 'warning';
         case 'key-account':
             return 'key-account';
+        case 'supplier':
+            return 'supplier';
         default:
             return 'secondary';
     }

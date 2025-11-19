@@ -22,7 +22,7 @@ export function MapFilters({
   industries,
   isLoading
 }: MapFiltersProps) {
-    const statusOptions = ['lead', 'customer', 'key-account'];
+    const statusOptions = ['lead', 'customer', 'key-account', 'supplier'];
   return (
     <Card className="rounded-none border-x-0 border-t-0">
       <CardContent className="p-2">

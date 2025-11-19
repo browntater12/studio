@@ -158,6 +158,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
                         <SelectItem value="lead">Lead</SelectItem>
                         <SelectItem value="customer">Customer</SelectItem>
                         <SelectItem value="key-account">Key Account</SelectItem>
+                        <SelectItem value="supplier">Supplier</SelectItem>
                     </SelectContent>
                 </Select>
               <FormMessage />
