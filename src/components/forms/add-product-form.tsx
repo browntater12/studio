@@ -427,7 +427,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         name="spotFrequency"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Spot Frequency</FormLabel>
+                            <FormLabel>Frequency</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
                             <FormControl>
                                 <SelectTrigger>
@@ -522,7 +522,7 @@ export function AddProductToAccountForm({ accountId, allProducts, onSuccess }: A
                         name="bidFrequency"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Bid Frequency</FormLabel>
+                            <FormLabel>Frequency</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value} name={field.name}>
                             <FormControl>
                                 <SelectTrigger>
