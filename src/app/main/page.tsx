@@ -36,7 +36,7 @@ const staticAccounts: Account[] = [
   },
   {
     id: '3',
-    name 'Tech Innovators Inc.',
+    name: 'Tech Innovators Inc.',
     address: '1010 Binary Blvd, Silicon Valley, CA 94043',
     status: 'lead',
     industry: 'Technology',
