@@ -30,7 +30,7 @@ function MobileSidebar({ children }: { children: React.ReactNode }) {
     return <div className="flex flex-col h-full">{children}</div>;
 }
 
-export function PublicSidebar({ accounts }: { accounts: Account[] }) {
+export function PublicSidebar({ accounts, onAccountSelect }: { accounts: Account[], onAccountSelect: (id: string) => void }) {
   const [search, setSearch] = React.useState('');
   const isMobile = useIsMobile();
   const { state } = useSidebar();
@@ -41,6 +41,10 @@ export function PublicSidebar({ accounts }: { accounts: Account[] }) {
   ) || [];
 
   const Wrapper = isMobile ? MobileSidebar : DesktopSidebar;
+
+  const handleAccountClick = (id: string) => {
+    onAccountSelect(id);
+  }
 
   return (
     <Wrapper>
@@ -70,8 +74,9 @@ export function PublicSidebar({ accounts }: { accounts: Account[] }) {
           {filteredAccounts.map(account => (
             <SidebarMenuItem key={account.id}>
                 <SidebarMenuButton
-                  className="w-full justify-start cursor-default"
+                  className="w-full justify-start"
                   tooltip={account.name}
+                  onClick={() => handleAccountClick(account.id)}
                 >
                   <Building />
                   <div className="flex flex-col items-start">

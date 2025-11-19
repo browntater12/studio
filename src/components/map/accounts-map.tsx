@@ -6,10 +6,9 @@ import {
   AdvancedMarker,
   InfoWindow,
   useAdvancedMarkerRef,
-  Pin,
 } from '@vis.gl/react-google-maps';
 import { type Account } from '@/lib/types';
-import { Building2, User as UserIcon } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -65,7 +64,7 @@ function CurrentLocationMarker() {
 }
 
 
-function AccountMarker({ account }: { account: Account }) {
+function AccountMarker({ account, isPublic, onAccountSelect }: { account: Account, isPublic?: boolean, onAccountSelect?: (id: string) => void; }) {
   const [markerRef, marker] = useAdvancedMarkerRef();
   const [position, setPosition] = React.useState<google.maps.LatLngLiteral | null>(null);
   const [infowindowOpen, setInfowindowOpen] = React.useState(false);
@@ -96,6 +95,13 @@ function AccountMarker({ account }: { account: Account }) {
       const encodedAddress = encodeURIComponent(account.address);
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
       window.open(url, '_blank');
+    }
+  }
+
+  const handleViewAccount = () => {
+    if (onAccountSelect) {
+      onAccountSelect(account.id);
+      setInfowindowOpen(false);
     }
   }
 
@@ -132,10 +138,14 @@ function AccountMarker({ account }: { account: Account }) {
           <div className="p-2 space-y-2">
             <h3 className="font-semibold text-black">{account.name}</h3>
             <p className="text-sm text-muted-foreground">{account.address}</p>
-            <Button asChild size="sm" className="w-full">
-                <Link href={`/dashboard/account/${account.id}`}>View Account</Link>
-            </Button>
-            <Button variant="success" size="sm" className="w-full" onClick={handleGetDirections}>
+            {isPublic ? (
+                 <Button size="sm" className="w-full" onClick={handleViewAccount}>View Account</Button>
+            ) : (
+                <Button asChild size="sm" className="w-full">
+                    <Link href={`/dashboard/account/${account.id}`}>View Account</Link>
+                </Button>
+            )}
+            <Button variant="outline" size="sm" className="w-full" onClick={handleGetDirections}>
                 Get Directions
             </Button>
           </div>
@@ -145,7 +155,7 @@ function AccountMarker({ account }: { account: Account }) {
   );
 }
 
-export function AccountsMap({ accounts }: { accounts: Account[] }) {
+export function AccountsMap({ accounts, isPublic, onAccountSelect }: { accounts: Account[], isPublic?: boolean, onAccountSelect?: (id: string) => void }) {
   const accountsWithAddress = accounts.filter(account => account.address);
 
   return (
@@ -158,7 +168,7 @@ export function AccountsMap({ accounts }: { accounts: Account[] }) {
     >
       <CurrentLocationMarker />
       {accountsWithAddress.map(account => (
-        <AccountMarker key={account.id} account={account} />
+        <AccountMarker key={account.id} account={account} isPublic={isPublic} onAccountSelect={onAccountSelect} />
       ))}
     </GoogleMap>
   );
