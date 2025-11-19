@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { type Account, type Contact } from '@/lib/types';
+import { type Account, type Contact, type Product, type AccountProduct, type ShippingLocation, type CallNote } from '@/lib/types';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { AccountsMap } from '@/components/map/accounts-map';
 import { Loader2, Terminal, ArrowLeft } from 'lucide-react';
@@ -15,6 +15,11 @@ import { PublicSidebar } from '@/components/public-sidebar';
 import { PublicAccountHeader } from '@/components/public/public-account-header';
 import { PublicAccountInfo } from '@/components/public/public-account-info';
 import { PublicContactList } from '@/components/public/public-contact-list';
+import { PublicProductList } from '@/components/public/public-product-list';
+import { PublicShippingLocations } from '@/components/public/public-shipping-locations';
+import { PublicCallNotes } from '@/components/public/public-call-notes';
+import { Timestamp } from 'firebase/firestore';
+
 
 // Hardcoded data for the public landing page
 export const staticAccounts: Account[] = [
@@ -104,7 +109,28 @@ export const staticContacts: Contact[] = [
         isMainContact: true,
         companyId: 'static',
     }
-]
+];
+
+export const staticProducts: Product[] = [
+    { id: 'p1', name: 'Formula 101', productCode: 'F101', companyId: 'static' },
+    { id: 'p2', name: 'Cooling Tower Biocide', productCode: 'CTB-2', companyId: 'static' },
+    { id: 'p3', name: 'Boiler Antiscalant', productCode: 'BAS-5', companyId: 'static' },
+];
+
+export const staticAccountProducts: AccountProduct[] = [
+    { id: 'ap1', accountId: '1', productId: 'p1', notes: 'Main corporate account purchasing.', type: 'purchasing', price: 150.00, companyId: 'static' },
+    { id: 'ap2', accountId: '1', productId: 'p2', notes: 'Considering for all cooling towers.', type: 'opportunity', price: 220.50, companyId: 'static' },
+    { id: 'ap3', accountId: '2', productId: 'p3', notes: 'Quarterly bulk order.', type: 'purchasing', price: 550.00, companyId: 'static' },
+];
+
+export const staticShippingLocations: ShippingLocation[] = [
+    { id: 'sl1', originalAccountId: '2', relatedAccountId: '1', companyId: 'static' },
+];
+
+export const staticCallNotes: CallNote[] = [
+    { id: 'cn1', accountId: '1', callDate: Timestamp.fromDate(new Date('2023-10-26T10:00:00Z')), type: 'initial-meeting', note: 'Initial meeting with Jane and John. Discussed their current water treatment challenges and our capabilities.', companyId: 'static' },
+    { id: 'cn2', accountId: '1', callDate: Timestamp.fromDate(new Date('2023-11-15T14:30:00Z')), type: 'phone-call', note: 'Follow-up call with John about the CTB-2 proposal. He is reviewing it with his team.', companyId: 'static' },
+];
 
 
 function MapView({ accounts, filters, onAccountSelect }: { accounts: Account[], filters: any, onAccountSelect: (id: string) => void }) {
@@ -158,10 +184,14 @@ function MapView({ accounts, filters, onAccountSelect }: { accounts: Account[], 
   )
 }
 
-function AccountDetailView({ account, contacts, onBack }: { account: Account, contacts: Contact[], onBack: () => void }) {
-    const accountContacts = contacts.filter(c => c.accountNumber === account.accountNumber);
+function AccountDetailView({ account, onBack }: { account: Account, onBack: () => void }) {
+    const accountContacts = staticContacts.filter(c => c.accountNumber === account.accountNumber);
+    const accountProducts = staticAccountProducts.filter(ap => ap.accountId === account.id);
+    const shippingLocations = staticShippingLocations.filter(sl => sl.originalAccountId === account.id);
+    const callNotes = staticCallNotes.filter(cn => cn.accountId === account.id);
+
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto">
             <Button variant="outline" onClick={onBack}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Map
@@ -170,9 +200,15 @@ function AccountDetailView({ account, contacts, onBack }: { account: Account, co
             <div className="grid gap-8 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-8">
                     <PublicContactList account={account} contacts={accountContacts || []} />
+                    <PublicProductList
+                        accountProducts={accountProducts}
+                        allProducts={staticProducts}
+                    />
                 </div>
                 <div className="lg:col-span-1 space-y-8">
                     <PublicAccountInfo account={account} />
+                    <PublicShippingLocations locations={shippingLocations} allAccounts={staticAccounts} />
+                    <PublicCallNotes notes={callNotes} />
                 </div>
             </div>
         </div>
@@ -185,7 +221,6 @@ export default function MainPage() {
   const [selectedAccountId, setSelectedAccountId] = React.useState<string | null>(null);
 
   const accounts = staticAccounts;
-  const contacts = staticContacts;
   const isLoading = false;
 
   const industries = React.useMemo(() => {
@@ -219,7 +254,7 @@ export default function MainPage() {
         </header>
         <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
           {selectedAccount ? (
-            <AccountDetailView account={selectedAccount} contacts={contacts} onBack={handleBack} />
+            <AccountDetailView account={selectedAccount} onBack={handleBack} />
           ) : (
              <MapView 
                 accounts={accounts}
