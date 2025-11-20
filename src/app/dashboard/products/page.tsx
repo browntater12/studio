@@ -9,26 +9,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductsPage() {
     const firestore = useFirestore();
-    const { user, isUserLoading } = useUser();
+    const { user, isUserLoading: isAuthLoading } = useUser();
 
     const userProfileRef = useMemoFirebase(() => {
         if (!firestore || !user) return null;
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
-    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
     
     const productsQuery = useMemoFirebase(() => {
-        if (isUserLoading || !firestore || !userProfile) return null;
+        if (!firestore || !userProfile?.companyId) return null;
         return query(collection(firestore, 'products'), where('companyId', '==', userProfile.companyId));
-    }, [firestore, isUserLoading, userProfile]);
+    }, [firestore, userProfile]);
 
-    const { data: products, isLoading } = useCollection<Product>(productsQuery);
-    const combinedIsLoading = isLoading || isUserLoading;
+    const { data: products, isLoading: areProductsLoading } = useCollection<Product>(productsQuery);
+    const isLoading = isAuthLoading || isProfileLoading || (userProfile && areProductsLoading);
 
     return (
         <div className="space-y-8">
             <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-            {combinedIsLoading ? (
+            {isLoading ? (
                 <div className="space-y-4">
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />

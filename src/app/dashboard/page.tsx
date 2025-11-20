@@ -12,7 +12,7 @@ import { FileSearch, Loader2 } from 'lucide-react';
 export default function DashboardPage() {
   const firestore = useFirestore();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -22,7 +22,7 @@ export default function DashboardPage() {
 
   const accountsQuery = useMemoFirebase(() => {
     // Crucially, wait for userProfile to be loaded before creating the query.
-    if (!firestore || !userProfile) return null;
+    if (!firestore || !userProfile?.companyId) return null;
     return query(
       collection(firestore, 'accounts-db'), 
       where('companyId', '==', userProfile.companyId),
@@ -32,17 +32,14 @@ export default function DashboardPage() {
 
   const { data: accounts, isLoading: areAccountsLoading } = useCollection<Account>(accountsQuery);
 
-  const isLoading = isProfileLoading || areAccountsLoading;
+  const isLoading = isAuthLoading || isProfileLoading || (userProfile && areAccountsLoading);
 
   useEffect(() => {
-    // Only redirect once loading is complete and we have account data.
     if (!isLoading && accounts && accounts.length > 0) {
       router.replace(`/dashboard/account/${accounts[0].id}`);
     }
   }, [accounts, isLoading, router]);
 
-  // While the user profile is loading, or the accounts query is running, show a spinner.
-  // This prevents any premature rendering or redirects.
   if (isLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
@@ -51,7 +48,6 @@ export default function DashboardPage() {
     );
   }
   
-  // If not loading and there are no accounts, show the welcome/empty state.
   if (!isLoading && (!accounts || accounts.length === 0)) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
@@ -72,7 +68,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Fallback while redirect is processing
   return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

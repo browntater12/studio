@@ -28,13 +28,13 @@ export default function ProductDetailsPage() {
   const productId = params.id as string;
   const firestore = useFirestore();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const productRef = useMemoFirebase(() => {
     if (!firestore || !productId) return null;
@@ -54,7 +54,7 @@ export default function ProductDetailsPage() {
   }, [firestore, userProfile?.companyId]);
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
 
-  const isLoading = productLoading || usagesLoading || accountsLoading;
+  const isLoading = isAuthLoading || isProfileLoading || productLoading || usagesLoading || accountsLoading;
 
   const combinedData: ProductUsage[] = React.useMemo(() => {
     if (!productUsages || !accounts) return [];

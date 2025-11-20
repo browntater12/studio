@@ -29,14 +29,13 @@ export default function MapPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const accountsQuery = useMemoFirebase(() => {
-    // Wait for userProfile to be loaded before creating the query
-    if (!firestore || !userProfile) return null;
+    if (!firestore || !userProfile?.companyId) return null;
     return query(collection(firestore, 'accounts-db'), where('companyId', '==', userProfile.companyId));
   }, [firestore, userProfile]);
 
   const { data: accounts, isLoading: areAccountsLoading, error } = useCollection<Account>(accountsQuery);
   
-  const combinedIsLoading = areAccountsLoading || isAuthLoading || isProfileLoading;
+  const isLoading = isAuthLoading || isProfileLoading || (userProfile && areAccountsLoading);
 
   const industries = React.useMemo(() => {
     if (!accounts) return [];
@@ -90,10 +89,10 @@ export default function MapPage() {
             industryFilter={industryFilter}
             setIndustryFilter={setIndustryFilter}
             industries={industries}
-            isLoading={combinedIsLoading}
+            isLoading={isLoading}
         />
         <div className="flex-1 min-h-0">
-            {combinedIsLoading ? (
+            {isLoading ? (
                  <div className="flex h-full w-full items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>

@@ -18,13 +18,13 @@ function AccountDetails() {
   const params = useParams();
   const accountId = params.id as string;
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
 
   const userProfileRef = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const accountRef = useMemoFirebase(() => {
     if (!firestore || !accountId) return null;
@@ -79,7 +79,7 @@ function AccountDetails() {
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
 
 
-  const isLoading = isUserLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading;
+  const isLoading = isAuthLoading || isProfileLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading;
 
   if (isLoading && !account) {
     return (
