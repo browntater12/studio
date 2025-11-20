@@ -30,9 +30,17 @@ service cloud.firestore {
     match /{collection}/{docId} 
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
         
-      // Allow a user to read/write documents if the document's companyId
-      // matches the companyId from their own user profile.
-      allow read, write: if isSignedIn() && userCompanyId() == request.resource.data.companyId;
+      // Allow a user to get a specific document if it belongs to their company.
+      allow get: if isSignedIn() && get(path(collection, docId)).data.companyId == userCompanyId();
+      
+      // Allow a user to query the collection only if they are filtering by their own companyId.
+      // This is a common pattern for multi-tenant apps. It enforces that the client-side query
+      // MUST include `where('companyId', '==', userCompanyId())`.
+      allow list: if isSignedIn() && request.query.get("companyId") == userCompanyId();
+      
+      // Allow a user to write (create, update, delete) a document if the new/existing
+      // data belongs to their company.
+      allow write: if isSignedIn() && request.resource.data.companyId == userCompanyId();
     }
   }
 }
