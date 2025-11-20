@@ -32,12 +32,23 @@ service cloud.firestore {
       // Users can read their own profile to get their companyId
       allow get: if isOwner(userId);
       // Logged-in users can create their own profile.
-      // We assume companyId is set on creation.
+      // This is handled by the createUserAndCompany server-side function, but we add a rule for safety.
       allow create: if isOwner(userId);
       // Users can update their own profile
       allow update: if isOwner(userId);
       // No one can list all users or delete profiles for security.
       allow list, delete: if false;
+    }
+    
+    match /companies/{companyId} {
+        // Only the user belonging to the company can read the company doc
+        allow get: if isSignedIn() && isSameCompany(companyId);
+        // Creation is handled by the server-side function. No direct client creation.
+        allow create: if false;
+        // Only the owner can update the company (e.g. name)
+        allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        // No one can list all companies or delete them.
+        allow list, delete: if false;
     }
 
     // Generic rule for company-isolated data

@@ -29,6 +29,7 @@ import { ThemeToggle } from './theme-toggle';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from './ui/button';
 import Link from 'next/link';
+import { SignUpForm } from '@/components/forms/sign-up-form';
 
 function DesktopSidebar({ children }: { children: React.ReactNode }) {
     return <Sidebar>{children}</Sidebar>;
@@ -43,6 +44,26 @@ interface PublicSidebarProps {
     onAccountSelect: (id: string) => void;
     onNavigate: (view: 'map' | 'products') => void;
     currentView: 'map' | 'products';
+}
+
+function SignUpModal() {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button size="lg">Individual</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Create an Individual Account</DialogTitle>
+                    <DialogDescription>
+                        Get started by creating your own account and company space.
+                    </DialogDescription>
+                </DialogHeader>
+                <SignUpForm onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentView }: PublicSidebarProps) {
@@ -129,18 +150,16 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
             <DialogTrigger asChild>
                 <Button variant="destructive">Get Started</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-sm">
                 <DialogHeader>
                     <DialogTitle>Choose your plan</DialogTitle>
                     <DialogDescription>
                         Select the plan that best fits your needs. You can always change it later.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                    <SignUpModal />
                     <Button asChild size="lg">
-                        <Link href="/login">Individual</Link>
-                    </Button>
-                     <Button asChild size="lg">
                         <Link href="/login">Enterprise</Link>
                     </Button>
                 </div>
