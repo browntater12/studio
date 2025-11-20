@@ -19,10 +19,25 @@ export async function createUserAndCompany(userData: UserData) {
         const firestore = getFirestore(adminApp);
 
         let userRecord;
+
         if (userData.idToken) {
-            // Google Sign-In flow: User should already exist from client-side signInWithPopup
-            // We just need to get their record.
-             userRecord = await auth.getUserByEmail(userData.email);
+            // Google Sign-In flow
+            try {
+                // First, check if a user with that email already exists
+                userRecord = await auth.getUserByEmail(userData.email);
+            } catch (error: any) {
+                // If the user does not exist, create them
+                if (error.code === 'auth/user-not-found') {
+                    userRecord = await auth.createUser({
+                        email: userData.email,
+                        displayName: userData.displayName || undefined,
+                        // No password for Google sign-in
+                    });
+                } else {
+                    // For other errors, re-throw them
+                    throw error;
+                }
+            }
         } else if (userData.password) {
             // Email/Password flow: Create the user
             userRecord = await auth.createUser({
@@ -42,15 +57,13 @@ export async function createUserAndCompany(userData: UserData) {
 
             // Only proceed if the user profile doesn't already exist.
             if (userProfileDoc.exists) {
-                // This can happen if a user signs in with Google, then tries to sign up
-                // with the same email/password. We just let them proceed.
                 console.log(`User profile for ${uid} already exists. Skipping creation.`);
                 return;
             }
 
             // 1. Create a new company
             const companyRef = firestore.collection('companies').doc();
-            const companyName = userData.displayName ? `${userData.displayName}'s Company` : `Company for ${userData.email}`;
+            const companyName = userRecord.displayName ? `${userRecord.displayName}'s Company` : `Company for ${userData.email}`;
             transaction.set(companyRef, {
                 name: companyName,
                 createdAt: new Date(),
@@ -61,7 +74,7 @@ export async function createUserAndCompany(userData: UserData) {
             // 2. Create the user profile and link it to the company
             transaction.set(userProfileRef, {
                 email: userRecord.email,
-                displayName: userRecord.displayName || userData.displayName || '',
+                displayName: userRecord.displayName || '',
                 companyId: companyId,
             });
         });
