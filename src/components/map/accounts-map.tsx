@@ -178,7 +178,7 @@ function Map({ children }: { children: React.ReactNode }) {
         
         if (positions.length > 1) {
             map.fitBounds(bounds, 50); // 50px padding
-        } else {
+        } else if (positions.length === 1) {
             map.setCenter(bounds.getCenter());
             map.setZoom(10);
         }
@@ -192,7 +192,7 @@ function Map({ children }: { children: React.ReactNode }) {
         return child;
     });
 
-    return <>{childrenWithProps}</>
+    return <>{childrenWithProps}</>;
 }
 
 export function AccountsMap({ accounts, isPublic, onAccountSelect }: { accounts: Account[], isPublic?: boolean, onAccountSelect?: (id: string) => void }) {
