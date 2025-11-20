@@ -10,11 +10,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Helper to get the user's company ID from their profile.
-    function userCompanyId() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
-    }
-    
     // A user can read and write to their own profile.
     match /users/{userId} {
       allow read, write: if isOwner(userId);
@@ -22,8 +17,8 @@ service cloud.firestore {
     
     // A user can get their own company document. Only the owner can update it.
     match /companies/{companyId} {
-        allow get: if isSignedIn() && userCompanyId() == companyId;
-        allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == companyId;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     // Rules for all data collections partitioned by companyId.
@@ -31,16 +26,17 @@ service cloud.firestore {
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
         
       // Allow a user to get a specific document if it belongs to their company.
-      allow get: if isSignedIn() && get(path(collection, docId)).data.companyId == userCompanyId();
+      // This relies on the client-side code correctly fetching the user's companyId first.
+      allow get: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == resource.data.companyId;
       
-      // Allow a user to query the collection only if they are filtering by their own companyId.
+      // Allow a user to query a collection ONLY if they are filtering by their own companyId.
       // This is a common pattern for multi-tenant apps. It enforces that the client-side query
-      // MUST include `where('companyId', '==', userCompanyId())`.
-      allow list: if isSignedIn() && request.query.get("companyId") == userCompanyId();
+      // MUST include `where('companyId', '==', userCompanyId)`.
+      allow list: if isSignedIn() && request.query.get("companyId") == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
       
       // Allow a user to write (create, update, delete) a document if the new/existing
       // data belongs to their company.
-      allow write: if isSignedIn() && request.resource.data.companyId == userCompanyId();
+      allow write: if isSignedIn() && request.resource.data.companyId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
     }
   }
 }
