@@ -46,12 +46,12 @@ export const staticAccounts: Account[] = [
   },
   {
     id: '3',
-    name: 'ChemenTech',
+    name: 'CemenTech',
     accountNumber: '1246',
     address: '1700 N 14th St, Indianola, IA 50125',
     status: 'lead',
     industry: 'Manufacturing',
-    details: 'Cementech manufacturers cement trucks that mix the cement in the truck',
+    details: 'CemenTech manufacturers cement trucks that mix the cement in the truck',
     companyId: 'static',
   },
   {
@@ -134,8 +134,8 @@ export const staticContacts: Contact[] = [
     // Pella Corporation (1054)
     { id: 'c3', accountNumber: '1054', name: 'Mike Williams', position: 'Operations Director', phone: '641-555-0102', email: 'mike.w@pella.com', location: 'Pella, IA', isMainContact: true, companyId: 'static' },
     { id: 'c4', accountNumber: '1054', name: 'Emily Brown', position: 'Purchasing Agent', phone: '641-555-0103', email: 'emily.b@pella.com', location: 'Pella, IA', isMainContact: false, companyId: 'static' },
-    // ChemenTech (1246)
-    { id: 'c5', accountNumber: '1246', name: 'David Chen', position: 'Lead Engineer', phone: '515-555-0104', email: 'david.c@chementech.com', location: 'Indianola, IA', isMainContact: true, companyId: 'static' },
+    // CemenTech (1246)
+    { id: 'c5', accountNumber: '1246', name: 'David Chen', position: 'Lead Engineer', phone: '515-555-0104', email: 'david.c@cementech.com', location: 'Indianola, IA', isMainContact: true, companyId: 'static' },
     // Heartland Co-op (1405)
     { id: 'c6', accountNumber: '1405', name: 'Maria Garcia', position: 'Regional Manager', phone: '515-555-0105', email: 'maria.g@heartland.com', location: 'Clive, IA', isMainContact: true, companyId: 'static' },
     { id: 'c13', accountNumber: '1405', name: 'Jeff Richardson', position: 'Safety Coordinator', phone: '515-555-0114', email: 'jeff.r@heartland.com', location: 'Des Moines, IA', isMainContact: false, companyId: 'static' },
@@ -167,7 +167,7 @@ export const staticAccountProducts: AccountProduct[] = [
     { id: 'ap2', accountId: '1', productId: 'p2', notes: 'Considering for all cooling towers.', type: 'opportunity', price: 220.50, companyId: 'static' },
     // Pella
     { id: 'ap3', accountId: '2', productId: 'p3', notes: 'Quarterly bulk order.', type: 'purchasing', price: 550.00, companyId: 'static' },
-    // ChemenTech
+    // CemenTech
     { id: 'ap4', accountId: '3', productId: 'p1', notes: 'Lead interested in Formula 101 for their new line.', type: 'opportunity', price: 160.00, companyId: 'static' },
     // Heartland Co-op
     { id: 'ap5', accountId: '4', productId: 'p2', notes: 'Interested in replacing their current biocide.', type: 'opportunity', price: 230.00, companyId: 'static' },
@@ -191,6 +191,10 @@ export const staticAccountProducts: AccountProduct[] = [
 
 export const staticShippingLocations: ShippingLocation[] = [
     { id: 'sl1', originalAccountId: '2', relatedAccountId: '1', companyId: 'static' },
+    { id: 'sl2', originalAccountId: '1', relatedAccountId: '9', companyId: 'static' },
+    { id: 'sl3', originalAccountId: '4', relatedAccountId: '10', companyId: 'static' },
+    { id: 'sl4', originalAccountId: '8', relatedAccountId: '7', companyId: 'static' },
+    { id: 'sl5', originalAccountId: '6', relatedAccountId: '3', companyId: 'static' },
 ];
 
 export const staticCallNotes: CallNote[] = [
