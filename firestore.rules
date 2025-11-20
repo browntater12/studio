@@ -12,68 +12,49 @@ service cloud.firestore {
     }
 
     // Get the user's profile data from the /users collection
-    function getUserProfile() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function getUserProfile(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
     // Check if the incoming document's companyId matches the user's companyId
-    function isSameCompany(companyId) {
-      let userProfile = getUserProfile();
+    function isSameCompanyAsProfile(companyId) {
+      let userProfile = getUserProfile(request.auth.uid);
       return userProfile.companyId == companyId;
     }
-
+    
     // Check if the existing document's companyId matches the user's companyId
-    function isSameCompanyForExistingDoc() {
-        let userProfile = getUserProfile();
-        return resource.data.companyId == userProfile.companyId;
+    function isExistingDocInSameCompany() {
+      let userProfile = getUserProfile(request.auth.uid);
+      return resource.data.companyId == userProfile.companyId;
     }
 
     match /users/{userId} {
-      // Users can read their own profile to get their companyId
-      allow get: if isOwner(userId);
-      // Logged-in users can create their own profile.
-      // This is handled by the createUserAndCompany server-side function, but we add a rule for safety.
-      allow create: if isOwner(userId);
-      // Users can update their own profile
-      allow update: if isOwner(userId);
+      // A user can read and update their own profile.
+      // Creation is handled by a server-side function, but this rule provides a safeguard.
+      allow read, update, create: if isOwner(userId);
       // No one can list all users or delete profiles for security.
       allow list, delete: if false;
     }
     
     match /companies/{companyId} {
-        // Only the user belonging to the company can read the company doc
-        allow get: if isSignedIn() && isSameCompany(companyId);
+        // A user can read their own company document.
+        allow get: if isSignedIn() && isSameCompanyAsProfile(companyId);
         // Creation is handled by the server-side function. No direct client creation.
         allow create: if false;
-        // Only the owner can update the company (e.g. name)
+        // Only the owner of the company can update it.
         allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
         // No one can list all companies or delete them.
         allow list, delete: if false;
     }
 
-    match /accounts-db/{accountId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
-    }
-    match /contacts/{contactId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
-    }
-    match /account-products/{accountProductId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
-    }
-    match /products/{productId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
-    }
-    match /shipping-locations/{locationId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
-    }
-    match /call-notes/{callNoteId} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+    // Rules for all company-partitioned data
+    match /{collection}/{docId} {
+      // Allow read/write access if the user is authenticated and part of the correct company.
+      // On create/update, check the incoming data.
+      // On get/delete, check the existing data.
+      // On list (query), the client MUST include a `where('companyId', '==', userProfile.companyId)` clause.
+      allow read, write: if isSignedIn() &&
+                         (isSameCompanyAsProfile(request.resource.data.companyId) || isExistingDocInSameCompany());
     }
   }
 }
