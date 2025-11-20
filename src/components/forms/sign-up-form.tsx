@@ -75,6 +75,7 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
           description = "This email address is already in use. Please sign in or use a different email.";
       } else if (error.code === 'auth/invalid-credential') {
           description = "There was a problem logging you in after creating your account.";
+          console.log(error.code, error.message)
       } else if (error.message) {
           description = error.message;
       }

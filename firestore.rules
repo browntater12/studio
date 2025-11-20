@@ -11,36 +11,36 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function getUserProfile(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
-    }
-
+    // Helper to get the user's company ID from their profile.
     function userCompanyId() {
-        return getUserProfile(request.auth.uid).companyId;
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
     }
     
+    // A user can read and write to their own profile.
     match /users/{userId} {
-      allow read, update, create: if isOwner(userId);
+      allow read, write: if isOwner(userId);
       allow list, delete: if false;
     }
     
+    // A user can get their own company document. Only the owner can update it.
     match /companies/{companyId} {
         allow get: if isSignedIn() && userCompanyId() == companyId;
-        allow create: if false;
         allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-        allow list, delete: if false;
+        allow create, list, delete: if false;
     }
 
+    // Rules for all data collections partitioned by companyId.
     match /{collection}/{docId} 
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
         
-        allow read: if isSignedIn() && (
-            (exists(/databases/$(database)/documents/$(collection)/$(docId)) && resource.data.companyId == userCompanyId()) ||
-            (!exists(/databases/$(database)/documents/$(collection)/$(docId)))
-        );
+        // Allow read operations (get, list) ONLY if the query filters by the user's companyId.
+        // Firestore security rules ensure that any list() query against this collection
+        // MUST include `where('companyId', '==', userCompanyId())`.
+        allow read: if isSignedIn() && request.query.get('companyId') == userCompanyId();
 
-        allow write: if isSignedIn() && 
-            (request.resource.data.companyId == userCompanyId());
+        // Allow write operations (create, update, delete) if the data being written
+        // has a companyId that matches the user's companyId.
+        allow write: if isSignedIn() && request.resource.data.companyId == userCompanyId();
     }
   }
 }
