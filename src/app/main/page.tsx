@@ -128,18 +128,31 @@ export const staticAccounts: Account[] = [
 ];
 
 export const staticContacts: Contact[] = [
+    // John Deere-Ankeny (1042)
     { id: 'c1', accountNumber: '1042', name: 'Sarah Johnson', position: 'Plant Manager', phone: '515-555-0101', email: 'sarah.j@jdankeny.com', location: 'Ankeny, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c2', accountNumber: '1054', name: 'Mike Williams', position: 'Operations Director', phone: '641-555-0102', email: 'mike.w@pella.com', location: 'Pella, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c3', accountNumber: '1054', name: 'Emily Brown', position: 'Purchasing Agent', phone: '641-555-0103', email: 'emily.b@pella.com', location: 'Pella, IA', isMainContact: false, companyId: 'static' },
-    { id: 'c4', accountNumber: '1246', name: 'David Chen', position: 'Lead Engineer', phone: '515-555-0104', email: 'david.c@chementech.com', location: 'Indianola, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c5', accountNumber: '1405', name: 'Maria Garcia', position: 'Regional Manager', phone: '515-555-0105', email: 'maria.g@heartland.com', location: 'Clive, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c6', accountNumber: '1112', name: 'Tom Allen', position: 'CEO', phone: '641-555-0106', email: 'tom.a@newtonmfg.com', location: 'Newton, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c7', accountNumber: '1001', name: 'Robert King', position: 'Fleet Manager', phone: '515-555-0107', email: 'robert.k@midwestug.com', location: 'Bondurant, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c8', accountNumber: '1043', name: 'Jennifer White', position: 'Production Supervisor', phone: '515-555-0108', email: 'jennifer.w@innovativeinjection.com', location: 'West Des Moines, IA', isMainContact: false, companyId: 'static' },
-    { id: 'c9', accountNumber: '1043', name: 'Chris Green', position: 'Owner', phone: '515-555-0109', email: 'chris.g@innovativeinjection.com', location: 'West Des Moines, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c10', accountNumber: '1336', name: 'Patricia Hall', position: 'Facilities Manager', phone: '515-555-0110', email: 'patricia.h@principal.com', location: 'Des Moines, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c11', accountNumber: '1302', name: 'Mark Davis', position: 'Supply Chain Lead', phone: '641-555-0111', email: 'mark.d@vermeer.com', location: 'Pella, IA', isMainContact: true, companyId: 'static' },
-    { id: 'c12', accountNumber: '1003', name: 'Brian Miller', position: 'Head of Procurement', phone: '515-555-0112', email: 'brian.m@caseys.com', location: 'Ankeny, IA', isMainContact: true, companyId: 'static' },
+    { id: 'c2', accountNumber: '1042', name: 'Tom Clark', position: 'Head of Maintenance', phone: '515-555-0113', email: 'tom.c@jdankeny.com', location: 'Ankeny, IA', isMainContact: false, companyId: 'static' },
+    // Pella Corporation (1054)
+    { id: 'c3', accountNumber: '1054', name: 'Mike Williams', position: 'Operations Director', phone: '641-555-0102', email: 'mike.w@pella.com', location: 'Pella, IA', isMainContact: true, companyId: 'static' },
+    { id: 'c4', accountNumber: '1054', name: 'Emily Brown', position: 'Purchasing Agent', phone: '641-555-0103', email: 'emily.b@pella.com', location: 'Pella, IA', isMainContact: false, companyId: 'static' },
+    // ChemenTech (1246)
+    { id: 'c5', accountNumber: '1246', name: 'David Chen', position: 'Lead Engineer', phone: '515-555-0104', email: 'david.c@chementech.com', location: 'Indianola, IA', isMainContact: true, companyId: 'static' },
+    // Heartland Co-op (1405)
+    { id: 'c6', accountNumber: '1405', name: 'Maria Garcia', position: 'Regional Manager', phone: '515-555-0105', email: 'maria.g@heartland.com', location: 'Clive, IA', isMainContact: true, companyId: 'static' },
+    { id: 'c13', accountNumber: '1405', name: 'Jeff Richardson', position: 'Safety Coordinator', phone: '515-555-0114', email: 'jeff.r@heartland.com', location: 'Des Moines, IA', isMainContact: false, companyId: 'static' },
+    // Newton Manufacturing Co (1112)
+    { id: 'c7', accountNumber: '1112', name: 'Tom Allen', position: 'CEO', phone: '641-555-0106', email: 'tom.a@newtonmfg.com', location: 'Newton, IA', isMainContact: true, companyId: 'static' },
+    // Midwest Underground (1001)
+    { id: 'c8', accountNumber: '1001', name: 'Robert King', position: 'Fleet Manager', phone: '515-555-0107', email: 'robert.k@midwestug.com', location: 'Bondurant, IA', isMainContact: true, companyId: 'static' },
+    // Innovative Injection (1043)
+    { id: 'c9', accountNumber: '1043', name: 'Jennifer White', position: 'Production Supervisor', phone: '515-555-0108', email: 'jennifer.w@innovativeinjection.com', location: 'West Des Moines, IA', isMainContact: false, companyId: 'static' },
+    { id: 'c10', accountNumber: '1043', name: 'Chris Green', position: 'Owner', phone: '515-555-0109', email: 'chris.g@innovativeinjection.com', location: 'West Des Moines, IA', isMainContact: true, companyId: 'static' },
+    // Principal Financial (1336)
+    { id: 'c11', accountNumber: '1336', name: 'Patricia Hall', position: 'Facilities Manager', phone: '515-555-0110', email: 'patricia.h@principal.com', location: 'Des Moines, IA', isMainContact: true, companyId: 'static' },
+    // Vermeer Corp. (1302)
+    { id: 'c12', accountNumber: '1302', name: 'Mark Davis', position: 'Supply Chain Lead', phone: '641-555-0111', email: 'mark.d@vermeer.com', location: 'Pella, IA', isMainContact: true, companyId: 'static' },
+    { id: 'c14', accountNumber: '1302', name: 'Laura Wilson', position: 'Environmental Health and Safety', phone: '641-555-0115', email: 'laura.w@vermeer.com', location: 'Pella, IA', isMainContact: false, companyId: 'static' },
+    // Caseys (1003)
+    { id: 'c15', accountNumber: '1003', name: 'Brian Miller', position: 'Head of Procurement', phone: '515-555-0112', email: 'brian.m@caseys.com', location: 'Ankeny, IA', isMainContact: true, companyId: 'static' },
 ];
 
 export const staticProducts: Product[] = [
@@ -149,9 +162,31 @@ export const staticProducts: Product[] = [
 ];
 
 export const staticAccountProducts: AccountProduct[] = [
+    // John Deere
     { id: 'ap1', accountId: '1', productId: 'p1', notes: 'Main corporate account purchasing.', type: 'purchasing', price: 150.00, companyId: 'static' },
     { id: 'ap2', accountId: '1', productId: 'p2', notes: 'Considering for all cooling towers.', type: 'opportunity', price: 220.50, companyId: 'static' },
+    // Pella
     { id: 'ap3', accountId: '2', productId: 'p3', notes: 'Quarterly bulk order.', type: 'purchasing', price: 550.00, companyId: 'static' },
+    // ChemenTech
+    { id: 'ap4', accountId: '3', productId: 'p1', notes: 'Lead interested in Formula 101 for their new line.', type: 'opportunity', price: 160.00, companyId: 'static' },
+    // Heartland Co-op
+    { id: 'ap5', accountId: '4', productId: 'p2', notes: 'Interested in replacing their current biocide.', type: 'opportunity', price: 230.00, companyId: 'static' },
+    // Newton Manufacturing
+    { id: 'ap6', accountId: '5', productId: 'p1', notes: 'Small regular orders.', type: 'purchasing', price: 155.00, companyId: 'static' },
+    { id: 'ap7', accountId: '5', productId: 'p3', notes: 'Used in their main boiler system.', type: 'purchasing', price: 560.00, companyId: 'static' },
+    // Midwest Underground
+    { id: 'ap8', accountId: '6', productId: 'p1', notes: 'Heavy duty cleaner for equipment.', type: 'purchasing', price: 175.00, companyId: 'static' },
+    // Innovative Injection
+    { id: 'ap9', accountId: '7', productId: 'p2', notes: 'For their molding machine cooling systems.', type: 'purchasing', price: 215.00, companyId: 'static' },
+    { id: 'ap10', accountId: '7', productId: 'p3', notes: 'Trial for boiler efficiency.', type: 'opportunity', price: 570.00, companyId: 'static' },
+    // Principal Financial
+    { id: 'ap11', accountId: '8', productId: 'p2', notes: 'For the HVAC cooling towers in their main building.', type: 'purchasing', price: 225.00, companyId: 'static' },
+    // Vermeer Corp.
+    { id: 'ap12', accountId: '9', productId: 'p1', notes: 'Used on the factory floor.', type: 'purchasing', price: 145.00, companyId: 'static' },
+    { id: 'ap13', accountId: '9', productId: 'p2', notes: 'Testing CTB-2 against competitor.', type: 'opportunity', price: 210.00, companyId: 'static' },
+    { id: 'ap14', accountId: '9', productId: 'p3', notes: 'Used across multiple boilers in the facility.', type: 'purchasing', price: 540.00, companyId: 'static' },
+    // Caseys
+    { id: 'ap15', accountId: '10', productId: 'p1', notes: 'Potential for use as a kitchen degreaser in all locations.', type: 'opportunity', price: 130.00, companyId: 'static' },
 ];
 
 export const staticShippingLocations: ShippingLocation[] = [
