@@ -16,7 +16,7 @@ import { useDoc } from '@/firebase';
 
 export default function MapPage() {
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const [statusFilter, setStatusFilter] = React.useState('all');
@@ -26,16 +26,17 @@ export default function MapPage() {
       if (!firestore || !user) return null;
       return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const accountsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !firestore || !userProfile) return null;
+    // Wait for userProfile to be loaded before creating the query
+    if (!firestore || !userProfile) return null;
     return query(collection(firestore, 'accounts-db'), where('companyId', '==', userProfile.companyId));
-  }, [firestore, isUserLoading, userProfile]);
+  }, [firestore, userProfile]);
 
-  const { data: accounts, isLoading, error } = useCollection<Account>(accountsQuery);
+  const { data: accounts, isLoading: areAccountsLoading, error } = useCollection<Account>(accountsQuery);
   
-  const combinedIsLoading = isLoading || isUserLoading;
+  const combinedIsLoading = areAccountsLoading || isAuthLoading || isProfileLoading;
 
   const industries = React.useMemo(() => {
     if (!accounts) return [];

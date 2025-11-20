@@ -2,7 +2,7 @@
 'use server';
 
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 
 interface UserData {
@@ -11,12 +11,8 @@ interface UserData {
     displayName?: string | null;
 }
 
-// Helper function to introduce a delay
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export async function createUserAndCompany(userData: UserData) {
+    console.log("Starting createUserAndCompany for UID:", userData.uid);
     try {
         const adminApp = initializeServerApp();
         const firestore = getFirestore(adminApp);
@@ -24,58 +20,46 @@ export async function createUserAndCompany(userData: UserData) {
         
         const { uid, email, displayName } = userData;
 
-        // Add a small delay to allow auth state to propagate on the backend
-        await delay(1000);
-
-        let userRecord;
-        try {
-            userRecord = await auth.getUser(uid);
-        } catch (error: any) {
-            if (error.code === 'auth/user-not-found') {
-                console.log(`User with UID ${uid} not found, which is expected for new sign-ups. Proceeding...`);
-                // This is okay, we'll use the data passed from the client.
-                userRecord = { uid, email, displayName: displayName || '' };
-            } else {
-                throw error; // Re-throw other errors
-            }
-        }
-
+        const userProfileRef = firestore.collection('users').doc(uid);
 
         // Use a transaction to ensure all or nothing
         await firestore.runTransaction(async (transaction) => {
-            const userProfileRef = firestore.collection('users').doc(uid);
             const userProfileDoc = await transaction.get(userProfileRef);
 
             // Only proceed if the user profile doesn't already exist.
             if (userProfileDoc.exists) {
                 console.log(`User profile for ${uid} already exists. Skipping creation.`);
-                // Return from the transaction function, but the outer function will still return success.
                 return; 
             }
+            console.log(`User profile for ${uid} does not exist. Proceeding with creation.`);
 
             // 1. Create a new company
             const companyRef = firestore.collection('companies').doc();
+            const userRecord = await auth.getUser(uid);
             const companyName = userRecord.displayName ? `${userRecord.displayName}'s Company` : `Company for ${email}`;
+            
             transaction.set(companyRef, {
                 name: companyName,
-                createdAt: new Date(),
+                createdAt: FieldValue.serverTimestamp(),
                 ownerId: uid
             });
             const companyId = companyRef.id;
+            console.log(`Created company with ID: ${companyId} for user ${uid}`);
+
 
             // 2. Create the user profile and link it to the company
             transaction.set(userProfileRef, {
                 email: userRecord.email,
-                displayName: userRecord.displayName || displayName || '',
+                displayName: userRecord.displayName || '',
                 companyId: companyId,
             });
+            console.log(`Created user profile for ${uid} and linked to company ${companyId}`);
         });
 
-        // Always return success if the transaction completes or if the user already existed.
+        console.log(`Transaction for user ${uid} completed successfully.`);
         return { success: true };
     } catch (error: any) {
         console.error('Error in createUserAndCompany:', error);
-        // We return the error message to be displayed on the client.
         return { error: error.code || error.message || 'An unknown error occurred.' };
     }
 }

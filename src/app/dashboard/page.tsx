@@ -21,8 +21,8 @@ export default function DashboardPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const accountsQuery = useMemoFirebase(() => {
+    // Crucially, wait for userProfile to be loaded before creating the query.
     if (!firestore || !userProfile) return null;
-    // Get just the first account to redirect to, filtered by company
     return query(
       collection(firestore, 'accounts-db'), 
       where('companyId', '==', userProfile.companyId),
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const isLoading = isProfileLoading || areAccountsLoading;
 
   useEffect(() => {
-    // Only redirect if there are accounts to redirect to.
+    // Only redirect once loading is complete and we have account data.
     if (!isLoading && accounts && accounts.length > 0) {
       router.replace(`/dashboard/account/${accounts[0].id}`);
     }
