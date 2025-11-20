@@ -37,7 +37,8 @@ export async function createUserAndCompany(userData: UserData) {
             // Only proceed if the user profile doesn't already exist.
             if (userProfileDoc.exists) {
                 console.log(`User profile for ${uid} already exists. Skipping creation.`);
-                return;
+                // Return from the transaction function, but the outer function will still return success.
+                return; 
             }
 
             // 1. Create a new company
@@ -58,6 +59,7 @@ export async function createUserAndCompany(userData: UserData) {
             });
         });
 
+        // Always return success if the transaction completes or if the user already existed.
         return { success: true };
     } catch (error: any) {
         console.error('Error in createUserAndCompany:', error);
