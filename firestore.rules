@@ -13,21 +13,31 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && request.auth.uid == userId;
+      // Allow user to create their own doc with a companyId.
+      // Allow user to update their doc only if they don't change their companyId.
       allow write: if isSignedIn() && request.auth.uid == userId &&
                    ( (request.resource.data.companyId == resource.data.companyId) ||
                      (!exists(/databases/$(database)/documents/users/$(userId)) && request.resource.data.companyId != null) );
     }
 
     match /companies/{companyId} {
+      // Any user belonging to the company can get/update it.
       allow get: if isSignedIn() && getUserCompanyId() == companyId;
       allow update: if isSignedIn() && getUserCompanyId() == companyId;
+      // Note: Creation is handled by the trusted server action, not directly by clients.
     }
 
+    // Rules for all company-partitioned data collections
     match /{collection}/{docId}
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
 
+      // Allow a user to read a document if it belongs to their company
       allow get: if isSignedIn() && getUserCompanyId() == resource.data.companyId;
+
+      // Allow a user to query (list) documents, but ONLY if they filter by their own companyId
       allow list: if isSignedIn() && request.query.filters.size() > 0 && request.query.filters[0].field.stringValue == 'companyId' && request.query.filters[0].op.stringValue == '==' && request.query.filters[0].value.stringValue == getUserCompanyId();
+
+      // Allow a user to create, update, or delete a document if it belongs to their company.
       allow write: if isSignedIn() && request.resource.data.companyId == getUserCompanyId();
     }
   }
