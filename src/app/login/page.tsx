@@ -69,6 +69,7 @@ export default function LoginPage() {
   });
 
   React.useEffect(() => {
+    // If the user is already authenticated, redirect them to the dashboard.
     if (!isUserLoading && user) {
       router.replace('/dashboard');
     }
@@ -107,6 +108,7 @@ export default function LoginPage() {
     }
   };
 
+  // While checking auth state or if user exists (and is about to be redirected), show a loader.
   if (isUserLoading || user) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
@@ -115,6 +117,7 @@ export default function LoginPage() {
       )
   }
 
+  // Only render the login form if we are done loading and there is no user.
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
