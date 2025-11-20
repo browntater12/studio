@@ -15,6 +15,14 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
 import { ThemeToggle } from './theme-toggle';
@@ -117,9 +125,27 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
       </SidebarContent>
 
       <SidebarFooter>
-         <Button asChild variant="destructive">
-              <Link href="/login">Get Started</Link>
-         </Button>
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="destructive">Get Started</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Choose your plan</DialogTitle>
+                    <DialogDescription>
+                        Select the plan that best fits your needs. You can always change it later.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4">
+                    <Button asChild size="lg">
+                        <Link href="/login">Individual</Link>
+                    </Button>
+                     <Button asChild size="lg">
+                        <Link href="/login">Enterprise</Link>
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
         <ThemeToggle />
       </SidebarFooter>
     </Wrapper>
