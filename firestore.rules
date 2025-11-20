@@ -52,33 +52,27 @@ service cloud.firestore {
     }
 
     match /accounts-db/{accountId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /contacts/{contactId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /account-products/{accountProductId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /products/{productId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /shipping-locations/{locationId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /call-notes/{callNoteId} {
-        allow get: if isSignedIn() && isSameCompanyForExistingDoc();
-        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow read: if isSignedIn();
         allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
   }
