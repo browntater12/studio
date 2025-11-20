@@ -35,7 +35,7 @@ function AccountDetails() {
   const contactsQuery = useMemoFirebase(() => {
     if (!firestore || !account?.accountNumber || !userProfile?.companyId) return null;
     return query(
-        collection(firestore, 'contacts'), 
+        collection(firestore, 'contacts'),
         where('accountNumber', '==', account.accountNumber),
         where('companyId', '==', userProfile.companyId)
     );
@@ -51,7 +51,7 @@ function AccountDetails() {
   const productNotesQuery = useMemoFirebase(() => {
     if (!firestore || !accountId || !userProfile?.companyId) return null;
     return query(
-        collection(firestore, 'account-products'), 
+        collection(firestore, 'account-products'),
         where('accountId', '==', accountId),
         where('companyId', '==', userProfile.companyId)
     );
@@ -61,7 +61,7 @@ function AccountDetails() {
   const shippingLocationsQuery = useMemoFirebase(() => {
     if (!firestore || !accountId || !userProfile?.companyId) return null;
     return query(
-        collection(firestore, 'shipping-locations'), 
+        collection(firestore, 'shipping-locations'),
         where('originalAccountId', '==', accountId),
         where('companyId', '==', userProfile.companyId)
     );
@@ -71,7 +71,7 @@ function AccountDetails() {
   const callNotesQuery = useMemoFirebase(() => {
     if (!firestore || !accountId || !userProfile?.companyId) return null;
     return query(
-        collection(firestore, 'call-notes'), 
+        collection(firestore, 'call-notes'),
         where('accountId', '==', accountId),
         where('companyId', '==', userProfile.companyId)
     );
@@ -80,9 +80,9 @@ function AccountDetails() {
 
 
   // Unified loading state. It's loading if any of the core data hooks are loading.
-  const isLoading = 
-    isAuthLoading || 
-    isProfileLoading || 
+  const isLoading =
+    isAuthLoading ||
+    isProfileLoading ||
     (userProfile && (accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading));
 
 
@@ -167,6 +167,6 @@ export default function AccountPage() {
       </div>
     );
   }
-  
+
   return <AccountDetails />;
 }

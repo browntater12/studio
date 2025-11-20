@@ -24,7 +24,7 @@ export default function DashboardPage() {
     // Crucially, wait for userProfile to be loaded before creating the query.
     if (!firestore || !userProfile?.companyId) return null;
     return query(
-      collection(firestore, 'accounts-db'), 
+      collection(firestore, 'accounts-db'),
       where('companyId', '==', userProfile.companyId),
       orderBy('name')
     );
@@ -50,7 +50,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-  
+
   if (!isLoading && (!accounts || accounts.length === 0)) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">

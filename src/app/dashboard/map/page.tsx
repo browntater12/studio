@@ -32,7 +32,7 @@ export default function MapPage() {
   }, [firestore, userProfile]);
 
   const { data: accounts, isLoading: areAccountsLoading, error } = useCollection<Account>(accountsQuery);
-  
+
   const isLoading = isAuthLoading || isProfileLoading || (userProfile && areAccountsLoading);
 
   const industries = React.useMemo(() => {
@@ -81,7 +81,7 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-full w-full">
-        <MapFilters 
+        <MapFilters
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
             industryFilter={industryFilter}
