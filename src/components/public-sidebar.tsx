@@ -46,30 +46,11 @@ interface PublicSidebarProps {
     currentView: 'map' | 'products';
 }
 
-function SignUpModal() {
-    const [open, setOpen] = React.useState(false);
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button size="lg">Individual</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Create an Individual Account</DialogTitle>
-                    <DialogDescription>
-                        Get started by creating your own account and company space.
-                    </DialogDescription>
-                </DialogHeader>
-                <SignUpForm onSuccess={() => setOpen(false)} />
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentView }: PublicSidebarProps) {
   const [search, setSearch] = React.useState('');
   const isMobile = useIsMobile();
   const { state } = useSidebar();
+  const [open, setOpen] = React.useState(false);
 
   const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -146,23 +127,18 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
       </SidebarContent>
 
       <SidebarFooter>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="destructive">Get Started</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-sm">
+            <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Choose your plan</DialogTitle>
+                    <DialogTitle>Create an Account</DialogTitle>
                     <DialogDescription>
-                        Select the plan that best fits your needs. You can always change it later.
+                        Get started by creating your own account and company space.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 pt-4">
-                    <SignUpModal />
-                    <Button asChild size="lg">
-                        <Link href="/login">Enterprise</Link>
-                    </Button>
-                </div>
+                <SignUpForm onSuccess={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
         <ThemeToggle />
