@@ -44,7 +44,10 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  const handleSignUpCompletion = async (uid: string, email: string, displayName?: string | null) => {
+  const handleSignUpCompletion = async (uid: string, email: string, password?: string | null, displayName?: string | null) => {
+    if (password) {
+      await initiateEmailSignIn(auth!, email, password, false);
+    }
     const creationResult = await createUserAndCompany({ uid, email, displayName });
     if (creationResult?.error) {
         throw new Error(creationResult.error);
@@ -53,7 +56,6 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         title: "Account Created!",
         description: "You're now being redirected to your dashboard.",
     });
-    // The redirect will now handle moving the user away.
     router.push('/dashboard');
   };
 
@@ -65,13 +67,14 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true);
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        // We now explicitly sign the user in after creation, before creating the company.
-        await initiateEmailSignIn(auth, values.email, values.password, false);
-        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email);
+        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email, values.password);
     } catch (error: any) {
+      console.error("Sign up error:", error); // Log the full error
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
           description = "This email address is already in use. Please sign in or use a different email.";
+      } else if (error.message) {
+          description = error.message;
       }
       toast({
         variant: "destructive",
@@ -92,11 +95,14 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     const provider = new GoogleAuthProvider();
     try {
         const result = await signInWithPopup(auth, provider);
-        await handleSignUpCompletion(result.user.uid, result.user.email!, result.user.displayName);
+        await handleSignUpCompletion(result.user.uid, result.user.email!, null, result.user.displayName);
     } catch(error: any) {
+        console.error("Google sign up error:", error); // Log the full error
         let description = "Could not sign up with Google. Please try again.";
         if (error.code === 'auth/account-exists-with-different-credential') {
             description = 'An account already exists with the same email address but different sign-in credentials. Please sign in using the original method.';
+        } else if (error.message) {
+          description = error.message;
         }
         toast({
             variant: "destructive",
