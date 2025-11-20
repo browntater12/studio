@@ -69,10 +69,12 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email, values.password);
     } catch (error: any) {
-      console.error("Sign up error:", error); // Log the full error
+      console.error(error); // Log the full error to the console
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
           description = "This email address is already in use. Please sign in or use a different email.";
+      } else if (error.code === 'auth/invalid-credential') {
+          description = "There was a problem logging you in after creating your account.";
       } else if (error.message) {
           description = error.message;
       }
