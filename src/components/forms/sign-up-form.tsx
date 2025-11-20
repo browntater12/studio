@@ -31,7 +31,6 @@ const signUpSchema = z.object({
 
 export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
   const auth = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = React.useState(false);
@@ -54,7 +53,7 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         description: "You're now being redirected to your dashboard.",
     });
     onSuccess();
-    router.push('/dashboard');
+    // No longer redirecting from here. The root page will handle it.
   };
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
