@@ -11,8 +11,12 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // A user can read and write their own profile document.
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      // A user can read their own profile.
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      // On create, a companyId must exist.
+      // On update, the companyId cannot be changed.
+      allow write: if isSignedIn() && request.auth.uid == userId &&
+                   (request.resource.data.companyId == resource.data.companyId || !exists(/databases/$(database)/documents/users/$(userId)));
     }
     
     match /companies/{companyId} {
