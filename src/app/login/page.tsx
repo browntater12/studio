@@ -6,9 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { setPersistence, browserLocalPersistence, browserSessionPersistence, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -75,7 +75,7 @@ export default function LoginPage() {
   }, [user, isUserLoading, router]);
 
 
-  const onSubmit = (values: z.infer<typeof loginSchema>) => {
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     if (!auth) {
         toast({
             variant: 'destructive',
@@ -85,25 +85,26 @@ export default function LoginPage() {
         return;
     }
     setIsSubmitting(true);
-    // We don't await this, the onAuthStateChanged listener will handle the redirect
-    initiateEmailSignIn(auth, values.email, values.password, !!values.rememberMe)
-        .catch((error) => {
-            // This will catch immediate client-side errors, but not all auth failures
-            let description = "Please check your email and password.";
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                description = "Invalid login credentials. Please try again.";
-            } else if (error.code === 'auth/too-many-requests') {
-                description = "Too many failed login attempts. Please try again later.";
-            }
-             toast({
-                 variant: "destructive",
-                 title: "Login Failed",
-                 description: description,
-             });
-        })
-        .finally(() => {
-            setIsSubmitting(false);
+    try {
+        const persistence = values.rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        // The onAuthStateChanged listener in the provider will handle the redirect.
+    } catch (error: any) {
+        let description = "An unexpected error occurred. Please try again.";
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            description = "Invalid login credentials. Please try again.";
+        } else if (error.code === 'auth/too-many-requests') {
+            description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+        }
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: description,
         });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   if (isUserLoading || user) {

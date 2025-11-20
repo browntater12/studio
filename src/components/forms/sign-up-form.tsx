@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, type User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, type User, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { createUserAndCompany } from '@/app/auth-actions';
 import { GoogleIcon } from '../icons/google-icon';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 
 const signUpSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -44,7 +43,7 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  const handleSignUpCompletion = async (user: User, password?: string | null) => {
+  const handleSignUpCompletion = async (user: User) => {
     // CRITICAL FIX: Await the creation of the user's company and profile in the database.
     // This ensures that the data exists before we try to log in and redirect.
     const creationResult = await createUserAndCompany({ 
@@ -57,15 +56,13 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         throw new Error(creationResult.error);
     }
     
-    // Now that the data is created, log the user in if needed.
-    if (password && auth) {
-      await initiateEmailSignIn(auth, user.email!, password, false);
-    }
-
     toast({
         title: "Account Created!",
         description: "You're now being redirected to your dashboard.",
     });
+    // The onAuthStateChanged listener will handle the redirect.
+    // No need to sign in again, as createUserWithEmailAndPassword and signInWithPopup already sign the user in.
+    onSuccess();
     router.push('/dashboard');
   };
 
@@ -77,7 +74,7 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true);
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await handleSignUpCompletion(userCredential.user, values.password);
+        await handleSignUpCompletion(userCredential.user);
     } catch (error: any) {
       console.error("Email/Password Sign Up Error:", error);
       let description = "An unexpected error occurred. Please try again.";
