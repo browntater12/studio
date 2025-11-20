@@ -51,11 +51,11 @@ service cloud.firestore {
         allow list, delete: if false;
     }
 
-    // Generic rule for company-isolated data
+    // Generic rules for company-isolated data
     function companyDataRules() {
       return {
-        // Read is allowed if the document's companyId matches the user's.
-        allow read: if isSignedIn() && isSameCompany(resource.data.companyId),
+        // Read is allowed if the user is signed in. The query must filter by companyId.
+        allow read: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId,
         // Create is allowed if the new document's companyId matches the user's.
         allow create: if isSignedIn() && isSameCompany(request.resource.data.companyId),
         // Update is allowed if both the existing and new data belong to the user's company.
@@ -66,22 +66,34 @@ service cloud.firestore {
     }
 
     match /accounts-db/{accountId} {
-      allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /contacts/{contactId} {
-        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /account-products/{accountProductId} {
-        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /products/{productId} {
-        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /shipping-locations/{locationId} {
-        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
     match /call-notes/{callNoteId} {
-        allow read, write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
+        allow read: if isSignedIn() && isSameCompanyForExistingDoc();
+        allow list: if isSignedIn() && request.query.get('companyId') == getUserProfile().companyId;
+        allow write: if isSignedIn() && isSameCompany(request.resource.data.companyId);
     }
   }
 }
