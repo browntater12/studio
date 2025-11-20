@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const isLoading = isProfileLoading || areAccountsLoading;
 
   useEffect(() => {
+    // Only redirect if there are accounts to redirect to.
     if (!isLoading && accounts && accounts.length > 0) {
       router.replace(`/dashboard/account/${accounts[0].id}`);
     }
@@ -47,8 +48,9 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  if (!accounts || accounts.length === 0) {
+  
+  // If not loading and there are no accounts, show the welcome/empty state.
+  if (!isLoading && (!accounts || accounts.length === 0)) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
         <Card className="w-full max-w-md text-center">
@@ -69,5 +71,9 @@ export default function DashboardPage() {
   }
 
   // Fallback while redirect is processing
-  return null;
+  return (
+      <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
 }
