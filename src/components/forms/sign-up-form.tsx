@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, type User } from 'firebase/auth';
 
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -44,14 +44,24 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  const handleSignUpCompletion = async (uid: string, email: string, password?: string | null, displayName?: string | null) => {
-    if (password) {
-      await initiateEmailSignIn(auth!, email, password, false);
-    }
-    const creationResult = await createUserAndCompany({ uid, email, displayName });
+  const handleSignUpCompletion = async (user: User, password?: string | null) => {
+    // CRITICAL FIX: Await the creation of the user's company and profile in the database.
+    // This ensures that the data exists before we try to log in and redirect.
+    const creationResult = await createUserAndCompany({ 
+        uid: user.uid, 
+        email: user.email!, 
+        displayName: user.displayName 
+    });
+
     if (creationResult?.error) {
         throw new Error(creationResult.error);
     }
+    
+    // Now that the data is created, log the user in if needed.
+    if (password && auth) {
+      await initiateEmailSignIn(auth, user.email!, password, false);
+    }
+
     toast({
         title: "Account Created!",
         description: "You're now being redirected to your dashboard.",
@@ -67,15 +77,12 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true);
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email, values.password);
+        await handleSignUpCompletion(userCredential.user, values.password);
     } catch (error: any) {
-      console.error(error); // Log the full error to the console
+      console.error("Email/Password Sign Up Error:", error);
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
           description = "This email address is already in use. Please sign in or use a different email.";
-      } else if (error.code === 'auth/invalid-credential') {
-          description = "There was a problem logging you in after creating your account.";
-          console.log(error.code, error.message)
       } else if (error.message) {
           description = error.message;
       }
@@ -98,9 +105,10 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     const provider = new GoogleAuthProvider();
     try {
         const result = await signInWithPopup(auth, provider);
-        await handleSignUpCompletion(result.user.uid, result.user.email!, null, result.user.displayName);
+        // For Google Sign-In, the user is already logged in. We just need to ensure their DB records are created.
+        await handleSignUpCompletion(result.user);
     } catch(error: any) {
-        console.error("Google sign up error:", error); // Log the full error
+        console.error("Google sign up error:", error);
         let description = "Could not sign up with Google. Please try again.";
         if (error.code === 'auth/account-exists-with-different-credential') {
             description = 'An account already exists with the same email address but different sign-in credentials. Please sign in using the original method.';
