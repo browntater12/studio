@@ -6,6 +6,7 @@ import {
   AdvancedMarker,
   InfoWindow,
   useAdvancedMarkerRef,
+  useMap,
 } from '@vis.gl/react-google-maps';
 import { type Account } from '@/lib/types';
 import { Building2 } from 'lucide-react';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 const geocodeCache = new Map<string, google.maps.LatLngLiteral>();
 
-function CurrentLocationMarker() {
+function CurrentLocationMarker({ onPositionChange }: { onPositionChange: (pos: google.maps.LatLngLiteral) => void }) {
     const [markerRef, marker] = useAdvancedMarkerRef();
     const [position, setPosition] = React.useState<google.maps.LatLngLiteral | null>(null);
     const [infowindowOpen, setInfowindowOpen] = React.useState(true);
@@ -29,13 +30,14 @@ function CurrentLocationMarker() {
                         lng: position.coords.longitude,
                     };
                     setPosition(pos);
+                    onPositionChange(pos);
                 },
                 (error) => {
                     console.error("Error getting user location:", error.message);
                 }
             );
         }
-    }, []);
+    }, [onPositionChange]);
 
     if (!position) return null;
 
@@ -64,7 +66,7 @@ function CurrentLocationMarker() {
 }
 
 
-function AccountMarker({ account, isPublic, onAccountSelect }: { account: Account, isPublic?: boolean, onAccountSelect?: (id: string) => void; }) {
+function AccountMarker({ account, isPublic, onAccountSelect, onPositionChange }: { account: Account, isPublic?: boolean, onAccountSelect?: (id: string) => void, onPositionChange: (pos: google.maps.LatLngLiteral) => void; }) {
   const [markerRef, marker] = useAdvancedMarkerRef();
   const [position, setPosition] = React.useState<google.maps.LatLngLiteral | null>(null);
   const [infowindowOpen, setInfowindowOpen] = React.useState(false);
@@ -72,8 +74,13 @@ function AccountMarker({ account, isPublic, onAccountSelect }: { account: Accoun
   React.useEffect(() => {
     if (!account.address) return;
 
+    const processGeocode = (pos: google.maps.LatLngLiteral) => {
+        setPosition(pos);
+        onPositionChange(pos);
+    }
+
     if (geocodeCache.has(account.address)) {
-        setPosition(geocodeCache.get(account.address)!);
+        processGeocode(geocodeCache.get(account.address)!);
         return;
     }
 
@@ -83,12 +90,12 @@ function AccountMarker({ account, isPublic, onAccountSelect }: { account: Accoun
         const location = results[0].geometry.location;
         const pos = { lat: location.lat(), lng: location.lng() };
         geocodeCache.set(account.address!, pos);
-        setPosition(pos);
+        processGeocode(pos);
       } else {
         console.error(`Geocode was not successful for the following reason: ${status}`);
       }
     });
-  }, [account.address]);
+  }, [account.address, onPositionChange]);
 
   const handleGetDirections = () => {
     if (account.address) {
@@ -155,21 +162,62 @@ function AccountMarker({ account, isPublic, onAccountSelect }: { account: Accoun
   );
 }
 
+function Map({ children }: { children: React.ReactNode }) {
+    const map = useMap();
+    const [positions, setPositions] = React.useState<google.maps.LatLngLiteral[]>([]);
+
+    const handlePositionChange = React.useCallback((pos: google.maps.LatLngLiteral) => {
+        setPositions(prev => [...prev, pos]);
+    }, []);
+
+    React.useEffect(() => {
+        if (!map || positions.length === 0) return;
+
+        const bounds = new window.google.maps.LatLngBounds();
+        positions.forEach(pos => bounds.extend(pos));
+        
+        if (positions.length > 1) {
+            map.fitBounds(bounds, 50); // 50px padding
+        } else {
+            map.setCenter(bounds.getCenter());
+            map.setZoom(10);
+        }
+    }, [map, positions]);
+    
+    const childrenWithProps = React.Children.map(children, child => {
+        if (React.isValidElement(child)) {
+            // @ts-ignore
+            return React.cloneElement(child, { onPositionChange: handlePositionChange });
+        }
+        return child;
+    });
+
+    return <>{childrenWithProps}</>
+}
+
 export function AccountsMap({ accounts, isPublic, onAccountSelect }: { accounts: Account[], isPublic?: boolean, onAccountSelect?: (id: string) => void }) {
   const accountsWithAddress = accounts.filter(account => account.address);
+  const defaultCenter = { lat: 41.2565, lng: -95.9345 }; // Omaha, NE
 
   return (
     <GoogleMap
       mapId="sales-territory-map"
-      defaultCenter={{ lat: 41.2565, lng: -95.9345 }} // Default to Omaha, NE
+      defaultCenter={defaultCenter}
       defaultZoom={6}
       gestureHandling={'greedy'}
       disableDefaultUI={true}
     >
-      <CurrentLocationMarker />
-      {accountsWithAddress.map(account => (
-        <AccountMarker key={account.id} account={account} isPublic={isPublic} onAccountSelect={onAccountSelect} />
-      ))}
+      <Map>
+        <CurrentLocationMarker />
+        {accountsWithAddress.map(account => (
+            <AccountMarker 
+                key={account.id} 
+                account={account} 
+                isPublic={isPublic} 
+                onAccountSelect={onAccountSelect} 
+            />
+        ))}
+      </Map>
     </GoogleMap>
   );
 }
