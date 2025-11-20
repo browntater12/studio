@@ -6,35 +6,40 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Helper function to get the current user's companyId from their user profile.
     function getUserCompanyId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
     }
 
+    // A user can read and write to their own profile document.
+    // The companyId cannot be changed after creation.
     match /users/{userId} {
       allow read: if isSignedIn() && request.auth.uid == userId;
-      // On create, a companyId must exist and not be empty.
-      // On update, the companyId cannot be changed.
       allow write: if isSignedIn() && request.auth.uid == userId &&
                    ( (request.resource.data.companyId == resource.data.companyId) || 
                      (!exists(/databases/$(database)/documents/users/$(userId)) && request.resource.data.companyId != null) );
     }
     
+    // A user can read their own company document. Only the owner can update it.
     match /companies/{companyId} {
       allow get: if isSignedIn() && getUserCompanyId() == companyId;
       allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
+    // Rules for all data collections partitioned by companyId.
     match /{collection}/{docId} 
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
         
-      // Rule for reading a single document.
+      // Allow reading a single document if its companyId matches the user's.
       allow get: if isSignedIn() && getUserCompanyId() == resource.data.companyId;
 
-      // Rule for querying a collection. The client query MUST contain a where() clause
-      // that filters by the user's companyId.
+      // Allow querying a collection, BUT only if the client's query includes
+      // a `where('companyId', '==', user's companyId)` filter.
+      // This is the key to securing list operations in a multi-tenant app.
       allow list: if isSignedIn() && request.query.filters.size() > 0 && request.query.filters[0].field.stringValue == 'companyId' && request.query.filters[0].op.stringValue == '==' && request.query.filters[0].value.stringValue == getUserCompanyId();
       
-      // Rule for creating, updating, or deleting a document.
+      // Allow writing (create, update, delete) if the companyId on the
+      // new/updated data matches the user's companyId.
       allow write: if isSignedIn() && request.resource.data.companyId == getUserCompanyId();
     }
   }
