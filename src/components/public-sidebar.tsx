@@ -117,8 +117,8 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
       </SidebarContent>
 
       <SidebarFooter>
-         <Button asChild>
-              <Link href="/login">Sign In to Get Started</Link>
+         <Button asChild variant="destructive">
+              <Link href="/login">Get started</Link>
          </Button>
         <ThemeToggle />
       </SidebarFooter>
