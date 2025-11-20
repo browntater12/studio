@@ -11,6 +11,11 @@ interface UserData {
     displayName?: string | null;
 }
 
+// Helper function to introduce a delay
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function createUserAndCompany(userData: UserData) {
     try {
         const adminApp = initializeServerApp();
@@ -18,6 +23,10 @@ export async function createUserAndCompany(userData: UserData) {
         const auth = getAuth(adminApp);
         
         const { uid, email, displayName } = userData;
+
+        // Add a small delay to allow auth state to propagate on the backend
+        await delay(1000);
+
         const userRecord = await auth.getUser(uid);
 
         // Use a transaction to ensure all or nothing
