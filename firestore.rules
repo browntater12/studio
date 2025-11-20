@@ -11,31 +11,30 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // A user can read their own profile.
       allow read: if isSignedIn() && request.auth.uid == userId;
-      // On create, a companyId must exist.
+      // On create, a companyId must exist and not be empty.
       // On update, the companyId cannot be changed.
       allow write: if isSignedIn() && request.auth.uid == userId &&
-                   (request.resource.data.companyId == resource.data.companyId || !exists(/databases/$(database)/documents/users/$(userId)));
+                   ( (request.resource.data.companyId == resource.data.companyId) || 
+                     (!exists(/databases/$(database)/documents/users/$(userId)) && request.resource.data.companyId != null) );
     }
     
     match /companies/{companyId} {
-      // A user can read their own company document.
       allow get: if isSignedIn() && getUserCompanyId() == companyId;
-      // Only the owner of the company can update it.
       allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
-    // Rules for all data collections partitioned by companyId.
     match /{collection}/{docId} 
         where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
         
-      // For single document reads (get), the doc's companyId must match the user's companyId.
-      // For queries (list), the query MUST include a `where('companyId', '==', getUserCompanyId())` clause.
-      // Firestore enforces this automatically based on the rule below.
-      allow read: if isSignedIn() && getUserCompanyId() == resource.data.companyId;
+      // Rule for reading a single document.
+      allow get: if isSignedIn() && getUserCompanyId() == resource.data.companyId;
+
+      // Rule for querying a collection. The client query MUST contain a where() clause
+      // that filters by the user's companyId.
+      allow list: if isSignedIn() && request.query.filters.size() > 0 && request.query.filters[0].field.stringValue == 'companyId' && request.query.filters[0].op.stringValue == '==' && request.query.filters[0].value.stringValue == getUserCompanyId();
       
-      // For write operations, the companyId of the data being written must match the user's companyId.
+      // Rule for creating, updating, or deleting a document.
       allow write: if isSignedIn() && request.resource.data.companyId == getUserCompanyId();
     }
   }
