@@ -54,7 +54,7 @@ export default function ProductDetailsPage() {
   }, [firestore, userProfile?.companyId]);
   const { data: accounts, isLoading: accountsLoading } = useCollection<Account>(accountsQuery);
 
-  const isLoading = isAuthLoading || isProfileLoading || productLoading || usagesLoading || accountsLoading;
+  const isLoading = isAuthLoading || isProfileLoading || (userProfile && (productLoading || usagesLoading || accountsLoading));
 
   const combinedData: ProductUsage[] = React.useMemo(() => {
     if (!productUsages || !accounts) return [];

@@ -79,7 +79,12 @@ function AccountDetails() {
   const { data: callNotes, isLoading: callNotesLoading } = useCollection<CallNote>(callNotesQuery);
 
 
-  const isLoading = isAuthLoading || isProfileLoading || accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading;
+  // Unified loading state. It's loading if any of the core data hooks are loading.
+  const isLoading = 
+    isAuthLoading || 
+    isProfileLoading || 
+    (userProfile && (accountLoading || contactsLoading || productsLoading || productNotesLoading || shippingLocationsLoading || callNotesLoading));
+
 
   if (isLoading && !account) {
     return (

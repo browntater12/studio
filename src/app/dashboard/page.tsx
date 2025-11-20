@@ -32,9 +32,12 @@ export default function DashboardPage() {
 
   const { data: accounts, isLoading: areAccountsLoading } = useCollection<Account>(accountsQuery);
 
+  // This is the key change: The component is only considered "loading" if auth is loading,
+  // or the profile is loading, or if we have a profile but are still loading accounts.
   const isLoading = isAuthLoading || isProfileLoading || (userProfile && areAccountsLoading);
 
   useEffect(() => {
+    // Only redirect when we are done loading and have accounts.
     if (!isLoading && accounts && accounts.length > 0) {
       router.replace(`/dashboard/account/${accounts[0].id}`);
     }
@@ -68,6 +71,7 @@ export default function DashboardPage() {
     );
   }
 
+  // Fallback loading state while redirecting
   return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
