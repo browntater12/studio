@@ -30,9 +30,11 @@ export default function ProductsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Products</h1>
             {isLoading ? (
                 <div className="space-y-4">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-10 w-64" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                    <Skeleton className="h-96 w-full" />
                 </div>
             ) : (
                 <ProductTable products={products || []} />
