@@ -35,6 +35,7 @@ function LoadingOverlay() {
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                 <h2 className="text-xl font-semibold mb-2">Creating Your Account</h2>
                 <p className="text-muted-foreground">Please wait, do not refresh the page.</p>
+                <p className="text-sm text-muted-foreground mt-2">May take up to 2 minutes.</p>
             </div>
         </div>
     );
