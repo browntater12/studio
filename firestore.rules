@@ -11,50 +11,36 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Get the user's profile data from the /users collection
     function getUserProfile(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
-    // Check if the incoming document's companyId matches the user's companyId
-    function isSameCompanyAsProfile(companyId) {
-      let userProfile = getUserProfile(request.auth.uid);
-      return userProfile.companyId == companyId;
+    function userCompanyId() {
+        return getUserProfile(request.auth.uid).companyId;
     }
     
-    // Check if the existing document's companyId matches the user's companyId
-    function isExistingDocInSameCompany() {
-      let userProfile = getUserProfile(request.auth.uid);
-      return resource.data.companyId == userProfile.companyId;
-    }
-
     match /users/{userId} {
-      // A user can read and update their own profile.
-      // Creation is handled by a server-side function, but this rule provides a safeguard.
       allow read, update, create: if isOwner(userId);
-      // No one can list all users or delete profiles for security.
       allow list, delete: if false;
     }
     
     match /companies/{companyId} {
-        // A user can read their own company document.
-        allow get: if isSignedIn() && isSameCompanyAsProfile(companyId);
-        // Creation is handled by the server-side function. No direct client creation.
+        allow get: if isSignedIn() && userCompanyId() == companyId;
         allow create: if false;
-        // Only the owner of the company can update it.
         allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-        // No one can list all companies or delete them.
         allow list, delete: if false;
     }
 
-    // Rules for all company-partitioned data
-    match /{collection}/{docId} {
-      // Allow read/write access if the user is authenticated and part of the correct company.
-      // On create/update, check the incoming data.
-      // On get/delete, check the existing data.
-      // On list (query), the client MUST include a `where('companyId', '==', userProfile.companyId)` clause.
-      allow read, write: if isSignedIn() &&
-                         (isSameCompanyAsProfile(request.resource.data.companyId) || isExistingDocInSameCompany());
+    match /{collection}/{docId} 
+        where collection in ['accounts-db', 'contacts', 'account-products', 'products', 'shipping-locations', 'call-notes'] {
+        
+        allow read: if isSignedIn() && (
+            (exists(/databases/$(database)/documents/$(collection)/$(docId)) && resource.data.companyId == userCompanyId()) ||
+            (!exists(/databases/$(database)/documents/$(collection)/$(docId)))
+        );
+
+        allow write: if isSignedIn() && 
+            (request.resource.data.companyId == userCompanyId());
     }
   }
 }
