@@ -41,6 +41,8 @@ export default function DashboardPage() {
     }
   }, [accounts, isLoading, router]);
 
+  // While the user profile is loading, or the accounts query is running, show a spinner.
+  // This prevents any premature rendering or redirects.
   if (isLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
