@@ -23,12 +23,34 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
+import { SignUpForm } from '@/components/forms/sign-up-form';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   rememberMe: z.boolean().default(false).optional(),
 });
+
+function SignUpDialog() {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="link" type="button">Sign up</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Create an Account</DialogTitle>
+                    <DialogDescription>
+                        Get started by creating your own account and company space.
+                    </DialogDescription>
+                </DialogHeader>
+                <SignUpForm onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -40,8 +62,8 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'admin@example.com',
-      password: 'password',
+      email: '',
+      password: '',
       rememberMe: true,
     },
   });
@@ -157,6 +179,10 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
+        <CardFooter className="flex justify-center text-sm">
+            <p className="text-muted-foreground">Don't have an account?</p>
+            <SignUpDialog />
+        </CardFooter>
       </Card>
     </div>
   );
