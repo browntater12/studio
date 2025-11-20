@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { setPersistence, browserLocalPersistence, browserSessionPersistence, signInWithEmailAndPassword } from 'firebase/auth';
+import { setPersistence, browserLocalPersistence, browserSessionPersistence, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,10 @@ const loginSchema = z.object({
   rememberMe: z.boolean().default(false).optional(),
 });
 
+const forgotPasswordSchema = z.object({
+    email: z.string().email({ message: 'Please enter a valid email address.' }),
+});
+
 function SignUpDialog() {
     const [open, setOpen] = React.useState(false);
     return (
@@ -51,6 +55,83 @@ function SignUpDialog() {
         </Dialog>
     )
 }
+
+function ForgotPasswordDialog() {
+    const [open, setOpen] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const auth = useAuth();
+    const { toast } = useToast();
+
+    const form = useForm<z.infer<typeof forgotPasswordSchema>>({
+        resolver: zodResolver(forgotPasswordSchema),
+        defaultValues: {
+            email: '',
+        },
+    });
+
+    const onSubmit = async (values: z.infer<typeof forgotPasswordSchema>) => {
+        if (!auth) {
+            toast({ variant: "destructive", title: "Error", description: "Authentication service not available." });
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await sendPasswordResetEmail(auth, values.email);
+            toast({
+                title: "Password Reset Email Sent",
+                description: "If an account with this email exists, a password reset link has been sent to it.",
+            });
+            setOpen(false);
+        } catch (error: any) {
+            console.error("Forgot password error:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not send password reset email. Please try again.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="link" type="button" className="p-0 h-auto text-sm">Forgot Password?</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Reset Your Password</DialogTitle>
+                    <DialogDescription>
+                        Enter your email address and we will send you a link to reset your password.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                    <Input type="email" placeholder="name@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isSubmitting} className="w-full">
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Reset Link
+                        </Button>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -149,7 +230,10 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex items-center justify-between">
+                        <FormLabel>Password</FormLabel>
+                        <ForgotPasswordDialog />
+                    </div>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
