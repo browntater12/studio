@@ -194,8 +194,22 @@ export const staticShippingLocations: ShippingLocation[] = [
 ];
 
 export const staticCallNotes: CallNote[] = [
-    { id: 'cn1', accountId: '1', callDate: Timestamp.fromDate(new Date('2023-10-26T10:00:00Z')), type: 'initial-meeting', note: 'Initial meeting with Jane and John. Discussed their current water treatment challenges and our capabilities.', companyId: 'static' },
-    { id: 'cn2', accountId: '1', callDate: Timestamp.fromDate(new Date('2023-11-15T14:30:00Z')), type: 'phone-call', note: 'Follow-up call with John about the CTB-2 proposal. He is reviewing it with his team.', companyId: 'static' },
+    { id: 'cn1', accountId: '1', callDate: Timestamp.fromDate(new Date('2024-04-10T10:00:00Z')), type: 'initial-meeting', note: 'Initial meeting with Sarah Johnson. Discussed See & Spray tech and potential for Formula 101 as a cleaner.', companyId: 'static' },
+    { id: 'cn2', accountId: '1', callDate: Timestamp.fromDate(new Date('2024-05-21T14:30:00Z')), type: 'phone-call', note: 'Follow-up call with Tom Clark about the CTB-2 proposal for their cooling towers. He is reviewing it with his team.', companyId: 'static' },
+    { id: 'cn3', accountId: '2', callDate: Timestamp.fromDate(new Date('2024-05-01T09:00:00Z')), type: 'in-person', note: 'Met with Mike Williams on site. Toured the window manufacturing line. Confirmed quarterly bulk order for BAS-5.', companyId: 'static' },
+    { id: 'cn4', accountId: '2', callDate: Timestamp.fromDate(new Date('2024-06-15T11:00:00Z')), type: 'note', note: 'Emily Brown emailed asking for updated safety data sheets for BAS-5. Sent them over.', companyId: 'static' },
+    { id: 'cn5', accountId: '3', callDate: Timestamp.fromDate(new Date('2024-06-20T13:00:00Z')), type: 'phone-call', note: 'Cold call with David Chen. He\'s interested in a sample of Formula 101 for their cement mixing trucks. Will follow up next week.', companyId: 'static' },
+    { id: 'cn6', accountId: '4', callDate: Timestamp.fromDate(new Date('2024-05-30T16:00:00Z')), type: 'initial-meeting', note: 'Met Maria Garcia at a trade show. She mentioned they are unhappy with their current biocide supplier. Great opportunity for CTB-2.', companyId: 'static' },
+    { id: 'cn7', accountId: '4', callDate: Timestamp.fromDate(new Date('2024-06-18T10:30:00Z')), type: 'phone-call', note: 'Called Maria to schedule a follow-up. Set a meeting for July 5th to discuss specifics.', companyId: 'static' },
+    { id: 'cn8', accountId: '5', callDate: Timestamp.fromDate(new Date('2024-06-11T11:00:00Z')), type: 'note', note: 'Received re-order for Formula 101 from Newton Mfg. No issues reported.', companyId: 'static' },
+    { id: 'cn9', accountId: '6', callDate: Timestamp.fromDate(new Date('2024-06-05T08:30:00Z')), type: 'in-person', note: 'On-site visit with Robert King. Demoed Formula 101 on some heavy equipment. He was very impressed with the performance.', companyId: 'static' },
+    { id: 'cn10', accountId: '6', callDate: Timestamp.fromDate(new Date('2024-06-25T14:00:00Z')), type: 'phone-call', note: 'Robert called to increase their standard order of Formula 101 by 50%.', companyId: 'static' },
+    { id: 'cn11', accountId: '7', callDate: Timestamp.fromDate(new Date('2024-05-15T15:00:00Z')), type: 'note', note: 'Chris Green mentioned they are starting a trial for BAS-5 for boiler efficiency. Will check back in a month.', companyId: 'static' },
+    { id: 'cn12', accountId: '7', callDate: Timestamp.fromDate(new Date('2024-06-22T12:00:00Z')), type: 'in-person', note: 'Met with Jennifer White. The BAS-5 trial is going well, seeing positive results.', companyId: 'static' },
+    { id: 'cn13', accountId: '8', callDate: Timestamp.fromDate(new Date('2024-06-28T09:30:00Z')), type: 'phone-call', note: 'Call with Patricia Hall to confirm the delivery schedule for their CTB-2 order for the downtown office HVAC.', companyId: 'static' },
+    { id: 'cn14', accountId: '9', callDate: Timestamp.fromDate(new Date('2024-06-03T13:45:00Z')), type: 'in-person', note: 'Met with Mark Davis and Laura Wilson. Discussed the results of the CTB-2 test. They are moving forward with replacing their current product.', companyId: 'static' },
+    { id: 'cn15', accountId: '9', callDate: Timestamp.fromDate(new Date('2024-06-19T11:20:00Z')), type: 'note', note: 'Received the first official PO from Vermeer for CTB-2.', companyId: 'static' },
+    { id: 'cn16', accountId: '10', callDate: Timestamp.fromDate(new Date('2024-06-12T10:00:00Z')), type: 'initial-meeting', note: 'Initial discovery call with Brian Miller. He is interested in Formula 101 as a potential kitchen degreaser for all Casey\'s locations. Sent over pricing for a pilot program.', companyId: 'static' },
 ];
 
 
@@ -390,3 +404,5 @@ export default function MainPage() {
     </SidebarProvider>
   );
 }
+
+    
