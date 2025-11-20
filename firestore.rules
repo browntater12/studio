@@ -20,7 +20,7 @@ service cloud.firestore {
                      (!exists(/databases/$(database)/documents/users/$(userId)) && request.resource.data.companyId != null) );
     }
     
-    // A user can read their own company document. Any user in that company can update it.
+    // Any user in a company can read and update their own company document.
     match /companies/{companyId} {
       allow get: if isSignedIn() && getUserCompanyId() == companyId;
       allow update: if isSignedIn() && getUserCompanyId() == companyId;
