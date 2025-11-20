@@ -53,9 +53,7 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         title: "Account Created!",
         description: "You're now being redirected to your dashboard.",
     });
-    // This onSuccess call was closing the modal too early. 
     // The redirect will now handle moving the user away.
-    // onSuccess();
     router.push('/dashboard');
   };
 
