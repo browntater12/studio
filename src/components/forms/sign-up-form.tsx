@@ -32,6 +32,7 @@ const signUpSchema = z.object({
 export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
   const auth = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = React.useState(false);
 
@@ -52,7 +53,10 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         title: "Account Created!",
         description: "You're now being redirected to your dashboard.",
     });
-    onSuccess();
+    // This onSuccess call was closing the modal too early. 
+    // The redirect will now handle moving the user away.
+    // onSuccess();
+    router.push('/dashboard');
   };
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
@@ -63,9 +67,9 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true);
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email);
-        // After creating the user, we explicitly sign them in to ensure the session is active.
+        // We now explicitly sign the user in after creation, before creating the company.
         await initiateEmailSignIn(auth, values.email, values.password, false);
+        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email);
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
