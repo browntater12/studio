@@ -6,49 +6,19 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { initializeServerApp } from '@/firebase/server';
 
 interface UserData {
-    idToken?: string;
+    uid: string;
     email: string;
-    password?: string;
     displayName?: string | null;
 }
 
 export async function createUserAndCompany(userData: UserData) {
     try {
         const adminApp = initializeServerApp();
-        const auth = getAuth(adminApp);
         const firestore = getFirestore(adminApp);
-
-        let userRecord;
-
-        if (userData.idToken) {
-            // Google Sign-In flow
-            try {
-                // First, check if a user with that email already exists
-                userRecord = await auth.getUserByEmail(userData.email);
-            } catch (error: any) {
-                // If the user does not exist, create them
-                if (error.code === 'auth/user-not-found') {
-                    userRecord = await auth.createUser({
-                        email: userData.email,
-                        displayName: userData.displayName || undefined,
-                        // No password for Google sign-in
-                    });
-                } else {
-                    // For other errors, re-throw them
-                    throw error;
-                }
-            }
-        } else if (userData.password) {
-            // Email/Password flow: Create the user
-            userRecord = await auth.createUser({
-                email: userData.email,
-                password: userData.password,
-            });
-        } else {
-            throw new Error("Either idToken or password must be provided.");
-        }
+        const auth = getAuth(adminApp);
         
-        const uid = userRecord.uid;
+        const { uid, email, displayName } = userData;
+        const userRecord = await auth.getUser(uid);
 
         // Use a transaction to ensure all or nothing
         await firestore.runTransaction(async (transaction) => {
@@ -63,7 +33,7 @@ export async function createUserAndCompany(userData: UserData) {
 
             // 1. Create a new company
             const companyRef = firestore.collection('companies').doc();
-            const companyName = userRecord.displayName ? `${userRecord.displayName}'s Company` : `Company for ${userData.email}`;
+            const companyName = userRecord.displayName ? `${userRecord.displayName}'s Company` : `Company for ${email}`;
             transaction.set(companyRef, {
                 name: companyName,
                 createdAt: new Date(),
@@ -74,7 +44,7 @@ export async function createUserAndCompany(userData: UserData) {
             // 2. Create the user profile and link it to the company
             transaction.set(userProfileRef, {
                 email: userRecord.email,
-                displayName: userRecord.displayName || '',
+                displayName: userRecord.displayName || displayName || '',
                 companyId: companyId,
             });
         });

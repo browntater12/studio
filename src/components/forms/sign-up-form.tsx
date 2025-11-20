@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
 
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -44,22 +44,31 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
+  const handleSignUpCompletion = async (uid: string, email: string, displayName?: string | null) => {
+    const creationResult = await createUserAndCompany({ uid, email, displayName });
+    if (creationResult?.error) {
+        throw new Error(creationResult.error);
+    }
+    toast({
+        title: "Account Created!",
+        description: "You're now being redirected to your dashboard.",
+    });
+    onSuccess();
+    router.push('/dashboard');
+  };
+
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
+    if (!auth) {
+        toast({ variant: "destructive", title: "Sign Up Failed", description: "Authentication service not available." });
+        return;
+    }
     setIsSubmitting(true);
     try {
-        const result = await createUserAndCompany(values);
-        if (result?.error) {
-            throw new Error(result.error);
-        }
-        toast({
-            title: "Account Created!",
-            description: "You're now being redirected to your dashboard.",
-        });
-        onSuccess();
-        router.push('/dashboard');
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email);
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
-      if (error.message.includes('email-already-in-use')) {
+      if (error.code === 'auth/email-already-in-use') {
           description = "This email address is already in use. Please sign in or use a different email.";
       }
       toast({
@@ -73,33 +82,24 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
   };
   
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
+    if (!auth) {
+        toast({ variant: "destructive", title: "Sign Up Failed", description: "Authentication service not available." });
+        return;
+    };
     setIsGoogleSubmitting(true);
     const provider = new GoogleAuthProvider();
     try {
         const result = await signInWithPopup(auth, provider);
-        const idToken = await result.user.getIdToken();
-        const creationResult = await createUserAndCompany({
-            idToken,
-            email: result.user.email!,
-            displayName: result.user.displayName
-        });
-
-        if (creationResult?.error) {
-             throw new Error(creationResult.error);
-        }
-
-        toast({
-            title: "Account Created!",
-            description: "You're now being redirected to your dashboard.",
-        });
-        onSuccess();
-        router.push('/dashboard');
+        await handleSignUpCompletion(result.user.uid, result.user.email!, result.user.displayName);
     } catch(error: any) {
+        let description = "Could not sign up with Google. Please try again.";
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            description = 'An account already exists with the same email address but different sign-in credentials. Please sign in using the original method.';
+        }
         toast({
             variant: "destructive",
             title: "Sign Up Failed",
-            description: "Could not sign up with Google. Please try again.",
+            description: description,
         });
     } finally {
         setIsGoogleSubmitting(false);
