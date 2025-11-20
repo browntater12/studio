@@ -27,7 +27,19 @@ export async function createUserAndCompany(userData: UserData) {
         // Add a small delay to allow auth state to propagate on the backend
         await delay(1000);
 
-        const userRecord = await auth.getUser(uid);
+        let userRecord;
+        try {
+            userRecord = await auth.getUser(uid);
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                console.log(`User with UID ${uid} not found, which is expected for new sign-ups. Proceeding...`);
+                // This is okay, we'll use the data passed from the client.
+                userRecord = { uid, email, displayName: displayName || '' };
+            } else {
+                throw error; // Re-throw other errors
+            }
+        }
+
 
         // Use a transaction to ensure all or nothing
         await firestore.runTransaction(async (transaction) => {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -23,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { createUserAndCompany } from '@/app/auth-actions';
 import { GoogleIcon } from '../icons/google-icon';
+import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 
 const signUpSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -53,7 +53,6 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         description: "You're now being redirected to your dashboard.",
     });
     onSuccess();
-    // No longer redirecting from here. The root page will handle it.
   };
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
@@ -65,6 +64,8 @@ export function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         await handleSignUpCompletion(userCredential.user.uid, userCredential.user.email || values.email);
+        // After creating the user, we explicitly sign them in to ensure the session is active.
+        await initiateEmailSignIn(auth, values.email, values.password, false);
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
