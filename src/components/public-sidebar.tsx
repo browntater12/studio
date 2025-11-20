@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { Building, Search, Map, Package } from 'lucide-react';
+import { Building, Search, Map, Package, User, Building2 } from 'lucide-react';
 import type { Account } from '@/lib/types';
 import {
   Sidebar,
@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Logo } from '@/components/icons/logo';
 import { Input } from './ui/input';
@@ -30,6 +31,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import { SignUpForm } from '@/components/forms/sign-up-form';
+import { Card, CardDescription, CardTitle } from './ui/card';
 
 function DesktopSidebar({ children }: { children: React.ReactNode }) {
     return <Sidebar>{children}</Sidebar>;
@@ -37,6 +39,26 @@ function DesktopSidebar({ children }: { children: React.ReactNode }) {
 
 function MobileSidebar({ children }: { children: React.ReactNode }) {
     return <div className="flex flex-col h-full">{children}</div>;
+}
+
+function IndividualSignUpModal() {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button className="w-full">Continue</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Create an Individual Account</DialogTitle>
+                    <DialogDescription>
+                        Get started by creating your own account and company space.
+                    </DialogDescription>
+                </DialogHeader>
+                <SignUpForm onSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 interface PublicSidebarProps {
@@ -50,7 +72,6 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
   const [search, setSearch] = React.useState('');
   const isMobile = useIsMobile();
   const { state } = useSidebar();
-  const [open, setOpen] = React.useState(false);
 
   const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -127,18 +148,35 @@ export function PublicSidebar({ accounts, onAccountSelect, onNavigate, currentVi
       </SidebarContent>
 
       <SidebarFooter>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog>
             <DialogTrigger asChild>
                 <Button variant="destructive">Get Started</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-xl">
                 <DialogHeader>
-                    <DialogTitle>Create an Account</DialogTitle>
+                    <DialogTitle>Choose your setup</DialogTitle>
                     <DialogDescription>
-                        Get started by creating your own account and company space.
+                        Start as an individual or set up your entire enterprise team.
                     </DialogDescription>
                 </DialogHeader>
-                <SignUpForm onSuccess={() => setOpen(false)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <Card className="flex flex-col items-center justify-center p-6 text-center">
+                        <User className="h-10 w-10 mb-2" />
+                        <CardTitle className="text-lg">Individual</CardTitle>
+                        <CardDescription className="mt-1 mb-4">
+                            Perfect for solo sales reps or small teams getting started.
+                        </CardDescription>
+                        <IndividualSignUpModal />
+                    </Card>
+                    <Card className="flex flex-col items-center justify-center p-6 text-center bg-muted/50 border-dashed">
+                        <Building2 className="h-10 w-10 mb-2 text-muted-foreground" />
+                        <CardTitle className="text-lg text-muted-foreground">Enterprise</CardTitle>
+                         <CardDescription className="mt-1 mb-4 text-muted-foreground">
+                            Coming soon. Contact us for more information on enterprise solutions.
+                        </CardDescription>
+                        <Button className="w-full" disabled>Coming Soon</Button>
+                    </Card>
+                </div>
             </DialogContent>
         </Dialog>
         <ThemeToggle />
