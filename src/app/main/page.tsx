@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Hardcoded data for the public landing page
-export const staticAccounts: Account[] = [
+const staticAccounts: Account[] = [
   {
     id: '1',
     name: 'John Deere-Ankeny', 
@@ -127,7 +127,7 @@ export const staticAccounts: Account[] = [
 
 ];
 
-export const staticContacts: Contact[] = [
+const staticContacts: Contact[] = [
     // John Deere-Ankeny (1042)
     { id: 'c1', accountNumber: '1042', name: 'Sarah Johnson', position: 'Plant Manager', phone: '515-555-0101', email: 'sarah.j@jdankeny.com', location: 'Ankeny, IA', isMainContact: true, companyId: 'static' },
     { id: 'c2', accountNumber: '1042', name: 'Tom Clark', position: 'Head of Maintenance', phone: '515-555-0113', email: 'tom.c@jdankeny.com', location: 'Ankeny, IA', isMainContact: false, companyId: 'static' },
@@ -155,13 +155,13 @@ export const staticContacts: Contact[] = [
     { id: 'c15', accountNumber: '1003', name: 'Brian Miller', position: 'Head of Procurement', phone: '515-555-0112', email: 'brian.m@caseys.com', location: 'Ankeny, IA', isMainContact: true, companyId: 'static' },
 ];
 
-export const staticProducts: Product[] = [
+const staticProducts: Product[] = [
     { id: 'p1', name: 'Formula 101', productCode: 'F101', companyId: 'static' },
     { id: 'p2', name: 'Cooling Tower Biocide', productCode: 'CTB-2', companyId: 'static' },
     { id: 'p3', name: 'Boiler Antiscalant', productCode: 'BAS-5', companyId: 'static' },
 ];
 
-export const staticAccountProducts: AccountProduct[] = [
+const staticAccountProducts: AccountProduct[] = [
     // John Deere
     { id: 'ap1', accountId: '1', productId: 'p1', notes: 'Main corporate account purchasing.', type: 'purchasing', price: 150.00, companyId: 'static' },
     { id: 'ap2', accountId: '1', productId: 'p2', notes: 'Considering for all cooling towers.', type: 'opportunity', price: 220.50, companyId: 'static' },
@@ -189,7 +189,7 @@ export const staticAccountProducts: AccountProduct[] = [
     { id: 'ap15', accountId: '10', productId: 'p1', notes: 'Potential for use as a kitchen degreaser in all locations.', type: 'opportunity', price: 130.00, companyId: 'static' },
 ];
 
-export const staticShippingLocations: ShippingLocation[] = [
+const staticShippingLocations: ShippingLocation[] = [
     { id: 'sl1', originalAccountId: '2', relatedAccountId: '1', companyId: 'static' },
     { id: 'sl2', originalAccountId: '1', relatedAccountId: '9', companyId: 'static' },
     { id: 'sl3', originalAccountId: '4', relatedAccountId: '10', companyId: 'static' },
@@ -197,7 +197,7 @@ export const staticShippingLocations: ShippingLocation[] = [
     { id: 'sl5', originalAccountId: '6', relatedAccountId: '3', companyId: 'static' },
 ];
 
-export const staticCallNotes: CallNote[] = [
+const staticCallNotes: CallNote[] = [
     { id: 'cn1', accountId: '1', callDate: Timestamp.fromDate(new Date('2024-04-10T10:00:00Z')), type: 'initial-meeting', note: 'Initial meeting with Sarah Johnson. Discussed See & Spray tech and potential for Formula 101 as a cleaner.', companyId: 'static' },
     { id: 'cn2', accountId: '1', callDate: Timestamp.fromDate(new Date('2024-05-21T14:30:00Z')), type: 'phone-call', note: 'Follow-up call with Tom Clark about the CTB-2 proposal for their cooling towers. He is reviewing it with his team.', companyId: 'static' },
     { id: 'cn3', accountId: '2', callDate: Timestamp.fromDate(new Date('2024-05-01T09:00:00Z')), type: 'in-person', note: 'Met with Mike Williams on site. Toured the window manufacturing line. Confirmed quarterly bulk order for BAS-5.', companyId: 'static' },
@@ -408,5 +408,3 @@ export default function MainPage() {
     </SidebarProvider>
   );
 }
-
-    
