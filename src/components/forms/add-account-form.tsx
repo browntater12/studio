@@ -64,7 +64,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
         if (!firestore || !user) return null;
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
-    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<z.infer<typeof addAccountSchema>>({
     resolver: zodResolver(addAccountSchema),
@@ -82,13 +82,15 @@ export function AddAccountForm({ account }: { account?: Account}) {
   })
 
   useEffect(() => {
-    if (userProfile && !form.getValues('companyId')) {
-      form.setValue('companyId', userProfile.companyId);
-    }
+    // When editing, populate the form with account data
     if (account) {
         form.reset(account);
+    } 
+    // When creating, set the companyId once the profile loads
+    else if (userProfile && !form.getValues('companyId')) {
+      form.setValue('companyId', userProfile.companyId);
     }
-  }, [userProfile, form, account]);
+  }, [userProfile, account, form]);
  
   async function onSubmit(values: z.infer<typeof addAccountSchema>) {
     if (!firestore) {
@@ -99,7 +101,8 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         return;
     }
-    if (!userProfile) {
+    // companyId is now part of the form values and is reliable
+    if (!values.companyId) {
         toast({
             title: 'Error',
             description: 'User profile not loaded. Please wait and try again.',
@@ -107,20 +110,11 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         return;
     }
-    const companyId = userProfile.companyId;
-    if (!companyId) {
-        toast({
-            title: 'Error',
-            description: 'Company information is not available. Cannot save account.',
-            variant: 'destructive'
-        });
-        return;
-    }
     
     setIsSubmitting(true);
     
-    // Ensure companyId is set in the values to be submitted
-    const valuesWithCompanyId = { ...values, companyId };
+    // The companyId is already in the values object from the form state
+    const valuesWithCompanyId = values;
     
     try {
         const accountsCollection = collection(firestore, 'accounts-db');
@@ -135,7 +129,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
         } else {
             // Check for unique account number on creation
             if (values.accountNumber) {
-                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", companyId));
+                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", values.companyId));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     form.setError("accountNumber", {
@@ -167,11 +161,14 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         errorEmitter.emit('permission-error', permissionError);
     } finally {
-        if (form.formState.isValid) { // Only set submitting to false if we don't have a manual error
+        // Only set submitting to false if we don't have a manual validation error
+        if (form.formState.isValid) {
             setIsSubmitting(false);
         }
     }
   };
+  
+  const isButtonDisabled = isSubmitting || (isProfileLoading && !account);
 
   return (
     <Form {...form}>
@@ -275,8 +272,8 @@ export function AddAccountForm({ account }: { account?: Account}) {
             )}
         />
         
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" disabled={isButtonDisabled} className="w-full">
+            {isButtonDisabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {account ? 'Save Changes' : 'Add Account'}
         </Button>
       </form>
