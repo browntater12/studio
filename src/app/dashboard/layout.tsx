@@ -8,7 +8,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader2, PanelLeft } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
 export default function DashboardLayout({
   children,
@@ -16,25 +18,35 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const isMobile = useIsMobile();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileSheetOpen, setMobileSheetOpen] = React.useState(false);
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   React.useEffect(() => {
     // When auth state is resolved and there's no user, redirect to login.
-    if (!isUserLoading && !user) {
+    if (!isAuthLoading && !user) {
       // Avoid redirect loops from the login page itself.
       if (pathname !== '/login') {
         router.replace('/login');
       }
     }
-  }, [user, isUserLoading, router, pathname]);
+  }, [user, isAuthLoading, router, pathname]);
+  
+  const isLoading = isAuthLoading || (user && isProfileLoading);
 
-  // While the auth state is loading, show a full-screen loader.
+  // While the auth state or user profile is loading, show a full-screen loader.
   // This is crucial to prevent rendering the dashboard (and its data-fetching components)
-  // for an unauthenticated user.
-  if (isUserLoading) {
+  // for an unauthenticated user or before the profile is available.
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -44,11 +56,19 @@ export default function DashboardLayout({
 
   // If loading is finished and there is still no user, we are about to redirect.
   // We return null to avoid a flash of un-styled content. The useEffect above handles the redirect.
-  if (!user) {
-    return null;
+  if (!user || !userProfile) {
+     if (!isAuthLoading && !isProfileLoading) {
+        router.replace('/login');
+    }
+    return (
+       <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
-  // If we've reached this point, we have a user. Render the dashboard.
+
+  // If we've reached this point, we have a user and their profile. Render the dashboard.
   if (isMobile) {
     return (
       <SidebarProvider>

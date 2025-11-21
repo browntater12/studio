@@ -82,12 +82,10 @@ export function AddAccountForm({ account }: { account?: Account}) {
   })
 
   useEffect(() => {
-    // When editing, populate the form with account data
     if (account) {
         form.reset(account);
     } 
-    // When creating, set the companyId once the profile loads
-    else if (userProfile && !form.getValues('companyId')) {
+    else if (userProfile) {
       form.setValue('companyId', userProfile.companyId);
     }
   }, [userProfile, account, form]);
@@ -101,11 +99,11 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         return;
     }
-    // companyId is now part of the form values and is reliable
-    if (!values.companyId) {
+
+    if (!userProfile?.companyId) {
         toast({
             title: 'Error',
-            description: 'User profile not loaded. Please wait and try again.',
+            description: 'Could not determine your company. Please try again.',
             variant: 'destructive'
         });
         return;
@@ -113,8 +111,10 @@ export function AddAccountForm({ account }: { account?: Account}) {
     
     setIsSubmitting(true);
     
-    // The companyId is already in the values object from the form state
-    const valuesWithCompanyId = values;
+    const valuesWithCompanyId = {
+      ...values,
+      companyId: userProfile.companyId
+    };
     
     try {
         const accountsCollection = collection(firestore, 'accounts-db');
@@ -129,7 +129,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
         } else {
             // Check for unique account number on creation
             if (values.accountNumber) {
-                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", values.companyId));
+                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", valuesWithCompanyId.companyId));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     form.setError("accountNumber", {
@@ -161,14 +161,13 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         errorEmitter.emit('permission-error', permissionError);
     } finally {
-        // Only set submitting to false if we don't have a manual validation error
         if (form.formState.isValid) {
             setIsSubmitting(false);
         }
     }
   };
   
-  const isButtonDisabled = isSubmitting || (isProfileLoading && !account);
+  const isButtonDisabled = isSubmitting || isProfileLoading;
 
   return (
     <Form {...form}>
