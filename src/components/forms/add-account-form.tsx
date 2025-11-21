@@ -99,7 +99,16 @@ export function AddAccountForm({ account }: { account?: Account}) {
         });
         return;
     }
-    if (!values.companyId) {
+    if (!userProfile) {
+        toast({
+            title: 'Error',
+            description: 'User profile not loaded. Please wait and try again.',
+            variant: 'destructive'
+        });
+        return;
+    }
+    const companyId = userProfile.companyId;
+    if (!companyId) {
         toast({
             title: 'Error',
             description: 'Company information is not available. Cannot save account.',
@@ -110,11 +119,14 @@ export function AddAccountForm({ account }: { account?: Account}) {
     
     setIsSubmitting(true);
     
+    // Ensure companyId is set in the values to be submitted
+    const valuesWithCompanyId = { ...values, companyId };
+    
     try {
         const accountsCollection = collection(firestore, 'accounts-db');
         if (account) {
             const accountRef = doc(firestore, 'accounts-db', account.id);
-            updateDoc(accountRef, values);
+            updateDoc(accountRef, valuesWithCompanyId);
             toast({
                 title: 'Account Updated',
                 description: 'The account has been updated successfully.',
@@ -123,7 +135,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
         } else {
             // Check for unique account number on creation
             if (values.accountNumber) {
-                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", values.companyId));
+                const q = query(accountsCollection, where("accountNumber", "==", values.accountNumber), where("companyId", "==", companyId));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     form.setError("accountNumber", {
@@ -135,7 +147,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
                 }
             }
             
-            const docRef = await addDoc(accountsCollection, values);
+            const docRef = await addDoc(accountsCollection, valuesWithCompanyId);
             toast({
                 title: 'Account Created',
                 description: 'The new account has been added successfully.',
@@ -151,7 +163,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
         const permissionError = new FirestorePermissionError({
             path: collectionPath,
             operation: operation,
-            requestResourceData: values
+            requestResourceData: valuesWithCompanyId
         });
         errorEmitter.emit('permission-error', permissionError);
     } finally {
@@ -263,7 +275,7 @@ export function AddAccountForm({ account }: { account?: Account}) {
             )}
         />
         
-        <Button type="submit" disabled={isSubmitting || !userProfile} className="w-full">
+        <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {account ? 'Save Changes' : 'Add Account'}
         </Button>
